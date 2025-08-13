@@ -180,6 +180,9 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
     });
     this.route.queryParams.subscribe((queryParams: Params) => {
       this.codiceIpa = queryParams.codiceIpa;
+	  if (!this.codiceIpa && this.company) {
+        this.codiceIpa = this.company.codiceIpa;
+      }
       this.fromMap = queryParams.fromMap;
       this.zoom = queryParams.zoom;
       this.paramsWorkflowId = queryParams.workflowId;
