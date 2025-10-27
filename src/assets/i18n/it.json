@@ -42,9 +42,9 @@
     },
     "configuration" : {
       "slice": {
-        "title": "Impostazioni grafico statistiche",
-        "subtitle": "Lista delle sezioni",
-        "add": "Aggiungi nuova sezione",
+        "title": "Impostazioni compliance classi",
+        "subtitle": "Lista delle classi",
+        "add": "Aggiungi nuova classe",
         "color": "Colore",
         "min": "Minimo valore {{number}}",
         "max": "Massimo valore {{number}}"
@@ -55,21 +55,21 @@
         "started": "Scansione avviata correttamente"
       },
       "menu": {
-        "title": "Impostazioni Menu",
-        "subtitle": "Voci di Menu",
+        "title": "Impostazioni menu",
+        "subtitle": "Voci di menu",
         "add": "Aggiungi nuova voce",
         "label": "Etichetta",
         "url": "URL",
         "target": "Target"
       },
-      "color": "Impostazioni colori",
+      "color": "Impostazioni colori compliance sezioni",
       "cron": {
         "title": "Espressione per l'esecuzione di un nuovo controllo",
         "message": "La prossima esecuzione del controllo avverrà il <b>{{nextDate}}</b> confermi il cambiamento dell'espressione?",
         "next-date": ", la prossima esecuzione avverrà il {{nextDate}}",
         "next-next-date": ", la successiva il {{nextDate}}",
         "error": "Non è possibile selezionare più di un orario all'interno della giornata!",        
-        "workflow": "Impostazioni controllo",
+        "workflow": "Impostazioni parametri controlli",
         "workflow-url": "URL della piattaforma",
         "workflow-body": "Parametri",
         "workflow-preserve-label": "Numero di controlli da conservare",
@@ -135,8 +135,8 @@
       "start-now": "Avvia Ora",
       "grafici-mappe": {
         "title": "Statistiche",
-        "grafico-regola": "Statistiche scansioni per sezione",
-        "mappa-regola": "Compliance su scala nazionale",
+        "grafico-regola": "Compliance sezioni",
+        "mappa-regola": "Compliance mappa nazionale",
         "grafico-statistiche-regola": "Compliance per classi",
         "statistiche-regola": "Compliance per intervalli"
       }
