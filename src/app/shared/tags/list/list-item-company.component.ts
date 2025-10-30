@@ -23,7 +23,7 @@ import { RoleEnum } from '../../../auth/role.enum';
             <ng-content></ng-content>
         </div>
         <div class="card-footer px-1 py-0">
-          <div class="d-flex d-md-block d-xl-flex justify-content-around">
+          <div class="d-flex flex-wrap justify-content-around">
             @if (authenticated) {
               <app-show-workflow-history [codiceIpa]="item.codiceIpa"></app-show-workflow-history>
               <a itButton="outline-warning" size="xs" class="mt-1" translate routerLink="/search" [queryParams]="{workflowId: '',codiceIpa: item.codiceIpa, sort: 'createdAt,desc'}">

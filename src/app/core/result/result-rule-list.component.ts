@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, Input, ViewEncapsulation } from '@angular/core';
 import { CommonListComponent } from '../../common/controller/common-list.component';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { NavigationService } from '../navigation.service';
 import { TranslateService } from '@ngx-translate/core';
 import { animate, keyframes, style, transition, trigger } from '@angular/animations';
@@ -29,7 +29,13 @@ import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
           <div class="row col-md-12">
             @if(optionsWorkflow && optionsWorkflow.length != 0) {
               <div class="form-group col-md-4">
-                <ng-select [items]="optionsWorkflow" bindLabel="text" bindValue="value"  formControlName="workflowId"  [placeholder]="'it.workflow.id'| translate">
+                <ng-select 
+                  [items]="optionsWorkflow" 
+                  [clearable]=false
+                  bindLabel="text" 
+                  bindValue="value"  
+                  formControlName="workflowId"  
+                  [placeholder]="'it.workflow.id'| translate">
                 </ng-select>
               </div>
             }
@@ -46,17 +52,17 @@ import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
           </div>
           <div class="row col-md-12">
             <div class="form-group col-md-3">
-              <it-input formControlName="codiceIpa" [label]="'it.company.codiceIpa'| translate">
+              <it-input class="w-100" type="search" formControlName="codiceIpa" [label]="'it.company.codiceIpa'| translate">
                 <it-icon [name]="'key'" size="sm" color="primary" prependText></it-icon>
               </it-input>
             </div>
             <div class="form-group col-md-3">
-              <it-input formControlName="denominazioneEnte" [label]="'it.company.denominazioneEnte'| translate">
+              <it-input class="w-100" type="search" formControlName="denominazioneEnte" [label]="'it.company.denominazioneEnte'| translate">
                 <it-icon [name]="'pa'" size="sm" color="primary" prependText></it-icon>
               </it-input>
             </div>
             <div class="form-group col-md-3">
-              <it-input formControlName="codiceFiscaleEnte" [label]="'it.company.codiceFiscaleEnte'| translate">
+              <it-input class="w-100" type="search" formControlName="codiceFiscaleEnte" [label]="'it.company.codiceFiscaleEnte'| translate">
                 <it-icon [name]="'card'" size="sm" color="primary" prependText></it-icon>
               </it-input>
             </div>

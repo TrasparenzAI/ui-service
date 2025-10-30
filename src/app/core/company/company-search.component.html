@@ -4,17 +4,17 @@
     <form class="clearfix" [formGroup]="filterFormSearch" [ngClass]="{'d-none': collapse, 'd-block': !collapse}">
       <div class="row col-md-12">
         <div class="form-group col-md-3">
-          <it-input formControlName="codiceIpa" [label]="'it.company.codiceIpa'| translate">
+          <it-input class="w-100" type="search" formControlName="codiceIpa" [label]="'it.company.codiceIpa'| translate">
             <it-icon [name]="'key'" size="sm" color="primary" prependText></it-icon>
           </it-input>
         </div>
         <div class="form-group col-md-3">
-          <it-input formControlName="denominazioneEnte" [label]="'it.company.denominazioneEnte'| translate">
+          <it-input class="w-100" type="search" formControlName="denominazioneEnte" [label]="'it.company.denominazioneEnte'| translate">
             <it-icon [name]="'pa'" size="sm" color="primary" prependText></it-icon>
           </it-input>
         </div>
         <div class="form-group col-md-3">
-          <it-input formControlName="codiceFiscaleEnte" [label]="'it.company.codiceFiscaleEnte'| translate">
+          <it-input class="w-100" type="search" formControlName="codiceFiscaleEnte" [label]="'it.company.codiceFiscaleEnte'| translate">
             <it-icon [name]="'card'" size="sm" color="primary" prependText></it-icon>
           </it-input>
         </div>
@@ -28,12 +28,12 @@
       </div>
       <div class="row col-md-12">
         <div class="form-group col-md-3">
-          <it-input formControlName="comune" [label]="'it.company.comune'| translate">
+          <it-input class="w-100" type="search" formControlName="comune" [label]="'it.company.comune'| translate">
             <it-icon [name]="'map-marker-circle'" size="sm" color="primary" prependText></it-icon>
           </it-input>
         </div>
         <div class="form-group col-md-3">
-          <it-input formControlName="provincia" [label]="'it.company.provincia'| translate">
+          <it-input class="w-100" type="search" formControlName="provincia" [label]="'it.company.provincia'| translate">
             <it-icon [name]="'map-marker-plus'" size="sm" color="primary" prependText></it-icon>
           </it-input>
         </div>
