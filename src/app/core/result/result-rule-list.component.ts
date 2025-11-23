@@ -28,7 +28,7 @@ import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
         <form class="clearfix" [formGroup]="filterForm" [ngClass]="{'d-none': collapse, 'd-block': !collapse}">
           <div class="row col-md-12">
             @if(optionsWorkflow && optionsWorkflow.length != 0) {
-              <div class="form-group col-md-4">
+              <div class="form-group col-md-3">
                 <ng-select 
                   [items]="optionsWorkflow" 
                   [clearable]=false
@@ -39,32 +39,15 @@ import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
                 </ng-select>
               </div>
             }
-            <div class="form-group col-md-4">
+            <div class="form-group col-md-3">
               <it-range [min]="1" [max]="maxNumberOfRules" [step]="1" formControlName="minNumberOfRules">
                 {{'it.result.minNumberOfRules'| translate: {number: filterForm.controls.minNumberOfRules.value} }}
               </it-range>
             </div>
-            <div class="form-check col-md-4 ps-3">
+            <div class="form-check col-md-3 ps-3">
               <it-range [min]="1" [max]="maxNumberOfRules" [step]="1" formControlName="maxNumberOfRules">
                 {{'it.result.maxNumberOfRules'| translate: {number: filterForm.controls.maxNumberOfRules.value} }}
               </it-range>
-            </div>
-          </div>
-          <div class="row col-md-12">
-            <div class="form-group col-md-3">
-              <it-input class="w-100" type="search" formControlName="codiceIpa" [label]="'it.company.codiceIpa'| translate">
-                <it-icon [name]="'key'" size="sm" color="primary" prependText></it-icon>
-              </it-input>
-            </div>
-            <div class="form-group col-md-3">
-              <it-input class="w-100" type="search" formControlName="denominazioneEnte" [label]="'it.company.denominazioneEnte'| translate">
-                <it-icon [name]="'pa'" size="sm" color="primary" prependText></it-icon>
-              </it-input>
-            </div>
-            <div class="form-group col-md-3">
-              <it-input class="w-100" type="search" formControlName="codiceFiscaleEnte" [label]="'it.company.codiceFiscaleEnte'| translate">
-                <it-icon [name]="'card'" size="sm" color="primary" prependText></it-icon>
-              </it-input>
             </div>
             <div class="form-group col-md-3">
               <ng-select formControlName="codiceCategoria"  [placeholder]="'it.company.codiceCategoria'| translate">
@@ -186,9 +169,6 @@ export class ResultRuleListComponent extends CommonListComponent<Result> impleme
           status: [[Status.OK, Status.ACCEPTED]],
           minNumberOfRules: new FormControl(queryParams.min || 1),
           maxNumberOfRules: new FormControl(queryParams.max || this.maxNumberOfRules),
-          denominazioneEnte: new FormControl(''),
-          codiceFiscaleEnte: new FormControl(),
-          codiceIpa: new FormControl(),
           codiceCategoria: new FormControl(),
         });
       }

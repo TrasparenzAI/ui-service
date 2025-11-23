@@ -130,7 +130,7 @@
               <app-show-list-text [label]="'it.company.indirizzo'" [value]="company.fullIndirizzo"></app-show-list-text>
               <app-show-list-text [label]="'it.company.regione'" [value]="company.denominazioneRegione"></app-show-list-text>
               <it-list-item>
-                <div class="d-flex justify-content-around w-100">
+                <div class="d-flex flex-row justify-content-around w-100">
                   @if (authenticated) {
                     <app-show-workflow-history [codiceIpa]="company.codiceIpa"></app-show-workflow-history>
                     <a itButton="outline-warning" size="xs" class="mt-1" translate routerLink="/search" [queryParams]="{workflowId: '',codiceIpa: company.codiceIpa, sort: 'createdAt,desc'}">
@@ -164,7 +164,7 @@
             <app-show-list-text [label]="'it.result.destinationUrl'" [value]="currentNode?.data?.destinationUrl" url="true"></app-show-list-text>
             @if (currentNode && !company && isSuperuser) {
               <it-list-item>
-                <div class="w-100 d-xl-flex justify-content-around">
+                <div class="w-100 d-flex flex-row justify-content-around">
                   <a itButton="outline-primary" size="xs" class="mt-1" (click)="openEditModal()">
                     <it-icon name="pencil" color="primary"></it-icon><span class="ms-1" translate>edit</span>
                   </a>
@@ -180,7 +180,7 @@
             @if (company && authenticated) {
               @if (currentNode?.data?.storageData?.screenshotId || currentNode?.data?.storageData?.objectId) {
                 <it-list-item>
-                  <div class="w-100 d-xl-flex justify-content-around">
+                  <div class="w-100 d-flex flex-row justify-content-around">
                     <app-show-storage-result class="w-100"
                       [screenshot]="true"
                       [storageData]="currentNode?.data?.storageData"
@@ -197,7 +197,7 @@
               }
               @if (!currentNode?.data?.storageData?.objectId) {
                 <it-list-item>
-                  <div class="w-100 d-xl-flex justify-content-around">
+                  <div class="w-100 d-flex flex-row justify-content-around">
                     @if (currentNode?.data?.status == 404) {
                       <a itButton="outline-danger" class="mt-1" (click)="showErrorMessage(currentNode?.data?.parentNodeId)">
                         <it-icon name="error" color="danger"></it-icon><span class="ms-1" translate>it.result.errorMessage</span>
