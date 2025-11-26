@@ -21,8 +21,8 @@ import { ConfigurationService } from '../configuration/configuration.service';
       border-color: rgba(255, 255, 255, 0.2) !important;
     }
     .user-icon .icon{
-      width: 32px!important;
-      height: 32px!important;
+      width: 24px!important;
+      height: 24px!important;
     }
   `,
     standalone: false

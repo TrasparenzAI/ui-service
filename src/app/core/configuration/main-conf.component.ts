@@ -7,19 +7,19 @@ import { ApiMessageService, MessageType } from '../api-message.service';
 import { TranslateService } from '@ngx-translate/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
-import { Rule, SelectRule } from '../rule/rule.model';
+import { Rule } from '../rule/rule.model';
 import { environment } from '../../../environments/environment';
-
-import * as parser from 'cron-parser';
 import { RuleService } from '../rule/rule.service';
 import { ConductorService } from '../conductor/conductor.service';
-import { Status, Workflow } from '../conductor/workflow.model';
+import { Workflow } from '../conductor/workflow.model';
 import { DatePipe } from '@angular/common';
 import { StatusColor } from '../../common/model/status-color.enum';
 import { FormArray } from '@angular/forms';
 import { Validators } from '@angular/forms';
 import { ResultService } from '../result/result.service';
 import { validColorValidator } from 'ngx-colors';
+
+import * as parser from 'cron-parser';
 
 @Component({
     selector: 'app-main-conf',
@@ -29,6 +29,11 @@ import { validColorValidator } from 'ngx-colors';
     .callout-highlight {
       overflow: unset !important;
     }
+    label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }  
   `,
     providers: [DatePipe],
     standalone: false
@@ -294,6 +299,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
       rule_base_url: new FormControl(environment.ruleApiUrl),
       public_company_base_url: new FormControl(environment.companyApiUrl),
       result_aggregator_base_url: new FormControl(environment.resultAggregatorapiUrl),
+      task_scheduler_base_url: new FormControl(''),
       number_workflows_preserve: new FormControl(3),
       workflow_id_preserve: new FormControl('')
     });
@@ -362,6 +368,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
             this.workflowBODYForm.controls.rule_base_url.patchValue(jsonvalue.input.rule_base_url);            
             this.workflowBODYForm.controls.public_company_base_url.patchValue(jsonvalue.input.public_company_base_url);
             this.workflowBODYForm.controls.result_aggregator_base_url.patchValue(jsonvalue.input.result_aggregator_base_url);
+            this.workflowBODYForm.controls.task_scheduler_base_url.patchValue(jsonvalue.input.task_scheduler_base_url);
             this.workflowBODYForm.controls.force_jsoup.patchValue(jsonvalue.input.force_jsoup);
           }
           if (conf.key === ConfigurationService.JSONRULES_KEY) {
@@ -567,7 +574,8 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
         crawler_uri: this.workflowBODYForm.controls.crawler_uri.value,
         rule_base_url: this.workflowBODYForm.controls.rule_base_url.value,
         public_company_base_url: this.workflowBODYForm.controls.public_company_base_url.value,
-        result_aggregator_base_url: this.workflowBODYForm.controls.result_aggregator_base_url.value
+        result_aggregator_base_url: this.workflowBODYForm.controls.result_aggregator_base_url.value,
+        task_scheduler_base_url: this.workflowBODYForm.controls.task_scheduler_base_url.value
       }   
     };
     if(confirm(this.labels?.workflow?.startnow)) {
@@ -615,7 +623,8 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
         rule_base_url: this.workflowBODYForm.controls.rule_base_url.value,
         force_jsoup: this.workflowBODYForm.controls.force_jsoup.value,        
         public_company_base_url: this.workflowBODYForm.controls.public_company_base_url.value,
-        result_aggregator_base_url: this.workflowBODYForm.controls.result_aggregator_base_url.value
+        result_aggregator_base_url: this.workflowBODYForm.controls.result_aggregator_base_url.value,
+        task_scheduler_base_url: this.workflowBODYForm.controls.task_scheduler_base_url.value
       }   
     });
     this.configurationService.save(conf, true).subscribe((result: any) => {

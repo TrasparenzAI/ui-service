@@ -1,0 +1,27 @@
+<div class="container">
+    <h2 class="font-monospace pt-2" translate>it.service-info.title</h2>
+    <div class="shadow">
+    <it-table hover="true">
+        <ng-container thead>
+        <tr class="bg-dark text-white font-monospace">
+            <th scope="col">#</th>
+            <th scope="col" translate>it.service-info.table.cols.microservice</th>
+            <th scope="col" translate>it.service-info.table.cols.version</th>
+            <th scope="col" translate>it.service-info.table.cols.date</th>
+        </tr>
+        </ng-container>
+
+        <ng-container tbody>
+        @for (service of services; track $index; let idx = $index) {
+            <tr>
+                <th scope="row">{{idx + 1}}</th>
+                <td class="fw-bolder">{{service.artifact}}</td>
+                <td class="fst-italic">{{service.version}}</td>
+                <td>{{service.time | date: 'dd/MM/yyyy HH:mm:ss'}}</td>
+            </tr>
+        }  
+        </ng-container>
+
+    </it-table>
+    </div>
+</div>

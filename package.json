@@ -1,6 +1,7 @@
 {
   "name": "trasparenzai",
   "version": "2.2.2",
+  "buildDate": "2025-11-26T10:10:23.456Z",
   "license": "GNU Affero General Public License v3.0",
   "scripts": {
     "android": "tns run android",
@@ -12,7 +13,9 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "set-build-date": "node scripts/update-build-date.js",
+    "version": "npm run set-build-date"    
   },
   "private": true,
   "dependencies": {

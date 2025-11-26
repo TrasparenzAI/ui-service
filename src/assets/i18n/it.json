@@ -40,6 +40,16 @@
         "go-to-homepage": "Torna alla homepage"
       }
     },
+    "service-info": {
+      "title": "Lista dei Microservizi",
+      "table": {
+        "cols": {
+          "microservice": "Microservizio",
+          "version": "Versione (Tag)",
+          "date": "Data di Build"
+        }
+      }
+    },
     "configuration" : {
       "slice": {
         "title": "Impostazioni compliance classi",
@@ -86,11 +96,13 @@
           "read_timeout_max": "Timeout di risposta massimo (ms)",
           "crawling_mode": "Modalità di recupero della pagina HTML",
           "crawler_child_type": "Modalità di esecuzione dei flussi figli",
-          "result_base_url": "URL del servizio Risultati",
-          "crawler_uri": "URL del servizio Crawler",
-          "rule_base_url": "URL del servizio delle Regole",
-          "public_company_base_url": "URL del registro delle PA",
-          "result_aggregator_base_url": "URL del servizio dei dati Aggregati",
+          "url_service": "URL dei Servizi",
+          "result_base_url": "Risultati",
+          "task_scheduler_base_url": "Task Scheduler",
+          "crawler_uri": "Crawler",
+          "rule_base_url": "Motore delle Regole",
+          "public_company_base_url": "Indice delle PA",
+          "result_aggregator_base_url": "Aggregati",
           "force_jsoup":"Forza l'utilizzo di JSOUP"
         }
       },
@@ -131,6 +143,7 @@
       "navigation-path": "Percorso di navigazione",
       "map-result": "Mappa dei Risultati",
       "configuration": "Configurazione",
+      "service-info": "Info sui Servizi",
       "confirm": "Conferma",
       "start-now": "Avvia Ora",
       "grafici-mappe": {

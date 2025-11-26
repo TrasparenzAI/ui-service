@@ -58,6 +58,7 @@ import { NoteLegaliComponent } from './note-legali/note-legali.component';
 import { PrivacyPolicyComponent } from './privacy-policy/privacy-policy.component';
 import { ResultRuleListComponent } from './result/result-rule-list.component';
 import { ResultPieRuleComponent } from './result/result-pie-rule.component';
+import { ServiceInfoComponent } from './info/service-info.component';
 /**
  * Nel core module inserisco tutti i components necessari all'avvio dell'applicazione.
  * Esempio Pagina Iniziale ed Header.
@@ -83,6 +84,7 @@ import { ResultPieRuleComponent } from './result/result-pie-rule.component';
         CreditsComponent,
         RuleSelectComponent,
         MainConfigurationComponent,
+        ServiceInfoComponent,
         NoteLegaliComponent,
         PrivacyPolicyComponent,
         ResultRuleListComponent
@@ -130,6 +132,7 @@ import { ResultPieRuleComponent } from './result/result-pie-rule.component';
         WorkflowCardComponent,
         RuleSelectComponent,
         MainConfigurationComponent,
+        ServiceInfoComponent,
         DesignAngularKitModule,
         ResultRuleListComponent
     ],
