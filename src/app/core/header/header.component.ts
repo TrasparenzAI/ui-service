@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, HostListener, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ApiMessage, ApiMessageService, MessageType} from '../api-message.service';
 import { TranslateService, LangChangeEvent} from '@ngx-translate/core';

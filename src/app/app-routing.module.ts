@@ -19,6 +19,7 @@ import { AuthRedirectGuard } from './auth-redirect.guard';
 import { ResultRuleListComponent } from './core/result/result-rule-list.component';
 import { ResultPieRuleComponent } from './core/result/result-pie-rule.component';
 import { ServiceInfoComponent } from './core/info/service-info.component';
+import { ChatComponent } from './core/ai/chat.component';
 
 const appRoutes: Routes = [
   {path: '', canActivateChild:(environment.oidc.enable && environment.oidc.force)?[AutoLoginAllRoutesGuard]:[], children: [
@@ -34,6 +35,7 @@ const appRoutes: Routes = [
     { path: 'credits', component: CreditsComponent },
     { path: 'configuration', component: MainConfigurationComponent, canActivate: [AuthGuard], data: {role: RoleEnum.ADMIN}},
     { path: 'service-info', component: ServiceInfoComponent, canActivate: [AuthGuard], data: {role: RoleEnum.ADMIN}},
+    { path: 'chat-ai', component: ChatComponent, canActivate: [AuthGuard], data: {role: RoleEnum.ADMIN}},    
   ]},
   { path: 'privacy-policy', component: PrivacyPolicyComponent },
   { path: 'note-legali', component: NoteLegaliComponent },
