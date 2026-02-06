@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../environments/environment';
 import { MatomoRouteTrackerService } from './shared/service/matomo.service';
+import { filter } from 'rxjs';
 
 @Component({
     selector: 'app-root',
@@ -35,9 +36,18 @@ export class AppComponent implements OnInit {
       });
     });
     if (environment.oidc.enable) {
-      this.oidcSecurityService.isAuthenticated$.subscribe(
-        (auth) => (this.isAuthenticated = auth.isAuthenticated)
-      );
+      // Alternativa: ascolta solo quando l'utente è autenticato
+      this.oidcSecurityService.isAuthenticated$
+        .pipe(filter(({ isAuthenticated }) => isAuthenticated))
+        .subscribe(() => {
+          this.isAuthenticated = true;
+          this.oidcSecurityService.getUserData().subscribe(userData => {
+            const userId = userData?.email || userData?.preferred_username || userData?.sub;            
+            if (userId) {
+              this.matomoRouteTracker.setUserId(userId);
+            }
+          });
+        });
     }
   }
 
