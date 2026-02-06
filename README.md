@@ -51,6 +51,9 @@ Integra e mostra i dati presenti nei vari servizi fornendo la possibilità, aven
 | OIDC_REDIRECTURL           | http://localhost/auth/signin       | URL necessiaria per il redirect dopo l'accesso                                                         |
 | OIDC_CLIENTID              | angular-public                     | Identificativo del client da usare, va impostato sul sistema di autenticazione                         |
 | OIDC_POSTLOGOUTREDIRECTURL |                                    | URL da utilizzare dopo aver effettuato il logout può essere anche vuoto                                |
+| MATOMO_ENABLE              | false                              | Parametro che indica se è attivo il tracciamento delle pagine con Matomo                               |
+| MATOMO_TRAKER_URL          |                                    | URL del servizio ad esempio [Matomo](https://dica33.ba.cnr.it/matomo/matomo.php)                       |
+| MATOMO_SITE_ID             |                                    | Identificatvo del sito da usare.                                                                       |
 
 ## Autorizzazioni
 

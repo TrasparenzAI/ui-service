@@ -17,5 +17,10 @@ export const environment = {
     redirectUrl: window["env"]["oidc.redirectUrl"],
     clientId: window["env"]["oidc.clientId"],
     postLogoutRedirectUri: window["env"]["oidc.postLogoutRedirectUri"] || window.location.origin
+  },
+  matomo: {
+    enabled: window["env"]["matomo.enable"] || false,
+    trackerUrl: window["env"]["matomo.trackerUrl"],
+    siteId: window["env"]["matomo.siteId"]
   }
 };

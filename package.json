@@ -35,6 +35,8 @@
     "@bluehalo/ngx-leaflet-markercluster": "^18.0.1",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@ng-select/ng-select": "20.3.0",
+    "@ngx-matomo/router": "^4.1.2",
+    "@ngx-matomo/tracker": "^4.1.2",
     "@ngx-translate/core": "^16.0.4",
     "@ngx-translate/http-loader": "^16.0.1",
     "@rxweb/reactive-form-validators": "^2.1.8",
@@ -103,6 +105,10 @@
       "@angular/core": "^20.1.4"
     },
     "@bluehalo/ngx-leaflet-markercluster": {
+      "@angular/common": "^20.1.4",
+      "@angular/core": "^20.1.4"
+    },
+    "@ngx-matomo/router": {
       "@angular/common": "^20.1.4",
       "@angular/core": "^20.1.4"
     }

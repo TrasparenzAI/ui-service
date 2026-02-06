@@ -19,4 +19,9 @@
     window["env"]["oidc.redirectUrl"] = "${OIDC_REDIRECTURL}";
     window["env"]["oidc.clientId"] = "${OIDC_CLIENTID}";
     window["env"]["oidc.postLogoutRedirectUri"] = "${OIDC_POSTLOGOUTREDIRECTURL}";
+
+    window["env"]["matomo.enable"] = ${MATOMO_ENABLE};
+    window["env"]["matomo.trackerUrl"] = "${MATOMO_TRAKER_URL}";
+    window["env"]["matomo.siteId"] = "${MATOMO_SITE_ID}";
+
 })(this);

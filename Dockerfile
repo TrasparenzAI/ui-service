@@ -8,7 +8,7 @@ COPY package.json package-lock.json ./
 RUN npm set progress=false && npm config set depth 0 && npm cache clean --force
 
 ## Storing node modules on a separate layer will prevent unnecessary npm installs at each build
-RUN npm i && mkdir /ng-app && cp -R ./node_modules ./ng-app
+RUN npm i --legacy-peer-deps && mkdir /ng-app && cp -R ./node_modules ./ng-app
 
 WORKDIR /ng-app
 
@@ -47,6 +47,10 @@ ENV OIDC_AUTHORITY=
 ENV OIDC_REDIRECTURL=http://localhost/auth/signin
 ENV OIDC_CLIENTID=angular-public
 ENV OIDC_POSTLOGOUTREDIRECTURL=
+
+ENV MATOMO_ENABLE=false
+ENV MATOMO_TRAKER_URL=
+ENV MATOMO_SITE_ID=
 
 # When the container starts, replace the env.js with values from environment variables
 CMD ["/bin/sh",  "-c",  "sed -i -e 's;<base href=\"/\">;<base href=\"'$BASE_HREF'\">;' /usr/share/nginx/html/index.html && envsubst < /usr/share/nginx/html/assets/env.template.js > /usr/share/nginx/html/assets/env.js && exec nginx -g 'daemon off;'"]

@@ -26,6 +26,7 @@ import localeIt from '@angular/common/locales/it';
 
 import { APP_INITIALIZER } from '@angular/core';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
+import { NgxMatomoTrackerModule } from '@ngx-matomo/tracker';
 
 export function appInitializerFactory(oidcSecurityService: OidcSecurityService) {
   return () => oidcSecurityService.checkAuth().toPromise();
@@ -34,7 +35,9 @@ export function appInitializerFactory(oidcSecurityService: OidcSecurityService) 
 @NgModule({ declarations: [
         AppComponent
     ],
-    bootstrap: [AppComponent], imports: [BrowserModule,
+    bootstrap: [AppComponent], 
+    imports: [      
+        BrowserModule,
         BrowserAnimationsModule,
         AuthModule.forRoot({
             config: {
@@ -64,7 +67,12 @@ export function appInitializerFactory(oidcSecurityService: OidcSecurityService) 
         }),
         AppRoutingModule, // Routing
         CoreModule, // Componenti moduli e servizi non Lazy
-        AppRoutingEndModule
+        AppRoutingEndModule,
+        NgxMatomoTrackerModule.forRoot({
+          disabled: environment.matomo.enabled,
+          trackerUrl: environment.matomo.trackerUrl,
+          siteId: environment.matomo.siteId,
+        })
       ], 
       providers: [
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },

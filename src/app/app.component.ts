@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Location, PopStateEvent } from '@angular/common';
 import { TranslateService } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../environments/environment';
+import { MatomoRouteTrackerService } from './shared/service/matomo.service';
 
 @Component({
     selector: 'app-root',
@@ -15,6 +16,7 @@ import { environment } from '../environments/environment';
 export class AppComponent implements OnInit {
 
   private lastPoppedUrl: string;
+  private matomoRouteTracker = inject(MatomoRouteTrackerService);
   isAuthenticated = false;
 
   constructor(private router: Router,
@@ -40,6 +42,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.matomoRouteTracker.init();
     this.location.subscribe((ev: PopStateEvent) => {
       this.lastPoppedUrl = ev.url;
     });    
