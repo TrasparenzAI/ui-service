@@ -20,8 +20,8 @@
     window["env"]["oidc.clientId"] = "angular-public";
     window["env"]["oidc.postLogoutRedirectUri"] = "http://localhost:4200/#/";
 
-    window["env"]["matomo.enable"] = true;
-    window["env"]["matomo.trackerUrl"] = "https://dica33.ba.cnr.it/matomo/matomo.php";
-    window["env"]["matomo.siteId"] = "1";
+    window["env"]["matomo.enable"] = false;
+    window["env"]["matomo.trackerUrl"] = "";
+    window["env"]["matomo.siteId"] = "";
 
   })(this);

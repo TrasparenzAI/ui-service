@@ -12,7 +12,6 @@ import {ConfigService} from '../../core/config.service';
 import {ActivatedRoute} from '@angular/router';
 import {JsonConvert, ValueCheckingMode} from 'json2typescript';
 import { Base } from '../model/base.model';
-import { ErrorObservable } from 'rxjs-compat/observable/ErrorObservable';
 import { TranslateService } from '@ngx-translate/core';
 import get from "lodash/get";
 
@@ -596,7 +595,7 @@ export abstract class CommonService<T extends Base> {
 
         this.apiMessageService.onApiMessage.error('Immpossibile scaricare il file allegato');
 
-        return ErrorObservable.create(responseError);
+        return throwError(() => responseError);
       }),);
     })).subscribe( () => {});
   }
