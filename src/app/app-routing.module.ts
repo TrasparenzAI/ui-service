@@ -20,6 +20,7 @@ import { ResultRuleListComponent } from './core/result/result-rule-list.componen
 import { ResultPieRuleComponent } from './core/result/result-pie-rule.component';
 import { ServiceInfoComponent } from './core/info/service-info.component';
 import { ChatComponent } from './core/ai/chat.component';
+import { HistoryComponent } from './core/result/history.component';
 
 const appRoutes: Routes = [
   {path: '', canActivateChild:(environment.oidc.enable && environment.oidc.force)?[AutoLoginAllRoutesGuard]:[], children: [
@@ -33,6 +34,7 @@ const appRoutes: Routes = [
     { path: 'result-pie-rule', component: ResultPieRuleComponent },
     { path: 'result-rule', component: ResultRuleListComponent },
     { path: 'credits', component: CreditsComponent },
+    { path: 'history', component: HistoryComponent, canActivate: [AuthGuard], data: {role: [RoleEnum.ADMIN, RoleEnum.SUPERUSER]}},
     { path: 'configuration', component: MainConfigurationComponent, canActivate: [AuthGuard], data: {role: RoleEnum.ADMIN}},
     { path: 'service-info', component: ServiceInfoComponent, canActivate: [AuthGuard], data: {role: RoleEnum.ADMIN}},
     { path: 'chat-ai', component: ChatComponent, canActivate: [AuthGuard], data: {role: RoleEnum.ADMIN}},    

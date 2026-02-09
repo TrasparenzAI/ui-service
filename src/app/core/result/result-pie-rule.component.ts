@@ -11,7 +11,6 @@ import { DurationFormatPipe } from '../../shared/pipes/durationFormat.pipe';
 import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { RuleService } from '../rule/rule.service';
 import { ConfigurationService } from '../configuration/configuration.service';
 
 import * as am5 from '@amcharts/amcharts5';
@@ -56,13 +55,12 @@ export class ResultPieRuleComponent implements OnInit {
 
   constructor(
     protected httpClient: HttpClient,
+    private router: Router,
     private route: ActivatedRoute,
     private formBuilder: FormBuilder,
-    private ruleService: RuleService,
     private conductorService: ConductorService,
     private translateService: TranslateService,
     private responsive: BreakpointObserver,
-    private router: Router,
     private datepipe: DatePipe,
     private durationFormatPipe: DurationFormatPipe,
     private configurationService: ConfigurationService,
@@ -231,13 +229,13 @@ export class ResultPieRuleComponent implements OnInit {
       series.slices.template.events.on("click", function(ev) {
         var status = ev.target.dataItem.dataContext.extra.key;
         if (status) {
-          this.router.navigate(['/search'],  { queryParams: {
+          this.router?.navigate(['/search'],  { queryParams: {
             workflowId: this.filterFormSearch.value.workflowId,
             ruleName: Rule.AMMINISTRAZIONE_TRASPARENTE,
             status: status 
           }});
         } else {
-          this.router.navigate(['/result-rule'],  { queryParams: {
+          this.router?.navigate(['/result-rule'],  { queryParams: {
             workflowId: this.filterFormSearch.value.workflowId,
             min: ev.target.dataItem.dataContext.extra.min,
             max: ev.target.dataItem.dataContext.extra.max

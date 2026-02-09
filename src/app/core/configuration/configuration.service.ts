@@ -28,6 +28,7 @@ export class ConfigurationService extends CommonService<Configuration> {
   public static readonly SLICE = `slice`;
 
   private cachedStatusColor: any;
+  private cachedSliceColor: any;
   private cachedMenuLink: any;
 
   public constructor(protected httpClient: HttpClient,
@@ -90,6 +91,22 @@ export class ConfigurationService extends CommonService<Configuration> {
             return this.cachedStatusColor;
           }
           return StatusColor;
+        })
+    );
+  }
+
+  public getSliceColor(): Observable<any> {
+    if (this.cachedSliceColor) {
+      return observableOf(this.cachedSliceColor);
+    }
+    return this.getAll().pipe(
+        map((configurations: Configuration[]) => {
+          let colors = configurations.filter((conf: Configuration) => conf.key === ConfigurationService.SLICE);
+          if (colors && colors.length === 1) {
+            this.cachedSliceColor = JSON.parse(colors[0].value);
+            return this.cachedSliceColor;
+          }
+          return {};
         })
     );
   }

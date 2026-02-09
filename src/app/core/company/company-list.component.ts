@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, Input, AfterViewInit, ViewChild, AfterContentInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, Input, ViewChild } from '@angular/core';
 import { CommonListComponent } from '../../common/controller/common-list.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormGroup } from '@angular/forms';

@@ -22,6 +22,7 @@ import { CompanyListComponent} from './company/company-list.component';
 import { CompanySearchComponent} from './company/company-search.component';
 import { CompanyMapComponent} from './company/company-map.component';
 import { CompanyGraphComponent} from './company/company-graph.component';
+import { CompanyRuleComponent} from './company/company-rule.component';
 import { CompanyService } from './company/company.service';
 
 import { ConductorService } from './conductor/conductor.service';
@@ -30,6 +31,7 @@ import { WorkflowCardComponent } from './conductor/workflow.component';
 import { ResultService } from './result/result.service';
 import { ResultListComponent } from './result/result-list.component';
 import { ResultPieComponent } from './result/result-pie.component';
+import { HistoryComponent } from './result/history.component';
 
 import { ResultAggregatorService } from './result-aggregator/result-aggregator.service';
 
@@ -79,9 +81,11 @@ import { ChatModule } from './ai/chat.module';
         CompanySearchComponent,
         CompanyMapComponent,
         CompanyGraphComponent,
+        CompanyRuleComponent,
         ResultListComponent,
         ResultPieComponent,
         ResultPieRuleComponent,
+        HistoryComponent,
         WorkflowCardComponent,
         CreditsComponent,
         RuleSelectComponent,
@@ -129,9 +133,11 @@ import { ChatModule } from './ai/chat.module';
         ResultListComponent,
         ResultPieComponent,
         ResultPieRuleComponent,
+        HistoryComponent,
         CompanySearchComponent,
         CompanyMapComponent,
         CompanyGraphComponent,
+        CompanyRuleComponent,
         WorkflowCardComponent,
         RuleSelectComponent,
         MainConfigurationComponent,

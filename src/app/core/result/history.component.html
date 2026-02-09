@@ -1,0 +1,23 @@
+<div class="container">
+    <div class="card shadow mt-2">
+        @if (company) {
+            <div class="card-header text-monospace text-center text-primary-dark bg-light">
+                <h2>{{ 'it.company.history-description' | translate: {denominazioneEnte: company?.denominazioneEnte } }}</h2>            
+            </div>
+        }
+        <div class="d-flex justify-content-center">
+            <div #chartdiv class="w-100 font-weight-bold text-monospace text-center text-primary-dark" style="height:50vh !important">
+                @if (loadingChart()) {
+                    <div class="h-100">
+                        <div class="d-flex justify-content-center">
+                            <div class="loading cursor-wait position-relative"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+@if (filterFormSearch) {
+  <result-list [filterForm] = "filterFormSearch" showGaugeBands="true"></result-list>
+}

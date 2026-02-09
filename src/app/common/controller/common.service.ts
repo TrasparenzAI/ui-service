@@ -215,7 +215,7 @@ export abstract class CommonService<T extends Base> {
    * @param {number} id
    * @returns {Observable<T>}
    */
-  public getById(id: string, filter?: {}, redirectOnError?: boolean): Observable<T> {
+  public getById(id: string, filter?: {}, redirectOnError?: boolean, showMessage: boolean = true): Observable<T> {
     let params = new HttpParams();
     params = this.appendToImmutableHttpParams(filter, params);
     if (!id) {
@@ -240,7 +240,7 @@ export abstract class CommonService<T extends Base> {
               }),
               catchError( (httpErrorResponse: HttpErrorResponse) => {
                 const springError = new SpringError(httpErrorResponse, this.translateService, redirectOnError);
-                this.apiMessageService.sendMessage(MessageType.ERROR, springError.getRestErrorMessage());
+                if (showMessage) this.apiMessageService.sendMessage(MessageType.ERROR, springError.getRestErrorMessage());                
                 return throwError(() => springError);
               })
             );

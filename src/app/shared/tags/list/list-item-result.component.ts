@@ -22,7 +22,7 @@ import { HttpClient } from '@angular/common/http';
                 <it-icon name="chart-line" color="primary"></it-icon>it.rule.title
               </button>
               @if (!codiceIpa) {
-                <button itButton="outline-warning" size="xs" class="my-1" translate routerLink="/search" [queryParams]="{workflowId: '',status: '',ruleName: item.ruleName, codiceIpa: item?.company?.codiceIpa, sort: 'createdAt,desc'}">
+                <button itButton="outline-warning" size="xs" class="my-1" translate routerLink="/history" [queryParams]="{codiceIpa: item?.company?.codiceIpa, sort: 'createdAt,desc'}">
                   <it-icon name="chart-line" color="warning"></it-icon>it.company.history
                 </button>
               }

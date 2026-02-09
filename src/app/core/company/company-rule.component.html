@@ -1,0 +1,11 @@
+<div class="bg-light chart-container shadow">
+  <div class="d-flex bg-dark text-white h3 mb-2 justify-content-center">
+    <span translate>it.rule.satisfy</span>
+  </div>
+  <div #chartdiv [style]="chartDivStyle"></div>
+  <div class="d-flex text-dark h6 justify-content-center px-2">
+    @if (data?.length) {
+      <span class="font-monospace">{{ 'it.rule.all' | translate: {rulesOK: rulesOK, all: data?.length, percent: rulesOK * 100/data?.length | number:'1.2-2' } }}</span>
+    }
+  </div>
+</div>

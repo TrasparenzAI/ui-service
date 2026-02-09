@@ -24,11 +24,6 @@ import { Rule, RuleChart, Term } from '../rule/rule.model';
 import { RuleService } from '../rule/rule.service';
 import { Company } from './company.model';
 import { CompanyService } from './company.service';
-
-import * as am5 from '@amcharts/amcharts5';
-import * as am5radar from "@amcharts/amcharts5/radar";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import * as am5xy from "@amcharts/amcharts5/xy";
 import * as _ from "lodash";
 
 @Component({
@@ -107,10 +102,6 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
   optionsRule: Array<SelectControlOption> = [];
   rulesFailed: Array<RuleChart> = [];
 
-  chartDivStyle: string = 'height:30vh !important';
-  @ViewChild('chartdiv', {static: true}) chartdiv: ElementRef;
-  root;
-  chartGauge;
 
   @ViewChild("editModal") editModal: ItModalComponent;
   @ViewChild("newModal") newModal: ItModalComponent;
@@ -122,6 +113,10 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
   authenticated = false;
   isAdmin: boolean;
   userData: any;
+
+  protected childRuleName: string;
+  protected childResults: Result[];
+  protected childRules: Map<String, Rule>;
 
   constructor(private formBuilder: FormBuilder,
               private route: ActivatedRoute,
@@ -237,7 +232,6 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
           this.manageChart();
         }
       } else {
-        this.chartDivStyle = 'height:0px !important';
         this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
           configurations.forEach((conf: Configuration) => {
             if (conf.key === ConfigurationService.JSONRULES_KEY) {
@@ -264,6 +258,10 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
         });    
       }
     });
+  }
+
+  get companyRuleWorkflowId() {
+    return this.filterFormSearch?.controls?.workflowId?.value;
   }
 
   workflowRuleName(workflowId: string): Observable<string> {
@@ -325,18 +323,21 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
         size: 500,
         noCache: true
       }, this.userData ? "/codiceipa/byWorkflow" : "/codiceipa").subscribe((results: Result[]) => {
-        console.log("results:"+results.length);
         if (results.length === 0) {
           this.apiMessageService.sendMessage(MessageType.WARNING, `Risultati non presenti per la PA: ${this.company.denominazioneEnte}!`);
         }
+        this.childRuleName = ruleName;
+        this.childResults = results;
+
         this.rulesOK = results.filter(result => result.status == 200 || result.status == 202).length;
         this.rulesFailed = [];
         this.optionsRuleDetail = [];
         this.ruleService.getRules().subscribe((rules: Map<String, Rule>) => {
+          this.childRules = rules;
+
           let rule = rules.get(ruleName);
           this.data = rule.getCharts(undefined, ruleName, []);
           this.rating = Math.trunc((this.rulesOK * 100 / this.data.length) / 20);
-          this.loadChart();
           this.data.forEach((ruleChart: RuleChart) => {
             this.optionsRuleDetail.push(ruleChart);
             let nodeId = (ruleName == ruleChart.nodeId) ? Rule.AMMINISTRAZIONE_TRASPARENTE : ruleChart.nodeId;
@@ -395,140 +396,8 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
     });  
   }
 
-
   public getDynamicColor(key) {
     return this.statusColor[`status_${key}`] + `!important`; 
-  }
-
-  loadChart() {
-    if(this.chartdiv?.nativeElement && !this.root) {
-      this.root = am5.Root.new(this.chartdiv?.nativeElement);
-    }
-    this.root.setThemes([
-      am5themes_Animated.new(this.root)
-    ]);
-    this.root.container.children.clear();
-    this.root.container.set("layout", this.root.verticalLayout);
-    
-    this.chartGauge = this.root.container.children.push(am5radar.RadarChart.new(this.root, {
-      startAngle: 160,
-      endAngle: 380
-    }));
-    let axisRenderer = am5radar.AxisRendererCircular.new(this.root, {
-      innerRadius: -40,
-      minGridDistance: 50
-    });    
-    axisRenderer.grid.template.setAll({
-      stroke: this.root.interfaceColors.get("background"),
-      visible: true,
-      strokeOpacity: 0.8
-    });
-    axisRenderer.ticks.template.setAll({
-      visible: true,
-      strokeOpacity: 1,
-    });
-
-    axisRenderer.labels.template.setAll({
-      fontSize: 15,
-      visible: true
-    });
-
-    let xAxis = this.chartGauge.xAxes.push(am5xy.ValueAxis.new(this.root, {
-      maxDeviation: 0,
-      min: 0,
-      max: this.data?.length,
-      strictMinMax: true,
-      renderer: axisRenderer
-    }));    
-    // Add clock hand
-    // https://www.amcharts.com/docs/v5/charts/radar-chart/gauge-charts/#Clock_hands
-    let axisDataItem = xAxis.makeDataItem({});
-
-    let clockHand = am5radar.ClockHand.new(this.root, {
-      pinRadius: am5.percent(20),
-      radius: am5.percent(100),
-      bottomWidth: 40
-    })
-
-    let bullet = axisDataItem.set("bullet", am5xy.AxisBullet.new(this.root, {
-      sprite: clockHand
-    }));
-
-    xAxis.createAxisRange(axisDataItem);
-
-    let label = this.chartGauge.radarContainer.children.push(am5.Label.new(this.root, {
-      fill: am5.color(0xffffff),
-      centerX: am5.percent(50),
-      textAlign: "center",
-      centerY: am5.percent(50),
-      fontSize: "1.5em"
-    }));
-    
-    axisDataItem.set("value", this.rulesOK);
-    bullet.get("sprite").on("rotation", function () {
-      let value = axisDataItem.get("value");
-      let text = Math.round(axisDataItem.get("value")).toString();
-      let fill = am5.color(0x000000);
-      xAxis.axisRanges.each(function (axisRange) {
-        if (value >= axisRange.get("value") && value <= axisRange.get("endValue")) {
-          fill = axisRange.get("axisFill").get("fill");
-        }
-      })
-
-      label.set("text", Math.round(value).toString());
-
-      clockHand.pin.animate({ key: "fill", to: fill, duration: 500, easing: am5.ease.out(am5.ease.cubic) })
-      clockHand.hand.animate({ key: "fill", to: fill, duration: 500, easing: am5.ease.out(am5.ease.cubic) })
-    });
-    this.chartGauge.bulletsContainer.set("mask", undefined);
-    // Create axis ranges bands
-    // https://www.amcharts.com/docs/v5/charts/radar-chart/gauge-charts/#Bands
-    let bandsData = [{
-      color: "#ee1f25",
-      lowScore: 0,
-      highScore: this.data?.length / 6.3
-    }, {
-      color: "#f04922",
-      lowScore: this.data?.length / 6.3,
-      highScore: this.data?.length / (6.3 / 2)
-    }, {
-      color: "#fdae19",
-      lowScore: this.data?.length / (6.3 / 2),
-      highScore: this.data?.length / (6.3 / 3)
-    }, {
-      color: "#b0d136",
-      lowScore: this.data?.length / (6.3 / 3),
-      highScore: this.data?.length / (6.3 / 4)
-    }, {
-      color: "#54b947",
-      lowScore: this.data?.length / (6.3 / 4),
-      highScore: this.data?.length / (6.3 / 5)
-    }, {
-      color: "#0f9747",
-      lowScore: this.data?.length / (6.3 / 5),
-      highScore: this.data?.length
-    }];
-
-    am5.array.each(bandsData, function (data) {
-      let axisRange = xAxis.createAxisRange(xAxis.makeDataItem({}));
-
-      axisRange.setAll({
-        value: data.lowScore,
-        endValue: data.highScore
-      });
-
-      axisRange.get("axisFill").setAll({
-        visible: true,
-        fill: am5.color(data.color),
-        fillOpacity: 0.8
-      });
-
-    });
-
-
-    // Make stuff animate on load
-    this.chartGauge.appear(1000, 100);
-    
   }
 
   getWorkflow(queryParams: Params): Observable<string> {

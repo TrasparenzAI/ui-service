@@ -79,21 +79,13 @@
       <div #chartContainer id="chartContainer" class="bg-secondary"></div>
     </div>
     <div class="col-lg-3 px-md-1">
-      <div class="bg-light">
-        @if (company) {
-          <div class="d-flex bg-dark text-white h3 mb-2 justify-content-center">
-            <span translate>it.rule.satisfy</span>
-          </div>
-        }
-        <div #chartdiv [style]="chartDivStyle"></div>
-        @if (company) {
-          <div class="d-flex text-dark h6 justify-content-center px-2">
-            @if (data?.length) {
-              <span class="font-monospace">{{ 'it.rule.all' | translate: {rulesOK: rulesOK, all: data?.length, percent: rulesOK * 100/data?.length | number:'1.2-2' } }}</span>
-            }
-          </div>
-        }
-      </div>
+      @if(company && childRuleName && childResults && childRules) {
+        <company-rule
+          [ruleName]="childRuleName" 
+          [results]="childResults"
+          [rules]="childRules">
+        </company-rule>
+      }
       @if (optionsRuleDetail && optionsRuleDetail.length > 0) {
         <div class="bg-white my-2 pt-3 shadow rounded border border-primary">
           <div class="row">
@@ -133,7 +125,7 @@
                 <div class="d-flex flex-row justify-content-around w-100">
                   @if (authenticated) {
                     <app-show-workflow-history [codiceIpa]="company.codiceIpa"></app-show-workflow-history>
-                    <a itButton="outline-warning" size="xs" class="mt-1" translate routerLink="/search" [queryParams]="{workflowId: '',codiceIpa: company.codiceIpa, sort: 'createdAt,desc'}">
+                    <a itButton="outline-warning" size="xs" class="mt-1" translate routerLink="/history" [queryParams]="{workflowId: '',codiceIpa: company.codiceIpa, sort: 'createdAt,desc'}">
                       <it-icon name="chart-line" color="warning"></it-icon>it.company.history
                     </a>
                   }

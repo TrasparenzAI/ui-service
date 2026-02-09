@@ -174,7 +174,8 @@
       "responsabile": "Responsabile",
       "map": "Mappa",      
       "search": "Cerca Amministrazioni",
-      "history": "Storico"
+      "history": "Storico",
+      "history-description": "Storico sezioni AT rilevate del {{denominazioneEnte}}"
     },
     "result": {
       "destinationUrl": "URL della Regola",
@@ -206,6 +207,7 @@
       },
       "name": "Nome della Regola",
       "status-label": "Stato",
+      "status-AT": "Presenza AT in Homepage",
       "term": "Termine ricercato",
       "alternativeTerm": "Termini alternativi",
       "legend": {

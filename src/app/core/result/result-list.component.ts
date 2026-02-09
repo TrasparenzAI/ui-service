@@ -9,6 +9,7 @@ import { Result } from './result.model';
 import { ResultService } from './result.service';
 import * as _ from "lodash";
 import { ConfigurationService } from '../configuration/configuration.service';
+import { Rule } from '../rule/rule.model';
 
 @Component({
     selector: 'result-list',
@@ -35,27 +36,38 @@ import { ConfigurationService } from '../configuration/configuration.service';
           @for (item of items; track item) {
             <div class="col-sm-12 px-md-2 pb-2" @scale [ngClass]="classForDisplayCard()">
               <app-list-item-result [item]="item" [codiceIpa]="codiceIpa" [filterForm]="filterForm">
-                <div class="callout callout-highlight" [style.color]="getColor(item.status)" [style.border-color]="getColor(item.status)">
-                  <div class="callout-title mb-1" [style.color]="getColor(item.status)">
-                    <svg class="icon" [style.fill]="getColor(item.status)"><use href="/bootstrap-italia/dist/svg/sprites.svg#it-pa"></use></svg>{{item.company.denominazioneEnte}}
+                <div [ngClass]="{'row': showGaugeBands}">
+                  <div [ngClass]="{'col-md-6': showGaugeBands}" class="callout callout-highlight" [style.color]="getColor(item.status)" [style.border-color]="getColor(item.status)">
+                    <div class="callout-title mb-1" [style.color]="getColor(item.status)">
+                      <svg class="icon" [style.fill]="getColor(item.status)"><use href="/bootstrap-italia/dist/svg/sprites.svg#it-pa"></use></svg>{{item.company.denominazioneEnte}}
+                    </div>
+                    <div class="col-sm-12">
+                      <app-show-text [label]="'it.company.codiceIpa'" [value]="item.company.codiceIpa"></app-show-text>
+                      <app-show-text class="pull-right" [label]="'it.company.acronimo'" [value]="item.company.acronimo"></app-show-text>
+                    </div>
+                    <div class="col-sm-12">
+                      <app-show-text [label]="'it.company.codiceFiscaleEnte'" [value]="item.company.codiceFiscaleEnte"></app-show-text>
+                    </div>
+                    <div class="col-sm-12">
+                      <app-show-text [label]="'it.company.codiceCategoria'" [value]="item.company.codiceCategoria"></app-show-text>
+                      <app-show-text class="pull-right" [label]="'it.company.codiceNatura'" [value]="item.company.codiceNatura"></app-show-text>
+                    </div>
+                    <div class="col-sm-12">
+                      <app-show-text [label]="'it.company.tipologia'" [value]="item.company.tipologia"></app-show-text>
+                    </div>
+                    <div class="col-sm-12">
+                      <app-show-url [fill]="getColor(item.status)" [label]="'it.company.sitoIstituzionale'" [value]="item.company.sitoIstituzionale"></app-show-url>
+                    </div>
                   </div>
-                  <div class="col-sm-12">
-                    <app-show-text [label]="'it.company.codiceIpa'" [value]="item.company.codiceIpa"></app-show-text>
-                    <app-show-text class="pull-right" [label]="'it.company.acronimo'" [value]="item.company.acronimo"></app-show-text>
-                  </div>
-                  <div class="col-sm-12">
-                    <app-show-text [label]="'it.company.codiceFiscaleEnte'" [value]="item.company.codiceFiscaleEnte"></app-show-text>
-                  </div>
-                  <div class="col-sm-12">
-                    <app-show-text [label]="'it.company.codiceCategoria'" [value]="item.company.codiceCategoria"></app-show-text>
-                    <app-show-text class="pull-right" [label]="'it.company.codiceNatura'" [value]="item.company.codiceNatura"></app-show-text>
-                  </div>
-                  <div class="col-sm-12">
-                    <app-show-text [label]="'it.company.tipologia'" [value]="item.company.tipologia"></app-show-text>
-                  </div>
-                  <div class="col-sm-12">
-                    <app-show-url [fill]="getColor(item.status)" [label]="'it.company.sitoIstituzionale'" [value]="item.company.sitoIstituzionale"></app-show-url>
-                  </div>
+                  @if(showGaugeBands) {
+                    <div class="col-md-6">
+                      <company-rule
+                        [isAuthenticated]="true" 
+                        [company]="item.company"
+                        [workflowId]="item.workflowId">
+                      </company-rule>
+                    </div>
+                  }
                 </div>
                 <div class="col-sm-12">
                   @if (item.errorMessage) {
@@ -69,7 +81,7 @@ import { ConfigurationService } from '../configuration/configuration.service';
                     </app-show-text-popover>
                   }
                   @if (!item.errorMessage) {
-                    <app-show-text [label]="'it.rule.status-label'" [value]="'it.rule.status.' + item.status + '.ruletitle'| translate"></app-show-text>
+                    <app-show-text [label]="statusLabel(item)" [value]="'it.rule.status.' + item.status + '.ruletitle'| translate"></app-show-text>
                   }
                 </div>
                 <div class="col-sm-12">
@@ -117,6 +129,8 @@ export class ResultListComponent extends CommonListComponent<Result> implements 
   @Input() showPageOnTop: boolean = false;
   @Input() showPage: boolean = false;
   @Input() infiniteScroll: boolean = true;
+  @Input() showGaugeBands: boolean = false;
+
   protected statusColor: any;
 
   pageOffset = ResultService.PAGE_OFFSET;
@@ -149,11 +163,18 @@ export class ResultListComponent extends CommonListComponent<Result> implements 
     return this.filterForm;
   }
 
-  public classForDisplayCard() {    
-    return {
-      'col-md-12': this.count <= 1,
-      'col-lg-4': this.count > 1
-    };
+  public classForDisplayCard() {
+    if (this.showGaugeBands) {
+      return {
+        'col-md-12': this.count <= 1,
+        'col-lg-6': this.count > 1
+      };
+    } else {
+      return {
+        'col-md-12': this.count <= 1,
+        'col-lg-4': this.count > 1
+      };
+    }   
   }
 
   onScroll() {
@@ -170,7 +191,7 @@ export class ResultListComponent extends CommonListComponent<Result> implements 
 
   public filterFormValue() {
     if (this.filterForm) {
-      if (this.filterForm.controls.child.value) {
+      if (this.filterForm?.controls?.child?.value) {
         let filter = _.cloneDeep(this.filterForm.value);
         filter.ruleName = `${filter.ruleName}/child`;
         return filter;
@@ -184,5 +205,10 @@ export class ResultListComponent extends CommonListComponent<Result> implements 
     if (this.statusColor) {
       return this.statusColor[`status_${key}`] + `!important`;      
     }
+  }
+
+  statusLabel(item: Result) {
+    if (item.ruleName === Rule.AMMINISTRAZIONE_TRASPARENTE) return 'it.rule.status-AT';
+    return 'it.rule.status-label';
   }
 }
