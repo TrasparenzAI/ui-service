@@ -59,7 +59,7 @@ export class MatomoRouteTrackerService {
       )
       .subscribe((event: NavigationEnd) => {
         // Usa l'URL completo dal browser che include automaticamente il fragment
-        const fullUrl = `/#${event.urlAfterRedirects}`;      
+        const fullUrl = event.urlAfterRedirects;
         // Traccia ogni cambio di pagina
         this._paq.push(['setCustomUrl', fullUrl]);
         this._paq.push(['setDocumentTitle', this.document.title]);
