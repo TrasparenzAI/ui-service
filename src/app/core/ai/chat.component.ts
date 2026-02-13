@@ -17,6 +17,7 @@ import 'deep-chat';
         <div class="col-md-11">
           <deep-chat
               #chat
+              avatars="true"
               [request]="requestConfig"
               [stream]="streamConfig"
               textInput='{"placeholder":{"text": "Benvenuto nella chat di TrasparenzAI ... come posso aiutarti oggi?"}}'

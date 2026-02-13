@@ -52,7 +52,6 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.matomoRouteTracker.init();
     this.location.subscribe((ev: PopStateEvent) => {
       this.lastPoppedUrl = ev.url;
     });    

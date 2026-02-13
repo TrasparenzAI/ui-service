@@ -26,6 +26,7 @@ import localeIt from '@angular/common/locales/it';
 
 import { APP_INITIALIZER } from '@angular/core';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
+import { MatomoRouteTrackerService } from './shared/service/matomo.service';
 
 export function appInitializerFactory(oidcSecurityService: OidcSecurityService) {
   return () => oidcSecurityService.checkAuth().toPromise();
@@ -79,6 +80,14 @@ export function appInitializerFactory(oidcSecurityService: OidcSecurityService) 
           deps: [OidcSecurityService],
           multi: true
         },
+        {
+          provide: APP_INITIALIZER,
+          useFactory: (matomoService: MatomoRouteTrackerService) => () => {
+            matomoService.init();
+          },
+          deps: [MatomoRouteTrackerService],
+          multi: true
+        },        
         provideHttpClient(withInterceptorsFromDi())
       ] 
     })
