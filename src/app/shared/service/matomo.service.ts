@@ -1,55 +1,31 @@
 import { Injectable, inject } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { DOCUMENT } from '@angular/common';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { filter } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-
-declare global {
-  interface Window {
-    _paq: any[];
-  }
-}
 
 @Injectable({
   providedIn: 'root'
 })
 export class MatomoRouteTrackerService {
   private router = inject(Router);
-  private document = inject(DOCUMENT);
-  private _paq: any[] = [];
-  private initialized = false;
+  private http = inject(HttpClient);
 
   init() {
-    if (!environment.matomo.enabled || this.initialized) return;
+    if (!environment.matomo.enabled) {
+      console.log('Matomo disabled');
+      return;
+    }
 
-    // Inizializza _paq
-    this.document.defaultView!._paq = this.document.defaultView!._paq || [];
-    this._paq = this.document.defaultView!._paq;
+    console.log('Matomo init - Self-hosted mode');
+    console.log('Tracker URL:', environment.matomo.trackerUrl);
+    console.log('Site ID:', environment.matomo.siteId);
 
-    // Configurazione Matomo
-    this._paq.push(['enableLinkTracking']);
-    this._paq.push(['setTrackerUrl', environment.matomo.trackerUrl]);
-    this._paq.push(['setSiteId', environment.matomo.siteId]);
-    
-    // Prima pageview
-    this._paq.push(['trackPageView']);
+    // Traccia pagina iniziale
+    this.trackPageView();
 
-    // Carica lo script
-    this.loadScript();
-
-    // Traccia le navigazioni successive
+    // Traccia navigazioni
     this.trackNavigations();
-    
-    this.initialized = true;
-  }
-
-  private loadScript() {
-    const script = this.document.createElement('script');
-    const matomoUrl = environment.matomo.trackerUrl.replace('/matomo.php', '/matomo.js');
-    script.src = matomoUrl;
-    script.async = true;
-    script.defer = true;
-    this.document.head.appendChild(script);
   }
 
   private trackNavigations() {
@@ -57,42 +33,88 @@ export class MatomoRouteTrackerService {
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd)
       )
-      .subscribe((event: NavigationEnd) => {
-        // Usa l'URL completo dal browser che include automaticamente il fragment
-        const fullUrl = event.urlAfterRedirects;
-        // Traccia ogni cambio di pagina
-        this._paq.push(['setCustomUrl', fullUrl]);
-        this._paq.push(['setDocumentTitle', this.document.title]);
-        this._paq.push(['trackPageView']);
-        
-        console.log('Matomo: Tracked page view ->', fullUrl);
+      .subscribe(() => {
+        setTimeout(() => this.trackPageView(), 100);
       });
   }
 
-  // Metodi helper
-  trackEvent(category: string, action: string, name?: string, value?: number) {
-    if (!environment.matomo.enabled) return;
-    
-    const params: any[] = ['trackEvent', category, action];
-    if (name) params.push(name);
-    if (value !== undefined) params.push(value);
-    
-    this._paq.push(params);
-    console.log('Matomo: Tracked event ->', params);
+  private trackPageView() {
+    const url = window.location.href;
+    const title = document.title;
+
+    console.log('Tracking page view:', url);
+
+    const params = new URLSearchParams({
+      idsite: environment.matomo.siteId.toString(),
+      rec: '1',
+      action_name: title,
+      url: url,
+      rand: Math.random().toString(36).substring(7),
+      apiv: '1',
+      send_image: '0'
+    });
+
+    const trackingUrl = `${environment.matomo.trackerUrl}?${params.toString()}`;
+
+    // Usa HttpClient per gestire meglio CORS
+    this.http.get(trackingUrl, { 
+      responseType: 'text',
+      headers: new HttpHeaders({
+        'Content-Type': 'application/x-www-form-urlencoded'
+      })
+    }).subscribe({
+      next: () => console.log('✓ Page tracked successfully'),
+      error: (error) => {
+        console.error('✗ Tracking failed:', error);
+        console.error('Check CORS configuration on Matomo server');
+      }
+    });
   }
 
-  trackSiteSearch(keyword: string, category?: string, resultsCount?: number) {
+  trackEvent(category: string, action: string, name?: string, value?: number) {
     if (!environment.matomo.enabled) return;
-    this._paq.push(['trackSiteSearch', keyword, category || false, resultsCount]);
+
+    const params = new URLSearchParams({
+      idsite: environment.matomo.siteId.toString(),
+      rec: '1',
+      e_c: category,
+      e_a: action,
+      ...(name && { e_n: name }),
+      ...(value !== undefined && { e_v: value.toString() }),
+      rand: Math.random().toString(36).substring(7),
+      apiv: '1'
+    });
+
+    const trackingUrl = `${environment.matomo.trackerUrl}?${params.toString()}`;
+
+    this.http.get(trackingUrl, { responseType: 'text' }).subscribe({
+      next: () => console.log('✓ Event tracked:', category, action),
+      error: (error) => console.error('✗ Event tracking failed:', error)
+    });
   }
 
   setUserId(userId: string) {
     if (!environment.matomo.enabled) return;
-    this._paq.push(['setUserId', userId]);
+    
+    const params = new URLSearchParams({
+      idsite: environment.matomo.siteId.toString(),
+      rec: '1',
+      uid: userId,
+      rand: Math.random().toString(36).substring(7),
+      apiv: '1'
+    });
+
+    const trackingUrl = `${environment.matomo.trackerUrl}?${params.toString()}`;
+
+    this.http.get(trackingUrl, { responseType: 'text' }).subscribe({
+      next: () => console.log('✓ User ID set:', userId),
+      error: (error) => console.error('✗ Set user ID failed:', error)
+    });
   }
 
   resetUserId() {
     if (!environment.matomo.enabled) return;
-    this._paq.push(['resetUserId']);
+    console.log('User ID reset');
+    // Per reset, basta non inviare più il parametro uid
   }
 }
