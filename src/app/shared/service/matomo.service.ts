@@ -10,6 +10,7 @@ import { environment } from '../../../environments/environment';
 export class MatomoRouteTrackerService {
   private router = inject(Router);
   private http = inject(HttpClient);
+  private userId: string;
 
   init() {
     if (!environment.matomo.enabled) {
@@ -48,6 +49,7 @@ export class MatomoRouteTrackerService {
       idsite: environment.matomo.siteId.toString(),
       rec: '1',
       action_name: title,
+      uid: this.userId,
       url: url,
       rand: Math.random().toString(36).substring(7),
       apiv: '1',
@@ -77,6 +79,7 @@ export class MatomoRouteTrackerService {
     const params = new URLSearchParams({
       idsite: environment.matomo.siteId.toString(),
       rec: '1',
+      uid: this.userId,
       e_c: category,
       e_a: action,
       ...(name && { e_n: name }),
@@ -95,26 +98,12 @@ export class MatomoRouteTrackerService {
 
   setUserId(userId: string) {
     if (!environment.matomo.enabled) return;
-    
-    const params = new URLSearchParams({
-      idsite: environment.matomo.siteId.toString(),
-      rec: '1',
-      uid: userId,
-      rand: Math.random().toString(36).substring(7),
-      apiv: '1'
-    });
-
-    const trackingUrl = `${environment.matomo.trackerUrl}?${params.toString()}`;
-
-    this.http.get(trackingUrl, { responseType: 'text' }).subscribe({
-      next: () => console.log('✓ User ID set:', userId),
-      error: (error) => console.error('✗ Set user ID failed:', error)
-    });
+    this.userId = userId;
   }
 
   resetUserId() {
     if (!environment.matomo.enabled) return;
     console.log('User ID reset');
-    // Per reset, basta non inviare più il parametro uid
+    this.userId = undefined;
   }
 }
