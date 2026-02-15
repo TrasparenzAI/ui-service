@@ -1,4 +1,4 @@
-import { ErrorHandler, NgModule } from '@angular/core';
+import { ErrorHandler, NgModule, provideAppInitializer, inject } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
@@ -24,13 +24,8 @@ import { ConfigService } from './core/config.service';
 
 import localeIt from '@angular/common/locales/it';
 
-import { APP_INITIALIZER } from '@angular/core';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { MatomoRouteTrackerService } from './shared/service/matomo.service';
-
-export function appInitializerFactory(oidcSecurityService: OidcSecurityService) {
-  return () => oidcSecurityService.checkAuth().toPromise();
-}
 
 @NgModule({ declarations: [
         AppComponent
@@ -74,20 +69,14 @@ export function appInitializerFactory(oidcSecurityService: OidcSecurityService) 
         { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true },
         { provide: APP_BASE_HREF, useValue: environment.baseHref },
         { provide: ErrorHandler, useClass: GlobalErrorHandler },
-        {
-          provide: APP_INITIALIZER,
-          useFactory: appInitializerFactory,
-          deps: [OidcSecurityService],
-          multi: true
-        },
-        {
-          provide: APP_INITIALIZER,
-          useFactory: (matomoService: MatomoRouteTrackerService) => () => {
-            matomoService.init();
-          },
-          deps: [MatomoRouteTrackerService],
-          multi: true
-        },        
+        provideAppInitializer(() => {
+          const oidcService = inject(OidcSecurityService);
+          return oidcService.checkAuth().toPromise();
+        }),
+        provideAppInitializer(() => {
+          const matomoService = inject(MatomoRouteTrackerService);
+          matomoService.init(); // NON ritornare la Promise - lascia che sia asincrono
+        }),
         provideHttpClient(withInterceptorsFromDi())
       ] 
     })

@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../environments/environment';
 import { MatomoRouteTrackerService } from './shared/service/matomo.service';
-import { filter } from 'rxjs';
+import { filter, take } from 'rxjs';
 
 @Component({
     selector: 'app-root',
@@ -38,7 +38,10 @@ export class AppComponent implements OnInit {
     if (environment.oidc.enable) {
       // Alternativa: ascolta solo quando l'utente è autenticato
       this.oidcSecurityService.isAuthenticated$
-        .pipe(filter(({ isAuthenticated }) => isAuthenticated))
+        .pipe(
+          filter(({ isAuthenticated }) => isAuthenticated),
+          take(1) // Execute only once when user becomes authenticated
+        )
         .subscribe(() => {
           this.isAuthenticated = true;
           this.oidcSecurityService.getUserData().subscribe(userData => {
