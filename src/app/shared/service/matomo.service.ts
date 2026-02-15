@@ -77,7 +77,7 @@ export class MatomoRouteTrackerService {
           console.warn('⚠️ Matomo not ready yet');
           return;
         }
-        const fullUrl = `/#${event.urlAfterRedirects}`;
+        const fullUrl = `${event.urlAfterRedirects}`;
         // CHIAVE: Non usare _paq.push per il tracking delle navigazioni
         // Usa direttamente l'API Piwik quando lo script è già caricato
         try {
