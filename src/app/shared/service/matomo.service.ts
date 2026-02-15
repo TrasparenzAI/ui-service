@@ -33,7 +33,16 @@ export class MatomoRouteTrackerService {
     this._paq.push(['setTrackerUrl', environment.matomo.trackerUrl]);
     this._paq.push(['setSiteId', environment.matomo.siteId]);
     
-    // Prima pageview
+    // Abilita il tracking ottimizzato per SPA
+    this._paq.push(['enableHeartBeatTimer']);
+    
+    // Prima pageview con URL virtuale (senza hash)
+    const baseUrl = this.document.defaultView!.location.origin;
+    const currentPath = this.router.url || '/';
+    const virtualUrl = `${baseUrl}${currentPath}`;
+    
+    this._paq.push(['setCustomUrl', virtualUrl]);
+    this._paq.push(['setDocumentTitle', this.document.title]);
     this._paq.push(['trackPageView']);
 
     // Carica lo script
@@ -77,20 +86,23 @@ export class MatomoRouteTrackerService {
           console.warn('⚠️ Matomo not ready yet');
           return;
         }
-        const fullUrl = `${event.urlAfterRedirects}`;
-        // CHIAVE: Non usare _paq.push per il tracking delle navigazioni
-        // Usa direttamente l'API Piwik quando lo script è già caricato
+        
+        // Costruisci URL virtuale SENZA hash per Matomo
+        // Matomo ignora gli hash, quindi usiamo URL virtuali puliti
+        const baseUrl = this.document.defaultView!.location.origin;
+        const virtualUrl = `${baseUrl}${event.urlAfterRedirects}`;
+        
         try {
           const tracker = this.document.defaultView!.Piwik.getAsyncTracker();
-          tracker.setCustomUrl(fullUrl);
+          tracker.setCustomUrl(virtualUrl);
           tracker.setDocumentTitle(this.document.title);
           tracker.trackPageView();
           
-          console.log('✅ Matomo: Tracked page view ->', event.urlAfterRedirects);
+          console.log('✅ Matomo: Tracked page view ->', virtualUrl);
         } catch (error) {
           console.error('❌ Matomo tracking error:', error);
           // Fallback a _paq.push se l'API diretta fallisce
-          this._paq.push(['setCustomUrl', fullUrl]);
+          this._paq.push(['setCustomUrl', virtualUrl]);
           this._paq.push(['setDocumentTitle', this.document.title]);
           this._paq.push(['trackPageView']);
         }
