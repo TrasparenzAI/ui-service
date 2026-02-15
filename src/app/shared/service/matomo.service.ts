@@ -33,14 +33,7 @@ export class MatomoRouteTrackerService {
     this._paq.push(['setTrackerUrl', environment.matomo.trackerUrl]);
     this._paq.push(['setSiteId', environment.matomo.siteId]);
     
-    // Abilita il tracking degli hash per hash routing (SPA)
-    this._paq.push(['enableHeartBeatTimer']);
-    
-    // Prima pageview con hash
-    const baseUrl = this.document.defaultView!.location.origin;
-    const currentHash = this.document.defaultView!.location.hash;
-    const fullUrl = `${baseUrl}/${currentHash}`;
-    this._paq.push(['setCustomUrl', fullUrl]);
+    // Prima pageview
     this._paq.push(['trackPageView']);
 
     // Carica lo script
@@ -84,18 +77,16 @@ export class MatomoRouteTrackerService {
           console.warn('⚠️ Matomo not ready yet');
           return;
         }
-        
-        // CHIAVE: Costruisci l'URL completo con il fragment (#)
-        const baseUrl = this.document.defaultView!.location.origin;
-        const fullUrl = `${baseUrl}/#${event.urlAfterRedirects}`;
-        
+        const fullUrl = `/#${event.urlAfterRedirects}`;
+        // CHIAVE: Non usare _paq.push per il tracking delle navigazioni
+        // Usa direttamente l'API Piwik quando lo script è già caricato
         try {
           const tracker = this.document.defaultView!.Piwik.getAsyncTracker();
-          tracker.setCustomUrl(fullUrl); // URL con hash
+          tracker.setCustomUrl(fullUrl);
           tracker.setDocumentTitle(this.document.title);
           tracker.trackPageView();
           
-          console.log('✅ Matomo: Tracked page view ->', fullUrl);
+          console.log('✅ Matomo: Tracked page view ->', event.urlAfterRedirects);
         } catch (error) {
           console.error('❌ Matomo tracking error:', error);
           // Fallback a _paq.push se l'API diretta fallisce
