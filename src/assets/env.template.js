@@ -21,6 +21,7 @@
     window["env"]["oidc.postLogoutRedirectUri"] = "${OIDC_POSTLOGOUTREDIRECTURL}";
 
     window["env"]["matomo.enable"] = ${MATOMO_ENABLE};
+    window["env"]["matomo.trackerUser.enable"] = ${MATOMO_TRACKER_USER_ENABLE};
     window["env"]["matomo.trackerUrl"] = "${MATOMO_TRAKER_URL}";
     window["env"]["matomo.siteId"] = "${MATOMO_SITE_ID}";
 

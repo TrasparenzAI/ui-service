@@ -44,12 +44,14 @@ export class AppComponent implements OnInit {
         )
         .subscribe(() => {
           this.isAuthenticated = true;
-          this.oidcSecurityService.getUserData().subscribe(userData => {
-            const userId = userData?.email || userData?.preferred_username || userData?.sub;            
-            if (userId) {
-              this.matomoRouteTracker.setUserId(userId);
-            }
-          });
+          if (environment.matomo.trackerUser.enable) {
+            this.oidcSecurityService.getUserData().subscribe(userData => {
+              const userId = userData?.email || userData?.preferred_username || userData?.sub;            
+              if (userId) {
+                this.matomoRouteTracker.setUserId(userId);
+              }
+            });
+          }
         });
     }
   }

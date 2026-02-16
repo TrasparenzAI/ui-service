@@ -20,7 +20,10 @@ export const environment = {
   },
   matomo: {
     enabled: window["env"]["matomo.enable"] || false,
-    trackerUrl: window["env"]["matomo.trackerUrl"],
+    trackerUser: {
+      enable: window["env"]["trackerUser.enable"] || false
+    },
+    trackerUrl: window["env"]["matomo.trackerUrl"],    
     siteId: window["env"]["matomo.siteId"]
   }
 };
