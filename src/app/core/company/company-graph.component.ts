@@ -221,7 +221,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
             }
           });
           if (this.userData) {
-            this.getWorkflow(queryParams).subscribe((workflowId: string) => {
+            this.getWorkflow(queryParams).subscribe((workflowId: string | undefined) => {
               this.filterFormSearch.controls.workflowId.patchValue(workflowId);
               this.filterFormSearch.valueChanges.subscribe((value: any) => {            
                 this.manageChart(value.workflowId);
@@ -423,12 +423,12 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
     return this.statusColor[`status_${key}`] + `!important`; 
   }
 
-  getWorkflow(queryParams: Params): Observable<string> {
+  getWorkflow(queryParams: Params): Observable<string | undefined> {
     if (queryParams.workflowId) {
       return observableOf(queryParams.workflowId);
     }
-    return this.conductorService.lastWorflow().pipe(map((workflow: Workflow) => {
-      return workflow.workflowId;
+    return this.conductorService.lastWorflowCompleted().pipe(map((workflow: Workflow) => {
+      return workflow?.workflowId;
     }));
   }
 
