@@ -1,3 +1,5 @@
+const parseBoolean = (value: any): boolean => value === true || value === 'true';
+
 export const environment = {
   production: true,
   apiUrl: window["env"]["apiUrl"],
@@ -10,6 +12,7 @@ export const environment = {
   crawlerApiUrl: window["env"]["crawlerApiUrl"],
   debug: window["env"]["debug"] || false,
   baseHref: window["env"]["baseHref"] || "/",
+  devBypassAdminAuth: parseBoolean(window["env"]["devBypassAdminAuth"] || false),
   oidc: {
     enable: window["env"]["oidc.enable"] || false,
     force: window["env"]["oidc.force"] || false,

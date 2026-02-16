@@ -117,6 +117,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
   protected childRuleName: string;
   protected childResults: Result[];
   protected childRules: Map<String, Rule>;
+  protected excludedCodiciIpa = new Set<string>();
 
   constructor(private formBuilder: FormBuilder,
               private route: ActivatedRoute,
@@ -177,86 +178,108 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
       copyFrom: new FormControl(),
       keytype: new FormControl(true)
     });
-    this.route.queryParams.subscribe((queryParams: Params) => {
-      this.codiceIpa = queryParams.codiceIpa;
-      if (!this.codiceIpa && this.company) {
-        this.codiceIpa = this.company.codiceIpa;
-      }
-      this.fromMap = queryParams.fromMap;
-      this.zoom = queryParams.zoom;
-      this.paramsWorkflowId = queryParams.workflowId;
-      if (this.codiceIpa) {
-        this.companyService.getAll({
-          codiceIpa: this.codiceIpa,
-          size: 1
-        }).subscribe((company: Company[]) => {
-          this.company = company[0];
-          this.tabRuleActive = true;
+    this.configurationService.getCompanyCardDisplay().subscribe((display) => {
+      this.excludedCodiciIpa = new Set((display?.excludedCodiciIpa || []).map((codiceIpa: string) => (codiceIpa || '').trim().toUpperCase()));
+      this.route.queryParams.subscribe((queryParams: Params) => {
+        this.codiceIpa = queryParams.codiceIpa;
+        if (!this.codiceIpa && this.company) {
+          this.codiceIpa = this.company.codiceIpa;
+        }
+        this.fromMap = queryParams.fromMap;
+        this.zoom = queryParams.zoom;
+        this.paramsWorkflowId = queryParams.workflowId;
+        if (this.excludedCodiciIpa.has((this.codiceIpa || '').trim().toUpperCase())) {
+          this.company = undefined;
+          this.currentNode = undefined;
+          this.data = [];
+          this.childResults = [];
+          this.childRules = undefined;
+          this.optionsRuleDetail = [];
+          this.rulesFailed = [];
+          this.tabRuleActive = false;
           this.tabPAActive = false;
           this.tabFailedActive = false;
-          if (!this.company) {
-            this.apiMessageService.sendMessage(MessageType.ERROR,  `PA non presente!`);
-          }
-        });
-        if (this.userData) {
-          this.getWorkflow(queryParams).subscribe((workflowId: string) => {
-            this.filterFormSearch.controls.workflowId.patchValue(workflowId);
-            this.filterFormSearch.valueChanges.subscribe((value: any) => {            
-              this.manageChart(value.workflowId);
-            });          
-            this.conductorService.getAll({
-              includeClosed: true,
-              includeTasks: false
-            }).subscribe((workflows: Workflow[]) => {
-              this.optionsWorkflow = [];
+          this.apiMessageService.sendMessage(
+            MessageType.WARNING,
+            this.translateService.instant('it.company.excluded', { codiceIpa: this.codiceIpa }),
+            NotificationPosition.Top
+          );
+          this.updateChart();
+          return;
+        }
+        if (this.codiceIpa) {
+          this.companyService.getAll({
+            codiceIpa: this.codiceIpa,
+            size: 1
+          }).subscribe((company: Company[]) => {
+            this.company = company[0];
+            this.tabRuleActive = true;
+            this.tabPAActive = false;
+            this.tabFailedActive = false;
+            if (!this.company) {
+              this.apiMessageService.sendMessage(MessageType.ERROR,  `PA non presente!`);
+            }
+          });
+          if (this.userData) {
+            this.getWorkflow(queryParams).subscribe((workflowId: string) => {
+              this.filterFormSearch.controls.workflowId.patchValue(workflowId);
+              this.filterFormSearch.valueChanges.subscribe((value: any) => {            
+                this.manageChart(value.workflowId);
+              });          
               this.conductorService.getAll({
                 includeClosed: true,
                 includeTasks: false
-              },`/${ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW}/correlated/${this.codiceIpa}`).subscribe((ipaWorkflows: Workflow[]) => {
-                ipaWorkflows.concat(workflows).sort((a,b) => (a.startTime < b.startTime)? 1 : -1).forEach((workflow: Workflow) => {
-                  this.optionsWorkflow.push({
-                    value: workflow.workflowId,
-                    text: this.translateService.instant('it.workflow.text', {
-                      startTime: this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy HH:mm:ss'),
-                      status: this.translateService.instant(`it.workflow.status.${workflow.status}`)
-                    }),
-                    selected: workflow.workflowId === queryParams['workflowId'],
-                    ruleName: workflow.input.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
-                  });
-                });  
-                this.manageChart(workflowId);
-              });      
-            });
-          });          
-        } else {
-          this.manageChart();
-        }
-      } else {
-        this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
-          configurations.forEach((conf: Configuration) => {
-            if (conf.key === ConfigurationService.JSONRULES_KEY) {
-              this.ruleConfigurationId = conf.id;
-              this.rules = new Map();
-              let value = JSON.parse(conf.value);
-              Object.keys(value).forEach((key: string) => {
-                this.rules.set(key, this.ruleService.buildInstance(value[key]));
+              }).subscribe((workflows: Workflow[]) => {
+                this.optionsWorkflow = [];
+                this.conductorService.getAll({
+                  includeClosed: true,
+                  includeTasks: false
+                },`/${ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW}/correlated/${this.codiceIpa}`).subscribe((ipaWorkflows: Workflow[]) => {
+                  ipaWorkflows.concat(workflows).sort((a,b) => (a.startTime < b.startTime)? 1 : -1).forEach((workflow: Workflow) => {
+                    this.optionsWorkflow.push({
+                      value: workflow.workflowId,
+                      text: this.translateService.instant('it.workflow.text', {
+                        startTime: this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy HH:mm:ss'),
+                        status: this.translateService.instant(`it.workflow.status.${workflow.status}`)
+                      }),
+                      selected: workflow.workflowId === queryParams['workflowId'],
+                      ruleName: workflow.input.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
+                    });
+                  });  
+                  this.manageChart(workflowId);
+                });      
               });
-            }            
-          });
-          if (this.rules) {
-            this.loadSelectRules();
-            this.filterFormSearch.controls.rootRule.patchValue(Rule.AMMINISTRAZIONE_TRASPARENTE);
-            this.filterFormSearch.valueChanges.subscribe((value: any) => {
-              if (value.rootRule) {
-                this.loadRuleData(value.rootRule, this.rules.get(value.rootRule));
-              }
-            });
-            this.loadRuleData(Rule.AMMINISTRAZIONE_TRASPARENTE, this.rules.get(Rule.AMMINISTRAZIONE_TRASPARENTE));
+            });          
           } else {
-            this.data = [];
+            this.manageChart();
           }
-        });    
-      }
+        } else {
+          this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
+            configurations.forEach((conf: Configuration) => {
+              if (conf.key === ConfigurationService.JSONRULES_KEY) {
+                this.ruleConfigurationId = conf.id;
+                this.rules = new Map();
+                let value = JSON.parse(conf.value);
+                Object.keys(value).forEach((key: string) => {
+                  this.rules.set(key, this.ruleService.buildInstance(value[key]));
+                });
+              }            
+            });
+            if (this.rules) {
+              this.loadSelectRules();
+              this.filterFormSearch.controls.rootRule.patchValue(Rule.AMMINISTRAZIONE_TRASPARENTE);
+              this.filterFormSearch.valueChanges.subscribe((value: any) => {
+                if (value.rootRule) {
+                  this.loadRuleData(value.rootRule, this.rules.get(value.rootRule));
+                }
+              });
+              this.loadRuleData(Rule.AMMINISTRAZIONE_TRASPARENTE, this.rules.get(Rule.AMMINISTRAZIONE_TRASPARENTE));
+            } else {
+              this.data = [];
+            }
+          });    
+        }
+      });
     });
   }
 

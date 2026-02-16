@@ -14,6 +14,7 @@ import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { RuleService } from '../rule/rule.service';
 import { TranslateService } from '@ngx-translate/core';
 import { DurationFormatPipe } from '../../shared/pipes/durationFormat.pipe';
+import { ConfigurationService } from '../configuration/configuration.service';
 import * as Leaflet from 'leaflet';
 import 'leaflet.markercluster';
 
@@ -54,6 +55,7 @@ export class CompanyMapComponent implements OnInit {
   protected filterFormSearch: FormGroup;
   protected optionsWorkflow: Array<any> = [];
   protected optionsRule: Array<any>;
+  protected excludedCodiciIpa = new Set<string>();
 
   constructor(
     private formBuilder: FormBuilder,
@@ -65,6 +67,7 @@ export class CompanyMapComponent implements OnInit {
     private apiMessageService: ApiMessageService,
     private resultAggregatorService: ResultAggregatorService,
     private conductorService: ConductorService,
+    private configurationService: ConfigurationService,
     private datepipe: DatePipe,
     private durationFormatPipe: DurationFormatPipe,
     private router: Router) {
@@ -216,22 +219,25 @@ export class CompanyMapComponent implements OnInit {
 
   ngOnInit(): void {    
     this.center = new Leaflet.LatLng(41.00, 12.50);
-    this.route.queryParams.subscribe((queryParams) => {
-      this.filter = queryParams.filter;
-      this.zoom = queryParams.zoom || 6;
-      this.workflowId = queryParams.workflowId;
-      this.ruleName = queryParams.ruleName || this.workflowRuleName(this.workflowId);
-      if (!this.filter) {
-        this.loadGeoJson(queryParams);
-      } else {
-        if (queryParams.workflowId) {
-          this.initMap(queryParams.workflowId, queryParams);
+    this.configurationService.getCompanyCardDisplay().subscribe((display) => {
+      this.excludedCodiciIpa = new Set((display?.excludedCodiciIpa || []).map((codiceIpa: string) => (codiceIpa || '').trim().toUpperCase()));
+      this.route.queryParams.subscribe((queryParams) => {
+        this.filter = queryParams.filter;
+        this.zoom = queryParams.zoom || 6;
+        this.workflowId = queryParams.workflowId;
+        this.ruleName = queryParams.ruleName || this.workflowRuleName(this.workflowId);
+        if (!this.filter) {
+          this.loadGeoJson(queryParams);
         } else {
-          this.conductorService.lastWorflowCompleted().subscribe((workflow: Workflow) => {
-            this.initMap(workflow.workflowId, queryParams);
-          });
+          if (queryParams.workflowId) {
+            this.initMap(queryParams.workflowId, queryParams);
+          } else {
+            this.conductorService.lastWorflowCompleted().subscribe((workflow: Workflow) => {
+              this.initMap(workflow.workflowId, queryParams);
+            });
+          }
         }
-      }
+      });
     });
   }
 
@@ -258,12 +264,18 @@ export class CompanyMapComponent implements OnInit {
         next: (geo: any) => {
           this.isGEOLoaded = true;
           let codiceIpa = params.codiceIpa;
+          if (this.excludedCodiciIpa.has((codiceIpa || '').trim().toUpperCase())) {
+            codiceIpa = undefined;
+          }
           let result = geo.features || geo;
           result.forEach((element: any) => {
             let coordinates = element.geometry.coordinates;
             let lat = coordinates[1];
             let lng = coordinates[0];
             element.properties.companies.forEach((company: any) => {
+              if (this.excludedCodiciIpa.has((company?.codiceIpa || '').trim().toUpperCase())) {
+                return;
+              }
               let status = this.workflowId ? company?.validazioni?.[this.ruleName] || 500 : undefined;
               let iconColor = this.workflowId ? ((status == 200 || status == 202) ? `success`: `danger` ) : `primary`;
               let icon = Leaflet.divIcon({

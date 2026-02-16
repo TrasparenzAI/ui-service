@@ -15,9 +15,21 @@
         @for (service of services; track $index; let idx = $index) {
             <tr>
                 <th scope="row">{{idx + 1}}</th>
-                <td class="fw-bolder">{{service.artifact}}</td>
-                <td class="fst-italic">{{service.version}}</td>
-                <td>{{service.time | date: 'dd/MM/yyyy HH:mm:ss'}}</td>
+                <td class="fw-bolder">{{service.artifact || '-'}}</td>
+                <td class="fst-italic">
+                    @if (service.connectionError) {
+                      <span class="text-danger" translate>it.service-info.table.connection-unavailable</span>
+                    } @else {
+                      {{service.version || '-'}}
+                    }
+                </td>
+                <td>
+                    @if (service.time) {
+                      {{service.time | date: 'dd/MM/yyyy HH:mm:ss'}}
+                    } @else {
+                      -
+                    }
+                </td>
             </tr>
         }  
         </ng-container>

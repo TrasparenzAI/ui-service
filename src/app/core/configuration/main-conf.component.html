@@ -218,6 +218,112 @@
         </div>
       </form>
     </it-accordion>
+    <it-accordion (showEvent)="showAccordion($event, this)" title="{{'it.configuration.display.title'| translate}}">
+      <form [formGroup]="companyCardDisplayForm">
+        <div class="card mb-4">
+          <div class="card-header px-0 d-xl-flex justify-content-between align-items-center border-success">
+            <h5 class="card-title text-success mb-0" translate>it.configuration.display.subtitle</h5>
+            <div>
+              <a itButton="outline-primary" (click)="confirmCompanyCardDisplay()" class="me-2">
+                <it-icon name="pencil" color="primary"></it-icon>{{'it.navigation.confirm' | translate}}
+              </a>
+            </div>
+          </div>
+          <div class="card-body px-0">
+            <div class="row mb-2">
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="codiceIpa" [label]="'it.company.codiceIpa'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="acronimo" [label]="'it.company.acronimo'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="codiceFiscaleEnte" [label]="'it.company.codiceFiscaleEnte'| translate" toggle="true"></it-checkbox>
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="codiceCategoria" [label]="'it.company.codiceCategoria'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="codiceNatura" [label]="'it.company.codiceNatura'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="tipologia" [label]="'it.company.tipologia'| translate" toggle="true"></it-checkbox>
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="sitoIstituzionale" [label]="'it.company.sitoIstituzionale'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="indirizzo" [label]="'it.company.indirizzo'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="regione" [label]="'it.company.regione'| translate" toggle="true"></it-checkbox>
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="responsabile" [label]="'it.company.responsabile'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="mail1" [label]="'it.configuration.display.mail1'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="mail2" [label]="'it.configuration.display.mail2'| translate" toggle="true"></it-checkbox>
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="mail3" [label]="'it.configuration.display.mail3'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="mail4" [label]="'it.configuration.display.mail4'| translate" toggle="true"></it-checkbox>
+              </div>
+              <div class="form-check col-12 col-lg-4 mt-0">
+                <it-checkbox formControlName="mail5" [label]="'it.configuration.display.mail5'| translate" toggle="true"></it-checkbox>
+              </div>
+            </div>
+            <hr class="my-3">
+            <div class="row align-items-end">
+              <div class="col-12">
+                <p class="mb-1 fw-semibold">{{'it.configuration.display.exclude-title' | translate}}</p>
+                <p class="text-muted mb-2">{{'it.configuration.display.exclude-description' | translate}}</p>
+              </div>
+              <div class="col-12 col-lg-8">
+                <it-input
+                  [(ngModel)]="excludedCodiceIpaInput"
+                  [ngModelOptions]="{standalone: true}"
+                  (keyup.enter)="addExcludedCodiceIpa()"
+                  [label]="'it.configuration.display.codice-ipa' | translate">
+                  <it-icon name="key" size="sm" color="primary" prependText></it-icon>
+                </it-input>
+              </div>
+              <div class="col-12 col-lg-4">
+                <a itButton="outline-success" class="text-success mb-3" (click)="addExcludedCodiceIpa()">
+                  <it-icon name="plus-circle" color="success"></it-icon>{{'it.configuration.display.add-codice-ipa' | translate}}
+                </a>
+              </div>
+            </div>
+            <div class="row" formArrayName="excludedCodiciIpa">
+              @if (excludedCodiciIpaArray.controls.length === 0) {
+                <div class="col-12 text-muted">{{'it.configuration.display.no-excluded' | translate}}</div>
+              } @else {
+                <div class="col-12 d-flex flex-wrap gap-2">
+                  @for (codiceIpaControl of excludedCodiciIpaArray.controls; track codiceIpaControl.value; let i = $index) {
+                    <span class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center gap-2 py-2 px-3">
+                      {{codiceIpaControl.value}}
+                      <button type="button" class="btn-close btn-close-sm" (click)="removeExcludedCodiceIpa(i)" [attr.aria-label]="'delete'"></button>
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </form>
+    </it-accordion>
     <it-accordion (showEvent)="showAccordion($event, this)" title="{{'it.configuration.slice.title'| translate}}">
       <form [formGroup]="sliceForm">
         <div class="card mb-4">

@@ -13,6 +13,7 @@
 
     window["env"]["baseHref"] = "/";
     window["env"]["production"] = false;
+    window["env"]["devBypassAdminAuth"] = false;
     window["env"]["oidc.enable"] = true;
     window["env"]["oidc.force"] = false;
     window["env"]["oidc.authority"] = "https://dica33.ba.cnr.it/keycloak/realms/trasparenzai/.well-known/openid-configuration";
