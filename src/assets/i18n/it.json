@@ -43,6 +43,7 @@
     "service-info": {
       "title": "Lista dei Microservizi",
       "table": {
+        "connection-unavailable": "Connessione al servizio non disponibile",
         "cols": {
           "microservice": "Microservizio",
           "version": "Versione (Tag)",
@@ -71,6 +72,20 @@
         "label": "Etichetta",
         "url": "URL",
         "target": "Target"
+      },
+      "display": {
+        "title": "Impostazioni di visualizzazione",
+        "subtitle": "Campi visibili nella card amministrazioni",
+        "mail1": "Email 1",
+        "mail2": "Email 2",
+        "mail3": "Email 3",
+        "mail4": "Email 4",
+        "mail5": "Email 5",
+        "exclude-title": "Esclusione enti dalla ricerca",
+        "exclude-description": "Aggiungi i codici IPA degli enti da escludere dalla ricerca e dalla visualizzazione.",
+        "codice-ipa": "Codice IPA da escludere",
+        "add-codice-ipa": "Aggiungi codice IPA",
+        "no-excluded": "Nessun ente escluso"
       },
       "color": "Impostazioni colori compliance sezioni",
       "cron": {
@@ -172,6 +187,7 @@
       "provincia": "Provincia",
       "regione": "Regione",
       "responsabile": "Responsabile",
+      "excluded": "L'ente con codice IPA {{codiceIpa}} è escluso dalla visualizzazione.",
       "map": "Mappa",      
       "search": "Cerca Amministrazioni",
       "history": "Storico",

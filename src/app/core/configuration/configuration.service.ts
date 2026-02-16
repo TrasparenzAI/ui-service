@@ -11,6 +11,25 @@ import { Configuration } from './configuration.model';
 import { map } from 'rxjs/operators';
 import { StatusColor } from '../../common/model/status-color.enum';
 
+export interface CompanyCardDisplaySettings {
+  codiceIpa: boolean;
+  acronimo: boolean;
+  codiceFiscaleEnte: boolean;
+  codiceCategoria: boolean;
+  codiceNatura: boolean;
+  tipologia: boolean;
+  sitoIstituzionale: boolean;
+  indirizzo: boolean;
+  regione: boolean;
+  responsabile: boolean;
+  mail1: boolean;
+  mail2: boolean;
+  mail3: boolean;
+  mail4: boolean;
+  mail5: boolean;
+  excludedCodiciIpa: string[];
+}
+
 @Injectable()
 export class ConfigurationService extends CommonService<Configuration> {
 
@@ -26,10 +45,12 @@ export class ConfigurationService extends CommonService<Configuration> {
   public static readonly COLOR = `color`;
   public static readonly MENU = `menu`;
   public static readonly SLICE = `slice`;
+  public static readonly COMPANY_CARD_DISPLAY = `company.card.display`;
 
   private cachedStatusColor: any;
   private cachedSliceColor: any;
   private cachedMenuLink: any;
+  private cachedCompanyCardDisplay: CompanyCardDisplaySettings;
 
   public constructor(protected httpClient: HttpClient,
                      protected apiMessageService: ApiMessageService,
@@ -126,6 +147,75 @@ export class ConfigurationService extends CommonService<Configuration> {
             this.cachedMenuLink = JSON.parse(menuLinks[0].value);
             return this.cachedMenuLink;
           }
+        })
+    );
+  }
+
+  public getDefaultCompanyCardDisplay(): CompanyCardDisplaySettings {
+    return {
+      codiceIpa: true,
+      acronimo: true,
+      codiceFiscaleEnte: true,
+      codiceCategoria: true,
+      codiceNatura: true,
+      tipologia: true,
+      sitoIstituzionale: true,
+      indirizzo: true,
+      regione: true,
+      responsabile: true,
+      mail1: true,
+      mail2: true,
+      mail3: true,
+      mail4: true,
+      mail5: true,
+      excludedCodiciIpa: []
+    };
+  }
+
+  private normalizeExcludedCodiciIpa(codiciIpa: string[]): string[] {
+    if (!Array.isArray(codiciIpa)) {
+      return [];
+    }
+    const uniqueCodiciIpa = new Set<string>();
+    codiciIpa.forEach((codiceIpa: string) => {
+      const normalized = (codiceIpa || '').trim().toUpperCase();
+      if (normalized) {
+        uniqueCodiciIpa.add(normalized);
+      }
+    });
+    return Array.from(uniqueCodiciIpa);
+  }
+
+  private normalizeCompanyCardDisplay(display: Partial<CompanyCardDisplaySettings>): CompanyCardDisplaySettings {
+    const excludedCodiciIpa = this.normalizeExcludedCodiciIpa(display?.excludedCodiciIpa);
+    return {
+      ...this.getDefaultCompanyCardDisplay(),
+      ...display,
+      excludedCodiciIpa
+    };
+  }
+
+  public setCachedCompanyCardDisplay(display: Partial<CompanyCardDisplaySettings>) {
+    this.cachedCompanyCardDisplay = this.normalizeCompanyCardDisplay(display);
+  }
+
+  public getCompanyCardDisplay(): Observable<CompanyCardDisplaySettings> {
+    if (this.cachedCompanyCardDisplay) {
+      return observableOf(this.cachedCompanyCardDisplay);
+    }
+    return this.getAll().pipe(
+        map((configurations: Configuration[]) => {
+          let settings = configurations.filter((conf: Configuration) => conf.key === ConfigurationService.COMPANY_CARD_DISPLAY);
+          if (settings && settings.length === 1) {
+            try {
+              this.cachedCompanyCardDisplay = this.normalizeCompanyCardDisplay(JSON.parse(settings[0].value));
+            } catch {
+              this.cachedCompanyCardDisplay = this.getDefaultCompanyCardDisplay();
+            }
+            return this.cachedCompanyCardDisplay;
+          }
+          this.cachedCompanyCardDisplay = this.getDefaultCompanyCardDisplay();
+          return this.cachedCompanyCardDisplay;
         })
     );
   }

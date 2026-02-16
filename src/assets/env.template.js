@@ -13,6 +13,7 @@
     window["env"]["crawlerApiUrl"] = "${CRAWLER_API_URL}";
 
     window["env"]["baseHref"] = "${BASE_HREF}";
+    window["env"]["devBypassAdminAuth"] = ${DEV_BYPASS_ADMIN_AUTH};
     window["env"]["oidc.enable"] = ${OIDC_ENABLE};
     window["env"]["oidc.force"] = ${OIDC_FORCE};
     window["env"]["oidc.authority"] = "${OIDC_AUTHORITY}";

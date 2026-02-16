@@ -24,34 +24,89 @@ export class ServiceInfoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
-      let servicesURL: string[] = [];
-      servicesURL.push(`${environment.apiUrl}${this.configurationService.getApiService()}`);
-      configurations.forEach((conf: Configuration) => {
-          if (conf.key === ConfigurationService.WORKFLOW_CRON_URL) {
-            servicesURL.push(conf.value.replace(/\/api\/workflow$/, ""));
-          }
-          if (conf.key === ConfigurationService.WORKFLOW_CRON_BODY) {
-            let jsonvalue = JSON.parse(conf.value);
-            servicesURL.push(jsonvalue.input.result_base_url);
-            //this.servicesURL.push(jsonvalue.input.crawler_uri);
-            servicesURL.push(jsonvalue.input.rule_base_url);            
-            servicesURL.push(jsonvalue.input.public_company_base_url);
-            servicesURL.push(jsonvalue.input.result_aggregator_base_url);
-            servicesURL.push(jsonvalue.input.task_scheduler_base_url);
-          }
-      });
-      this.services.push(new ServiceInfo(
-        `ui-service`, `UI Service`, new Date(packageJson.buildDate), packageJson.version, undefined 
-      ));
-      servicesURL.forEach((serviceURL: string) => {
-        if (serviceURL) {
-          this.httpClient.get(`${serviceURL}/actuator/info`).subscribe((result: Build) => {
-            this.services.push(result.build);
-          });
-        }
-      });
+    this.services.push(new ServiceInfo(
+      `ui-service`,
+      `UI Service`,
+      new Date(packageJson.buildDate),
+      packageJson.version,
+      undefined
+    ));
+
+    this.configurationService.getAll().subscribe({
+      next: (configurations: Configuration[]) => {
+        this.buildServicesURL(configurations).forEach((serviceURL: string) => {
+          this.loadServiceInfo(serviceURL);
+        });
+      },
+      error: () => {
+        // Keep the table visible with available data when configuration lookup fails.
+      }
     });
+  }
+
+  private buildServicesURL(configurations: Configuration[]): string[] {
+    const servicesURL: Set<string> = new Set<string>();
+    servicesURL.add(`${environment.apiUrl}${this.configurationService.getApiService()}`);
+
+    configurations.forEach((conf: Configuration) => {
+      if (conf.key === ConfigurationService.WORKFLOW_CRON_URL) {
+        servicesURL.add(conf.value?.replace(/\/api\/workflow$/, ""));
+      }
+
+      if (conf.key === ConfigurationService.WORKFLOW_CRON_BODY) {
+        try {
+          const jsonvalue = JSON.parse(conf.value);
+          servicesURL.add(jsonvalue.input.result_base_url);
+          // servicesURL.add(jsonvalue.input.crawler_uri);
+          servicesURL.add(jsonvalue.input.rule_base_url);
+          servicesURL.add(jsonvalue.input.public_company_base_url);
+          servicesURL.add(jsonvalue.input.result_aggregator_base_url);
+          servicesURL.add(jsonvalue.input.task_scheduler_base_url);
+        } catch (error) {
+          // Ignore malformed configuration and continue with the remaining services.
+        }
+      }
+    });
+
+    return Array.from(servicesURL).filter((url: string) => !!url);
+  }
+
+  private loadServiceInfo(serviceURL: string): void {
+    const serviceRow = this.createUnavailableServiceRow(serviceURL);
+    this.services.push(serviceRow);
+
+    const normalizedUrl = serviceURL.replace(/\/+$/, "");
+    this.httpClient.get<Build>(`${normalizedUrl}/actuator/info`).subscribe({
+      next: (result: Build) => {
+        if (!result?.build) {
+          return;
+        }
+        serviceRow.artifact = result.build.artifact || serviceRow.artifact;
+        serviceRow.name = result.build.name || serviceRow.name;
+        serviceRow.time = result.build.time;
+        serviceRow.version = result.build.version;
+        serviceRow.group = result.build.group;
+        serviceRow.connectionError = false;
+      },
+      error: () => {
+        serviceRow.connectionError = true;
+      }
+    });
+  }
+
+  private createUnavailableServiceRow(serviceURL: string): ServiceInfo {
+    const serviceLabel = this.extractServiceLabel(serviceURL);
+    return new ServiceInfo(serviceLabel, serviceLabel, undefined, undefined, undefined, true);
+  }
+
+  private extractServiceLabel(serviceURL: string): string {
+    try {
+      const url = new URL(serviceURL);
+      const [firstPathPart] = url.pathname.split(`/`).filter((segment: string) => !!segment);
+      return firstPathPart || url.hostname || serviceURL;
+    } catch (error) {
+      return serviceURL;
+    }
   }
 
 }

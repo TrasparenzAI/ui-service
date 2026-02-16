@@ -51,6 +51,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isAdmin: boolean;
   userData: any;
   menuLinks: any[];
+  devAdminBypass = !environment.production && environment.devBypassAdminAuth;
 
   constructor(private apiMessageService: ApiMessageService,
               private translateService: TranslateService,
@@ -86,6 +87,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.configurationService.getMenuLink().subscribe((menu: any) => {
       this.menuLinks = menu?.dettagli;
     });
+    if (this.devAdminBypass) {
+      this.authenticated = true;
+      this.isAdmin = true;
+      this.userData = {
+        name: 'Dev Admin',
+        given_name: 'Dev',
+        family_name: 'Admin'
+      };
+      this.responsiveFn();
+      return;
+    }
     if (environment.oidc.enable) { 
       if (!environment.oidc.force) {
         this.oidcSecurityService
@@ -174,6 +186,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   logout() {
+    if (this.devAdminBypass) {
+      return;
+    }
     this.oidcSecurityService.logoffAndRevokeTokens().subscribe(() => {
       console.log('logout');
     });

@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren, ViewEncapsulation } from '@angular/core';
-import { ConfigurationService } from './configuration.service';
+import { CompanyCardDisplaySettings, ConfigurationService } from './configuration.service';
 import { Configuration } from './configuration.model';
 import { Bs5UnixCronComponent, CronLocalization, Tab } from '@sbzen/ng-cron';
 import { ItAccordionComponent, ItModalComponent, NotificationPosition, SelectControlOption } from 'design-angular-kit';
@@ -57,6 +57,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   protected colorid: number;
   protected menuid: number;
   protected sliceid: number;
+  protected companyCardDisplayId: number;
   protected optionsCategoria: Array<SelectControlOption> = [];
   protected optionsRule: Array<SelectControlOption> = [];
 
@@ -68,6 +69,8 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   protected colorForm: FormGroup;
   protected menuForm: FormGroup;
   protected sliceForm: FormGroup;
+  protected companyCardDisplayForm: FormGroup;
+  protected excludedCodiceIpaInput: string = '';
 
   readonly localization: CronLocalization = {
     common: {
@@ -255,6 +258,25 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
        dettagli: this.formBuilder.array([])
     });
 
+    this.companyCardDisplayForm = this.formBuilder.group({
+      codiceIpa: new FormControl(true),
+      acronimo: new FormControl(true),
+      codiceFiscaleEnte: new FormControl(true),
+      codiceCategoria: new FormControl(true),
+      codiceNatura: new FormControl(true),
+      tipologia: new FormControl(true),
+      sitoIstituzionale: new FormControl(true),
+      indirizzo: new FormControl(true),
+      regione: new FormControl(true),
+      responsabile: new FormControl(true),
+      mail1: new FormControl(true),
+      mail2: new FormControl(true),
+      mail3: new FormControl(true),
+      mail4: new FormControl(true),
+      mail5: new FormControl(true),
+      excludedCodiciIpa: this.formBuilder.array([])
+    });
+
     this.colorForm = this.formBuilder.group({
       ngx_status_200: new FormControl(StatusColor.status_200,[Validators.required, validColorValidator()]),
       status_200: new FormControl(StatusColor.status_200,[Validators.required, validColorValidator()]),
@@ -327,6 +349,12 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
             jsonvalue?.dettagli.forEach((result: any) => {
               this.dettagliArray.push(this.createDettaglioMenuFormGroup(result));
             });
+          }
+          if (conf.key === ConfigurationService.COMPANY_CARD_DISPLAY) {
+            this.companyCardDisplayId = conf.id;
+            let jsonvalue = JSON.parse(conf.value);
+            this.applyCompanyCardDisplaySettings(jsonvalue as CompanyCardDisplaySettings);
+            this.configurationService.setCachedCompanyCardDisplay(this.getCompanyCardDisplaySettingsValue());
           }
           if (conf.key === ConfigurationService.SLICE) {
             this.sliceid = conf.id;
@@ -445,6 +473,98 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     return this.sliceForm.get('dettagli') as FormArray;
   }
 
+  get excludedCodiciIpaArray(): FormArray {
+    return this.companyCardDisplayForm.get('excludedCodiciIpa') as FormArray;
+  }
+
+  private normalizeCodiceIpa(codiceIpa: string): string {
+    return (codiceIpa || '').trim().toUpperCase();
+  }
+
+  private normalizeExcludedCodiciIpa(codiciIpa: string[]): string[] {
+    if (!Array.isArray(codiciIpa)) {
+      return [];
+    }
+    const uniqueCodiciIpa = new Set<string>();
+    codiciIpa.forEach((codiceIpa: string) => {
+      const normalized = this.normalizeCodiceIpa(codiceIpa);
+      if (normalized) {
+        uniqueCodiciIpa.add(normalized);
+      }
+    });
+    return Array.from(uniqueCodiciIpa);
+  }
+
+  private setExcludedCodiciIpa(codiciIpa: string[]) {
+    this.excludedCodiciIpaArray.clear();
+    this.normalizeExcludedCodiciIpa(codiciIpa).forEach((codiceIpa: string) => {
+      this.excludedCodiciIpaArray.push(new FormControl(codiceIpa, Validators.required));
+    });
+  }
+
+  addExcludedCodiceIpa() {
+    const codiceIpa = this.normalizeCodiceIpa(this.excludedCodiceIpaInput);
+    if (!codiceIpa) {
+      return;
+    }
+    const alreadyPresent = this.normalizeExcludedCodiciIpa(this.excludedCodiciIpaArray.value).includes(codiceIpa);
+    if (!alreadyPresent) {
+      this.excludedCodiciIpaArray.push(new FormControl(codiceIpa, Validators.required));
+    }
+    this.excludedCodiceIpaInput = '';
+  }
+
+  removeExcludedCodiceIpa(index: number) {
+    this.excludedCodiciIpaArray.removeAt(index);
+  }
+
+  private applyCompanyCardDisplaySettings(settings: CompanyCardDisplaySettings) {
+    const displaySettings = {
+      ...this.configurationService.getDefaultCompanyCardDisplay(),
+      ...settings,
+      excludedCodiciIpa: this.normalizeExcludedCodiciIpa(settings?.excludedCodiciIpa)
+    };
+    this.companyCardDisplayForm.patchValue({
+      codiceIpa: displaySettings.codiceIpa,
+      acronimo: displaySettings.acronimo,
+      codiceFiscaleEnte: displaySettings.codiceFiscaleEnte,
+      codiceCategoria: displaySettings.codiceCategoria,
+      codiceNatura: displaySettings.codiceNatura,
+      tipologia: displaySettings.tipologia,
+      sitoIstituzionale: displaySettings.sitoIstituzionale,
+      indirizzo: displaySettings.indirizzo,
+      regione: displaySettings.regione,
+      responsabile: displaySettings.responsabile,
+      mail1: displaySettings.mail1,
+      mail2: displaySettings.mail2,
+      mail3: displaySettings.mail3,
+      mail4: displaySettings.mail4,
+      mail5: displaySettings.mail5
+    });
+    this.setExcludedCodiciIpa(displaySettings.excludedCodiciIpa);
+  }
+
+  private getCompanyCardDisplaySettingsValue(): CompanyCardDisplaySettings {
+    return {
+      codiceIpa: this.companyCardDisplayForm.controls.codiceIpa.value,
+      acronimo: this.companyCardDisplayForm.controls.acronimo.value,
+      codiceFiscaleEnte: this.companyCardDisplayForm.controls.codiceFiscaleEnte.value,
+      codiceCategoria: this.companyCardDisplayForm.controls.codiceCategoria.value,
+      codiceNatura: this.companyCardDisplayForm.controls.codiceNatura.value,
+      tipologia: this.companyCardDisplayForm.controls.tipologia.value,
+      sitoIstituzionale: this.companyCardDisplayForm.controls.sitoIstituzionale.value,
+      indirizzo: this.companyCardDisplayForm.controls.indirizzo.value,
+      regione: this.companyCardDisplayForm.controls.regione.value,
+      responsabile: this.companyCardDisplayForm.controls.responsabile.value,
+      mail1: this.companyCardDisplayForm.controls.mail1.value,
+      mail2: this.companyCardDisplayForm.controls.mail2.value,
+      mail3: this.companyCardDisplayForm.controls.mail3.value,
+      mail4: this.companyCardDisplayForm.controls.mail4.value,
+      mail5: this.companyCardDisplayForm.controls.mail5.value,
+      excludedCodiciIpa: this.normalizeExcludedCodiciIpa(this.excludedCodiciIpaArray.value)
+    };
+  }
+
   cronConfirm(): void {
     let cronExpression = parser.parseExpression(this.cronValue);
     if (cronExpression.fields.hour.length > 1) {
@@ -506,6 +626,19 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     this.configurationService.save(conf).subscribe((result: any) => {
       this.menuid = result.id;
       this.configurationService.setCachedMenuLink(JSON.parse(conf.value));
+    });
+  }
+
+  confirmCompanyCardDisplay(): void {
+    let conf: Configuration = new Configuration();
+    conf.id = this.companyCardDisplayId;
+    conf.application = `ui-service`;
+    conf.profile = `default`;
+    conf.key = ConfigurationService.COMPANY_CARD_DISPLAY;
+    conf.value = JSON.stringify(this.getCompanyCardDisplaySettingsValue());
+    this.configurationService.save(conf).subscribe((result: any) => {
+      this.companyCardDisplayId = result.id;
+      this.configurationService.setCachedCompanyCardDisplay(this.getCompanyCardDisplaySettingsValue());
     });
   }
 

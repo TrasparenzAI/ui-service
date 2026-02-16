@@ -8,18 +8,28 @@ export class ServiceInfo {
     @JsonProperty('name')
     public name: string;
     @JsonProperty('time', ISODateTimeConverter)
-    public time: Date;
+    public time: Date | undefined;
     @JsonProperty('version')
-    public version: string;
+    public version: string | undefined;
     @JsonProperty('group')
-    public group: string;
+    public group: string | undefined;
+    @JsonProperty('connectionError', Boolean, true)
+    public connectionError: boolean;
 
-    constructor(artifact: string, name: string, time: Date, version: string, group: string) {
+    constructor(
+        artifact: string,
+        name: string,
+        time?: Date,
+        version?: string,
+        group?: string,
+        connectionError: boolean = false
+    ) {
         this.artifact = artifact;
         this.name = name;
         this.time = time;
         this.version = version;
         this.group = group;
+        this.connectionError = connectionError;
     }
 }
 

@@ -23,7 +23,7 @@ import { ChatComponent } from './core/ai/chat.component';
 import { HistoryComponent } from './core/result/history.component';
 
 const appRoutes: Routes = [
-  {path: '', canActivateChild:(environment.oidc.enable && environment.oidc.force)?[AutoLoginAllRoutesGuard]:[], children: [
+  {path: '', canActivateChild:(environment.oidc.enable && environment.oidc.force && !environment.devBypassAdminAuth)?[AutoLoginAllRoutesGuard]:[], children: [
     { path: '', canActivate: [AuthRedirectGuard], component: HomeComponent },
     { path: 'home', component: HomeComponent },
     { path: 'search', component: SearchComponent },

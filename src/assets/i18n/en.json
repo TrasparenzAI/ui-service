@@ -39,6 +39,17 @@
         "go-to-homepage": "Return to homepage"
       }
     },
+    "service-info": {
+      "title": "Microservices List",
+      "table": {
+        "connection-unavailable": "Service connection unavailable",
+        "cols": {
+          "microservice": "Microservice",
+          "version": "Version (Tag)",
+          "date": "Build date"
+        }
+      }
+    },
     "configuration": {
       "workflow": {
         "startnow": "Are you sure you want to run a full scan with the current parameters?",
@@ -52,6 +63,20 @@
         "label": "Label",
         "url": "URL",
         "target": "Target"
+      },
+      "display": {
+        "title": "Display settings",
+        "subtitle": "Visible fields in administration card",
+        "mail1": "Email 1",
+        "mail2": "Email 2",
+        "mail3": "Email 3",
+        "mail4": "Email 4",
+        "mail5": "Email 5",
+        "exclude-title": "Exclude entities from search",
+        "exclude-description": "Add IPA codes for entities to exclude from search results and visualization.",
+        "codice-ipa": "IPA code to exclude",
+        "add-codice-ipa": "Add IPA code",
+        "no-excluded": "No excluded entity"
       },
       "color": "Color settings",
       "cron": {
@@ -146,6 +171,7 @@
       "provincia": "Province",
       "regione": "Region",
       "responsabile": "Responsible",
+      "excluded": "The entity with IPA code {{codiceIpa}} is excluded from visualization.",
       "map": "Map",
       "search": "Search Administrations",
       "history": "History"
