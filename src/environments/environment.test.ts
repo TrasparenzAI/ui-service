@@ -21,7 +21,7 @@ export const environment = {
   matomo: {
     enabled: window["env"]["matomo.enable"] || false,
     trackerUser: {
-      enable: window["env"]["trackerUser.enable"] || false
+      enable: window["env"]["matomo.trackerUser.enable"] || false
     },
     trackerUrl: window["env"]["matomo.trackerUrl"],
     siteId: window["env"]["matomo.siteId"]

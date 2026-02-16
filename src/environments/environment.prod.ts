@@ -19,9 +19,9 @@ export const environment = {
     postLogoutRedirectUri: window["env"]["oidc.postLogoutRedirectUri"] || window.location.origin
   },
   matomo: {
-    enable: window["env"]["matomo.enable"] || false,
+    enabled: window["env"]["matomo.enable"] || false,
     trackerUser: {
-      enable: window["env"]["trackerUser.enable"] || false
+      enable: window["env"]["matomo.trackerUser.enable"] || false
     },
     trackerUrl: window["env"]["matomo.trackerUrl"],
     siteId: window["env"]["matomo.siteId"]
