@@ -251,7 +251,10 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
               });
             });          
           } else {
-            this.manageChart();
+            this.getWorkflow(queryParams).subscribe((workflowId: string | undefined) => {
+              this.filterFormSearch.controls.workflowId.patchValue(workflowId);
+              this.manageChart(workflowId);
+            });
           }
         } else {
           this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
