@@ -193,6 +193,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
           this.company = company[0];
           this.tabRuleActive = true;
           this.tabPAActive = false;
+          this.tabFailedActive = false;
           if (!this.company) {
             this.apiMessageService.sendMessage(MessageType.ERROR,  `PA non presente!`);
           }
@@ -206,6 +207,11 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
             this.conductorService.getAll({
               includeClosed: true,
               includeTasks: false
+            }).subscribe((workflows: Workflow[]) => {
+              this.optionsWorkflow = [];
+              this.conductorService.getAll({
+                includeClosed: true,
+                includeTasks: false
               },`/${ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW}/correlated/${this.codiceIpa}`).subscribe((ipaWorkflows: Workflow[]) => {
                 ipaWorkflows.concat(workflows).sort((a,b) => (a.startTime < b.startTime)? 1 : -1).forEach((workflow: Workflow) => {
                   this.optionsWorkflow.push({
@@ -223,7 +229,10 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
             });
           });          
         } else {
-          this.manageChart();
+          this.getWorkflow(queryParams).subscribe((workflowId: string | undefined) => {
+            this.filterFormSearch.controls.workflowId.patchValue(workflowId);
+            this.manageChart(workflowId);
+          });
         }
       } else {
         this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
