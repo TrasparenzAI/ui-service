@@ -129,7 +129,7 @@ export class CompanyRuleComponent implements OnInit, OnChanges {
 
   manageResults(ruleName: string, results: Result[]) {
     if (results.length === 0) {
-      this.apiMessageService.sendMessage(MessageType.WARNING, `Risultati non presenti per la PA: ${this.company.denominazioneEnte}!`);
+      this.apiMessageService.sendMessage(MessageType.WARNING, `Risultati non presenti per la PA: ${this.company?.denominazioneEnte}!`);
     }
     this.rulesOK = results.filter(result => result.status == 200 || result.status == 202).length;
     if (this.rules) {

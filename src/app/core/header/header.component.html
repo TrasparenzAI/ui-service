@@ -167,26 +167,28 @@
                 <span translate>it.navigation.grafici-mappe.mappa-regola</span>
               </a>
             </it-dropdown-item>
-            <it-dropdown-item>
-              <a href="#"  
-                translate 
-                (click)="toggleCollapse()" 
-                [routerLinkActive]="['active']"
-                routerLink="/result-pie-rule">
-                <it-icon size="sm" name="presentation"></it-icon>
-                <span translate>it.navigation.grafici-mappe.grafico-statistiche-regola</span>
-              </a>
-            </it-dropdown-item>
-            <it-dropdown-item>
-              <a href="#"  
-                translate 
-                (click)="toggleCollapse()" 
-                [routerLinkActive]="['active']"
-                routerLink="/result-rule">
-                <it-icon size="sm" name="box"></it-icon>
-                <span translate>it.navigation.grafici-mappe.statistiche-regola</span>
-              </a>
-            </it-dropdown-item>
+            @if (isAdmin) {
+              <it-dropdown-item>
+                <a href="#"  
+                  translate 
+                  (click)="toggleCollapse()" 
+                  [routerLinkActive]="['active']"
+                  routerLink="/result-pie-rule">
+                  <it-icon size="sm" name="presentation"></it-icon>
+                  <span translate>it.navigation.grafici-mappe.grafico-statistiche-regola</span>
+                </a>
+              </it-dropdown-item>
+              <it-dropdown-item>
+                <a href="#"  
+                  translate 
+                  (click)="toggleCollapse()" 
+                  [routerLinkActive]="['active']"
+                  routerLink="/result-rule">
+                  <it-icon size="sm" name="box"></it-icon>
+                  <span translate>it.navigation.grafici-mappe.statistiche-regola</span>
+                </a>
+              </it-dropdown-item>
+            }
           </ng-container>
         </it-dropdown>
       </it-navbar-item>

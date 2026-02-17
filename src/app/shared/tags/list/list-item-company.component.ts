@@ -24,7 +24,7 @@ import { RoleEnum } from '../../../auth/role.enum';
         </div>
         <div class="card-footer px-1 py-0">
           <div class="d-flex flex-wrap justify-content-around">
-            @if (authenticated) {
+            @if (authenticated && (isSuperuser || isAdmin)) {
               <app-show-workflow-history [codiceIpa]="item.codiceIpa"></app-show-workflow-history>
               <a itButton="outline-warning" size="xs" class="mt-1" translate routerLink="/history" [queryParams]="{workflowId: '',codiceIpa: item.codiceIpa, sort: 'createdAt,desc'}">
                 <it-icon name="chart-line" color="warning"></it-icon>it.company.history
@@ -52,6 +52,7 @@ import { RoleEnum } from '../../../auth/role.enum';
 export class ListItemCompanyComponent {
   authenticated = false;
   isAdmin: boolean;
+  isSuperuser: boolean;
   userData: any;
 
   constructor(
@@ -69,6 +70,7 @@ export class ListItemCompanyComponent {
             this.oidcSecurityService.userData$.subscribe(({ userData }) => {
               this.userData = userData;
               this.isAdmin = this.authGuard.hasRolesFromUserData([RoleEnum.ADMIN], userData);
+              this.isSuperuser = this.authGuard.hasRolesFromUserData([RoleEnum.SUPERUSER], userData);
             });
         });
       } else {
@@ -77,6 +79,7 @@ export class ListItemCompanyComponent {
           this.oidcSecurityService.userData$.subscribe(({ userData }) => {
             this.userData = userData;
             this.isAdmin = this.authGuard.hasRolesFromUserData([RoleEnum.ADMIN], userData);
+            this.isSuperuser = this.authGuard.hasRolesFromUserData([RoleEnum.SUPERUSER], userData);
           });
         });
       }

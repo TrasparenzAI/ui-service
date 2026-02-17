@@ -324,7 +324,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
         noCache: true
       }, this.userData ? "/codiceipa/byWorkflow" : "/codiceipa").subscribe((results: Result[]) => {
         if (results.length === 0) {
-          this.apiMessageService.sendMessage(MessageType.WARNING, `Risultati non presenti per la PA: ${this.company.denominazioneEnte}!`);
+          this.apiMessageService.sendMessage(MessageType.WARNING, `Risultati non presenti per la PA: ${this.company?.denominazioneEnte}!`);
         }
         this.childRuleName = ruleName;
         this.childResults = results;
