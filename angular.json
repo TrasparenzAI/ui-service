@@ -36,6 +36,11 @@
             ],
             "styles": [
               "@fortawesome/fontawesome-free/css/all.min.css",
+               { 
+                "input": "src/tema-verde.scss", 
+                "bundleName": "tema-verde", 
+                "inject": false 
+              },
               "src/styles.scss"
             ],
             "scripts": [

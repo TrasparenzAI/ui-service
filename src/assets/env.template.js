@@ -3,6 +3,7 @@
   
     // Environment variables
     window["env"]["apiUrl"] = "${API_URL}";
+    window["env"]["theme"] = "${THEME}";
     
     window["env"]["companyApiUrl"] = "${COMPANY_API_URL}";
     window["env"]["conductorApiUrl"] = "${CONDUCTOR_API_URL}";

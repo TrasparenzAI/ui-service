@@ -31,6 +31,7 @@ RUN rm -rf /usr/share/nginx/html/*
 ## From 'builder' stage copy over the artifacts in dist folder to default nginx public folder
 COPY --from=builder /ng-app/dist/browser /usr/share/nginx/html
 
+ENV THEME=
 ENV API_URL=https://dica33.ba.cnr.it
 ENV COMPANY_API_URL=$API_URL/public-sites-service
 ENV CONDUCTOR_API_URL=$API_URL/conductor-server

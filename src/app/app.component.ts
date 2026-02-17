@@ -7,6 +7,7 @@ import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../environments/environment';
 import { MatomoRouteTrackerService } from './shared/service/matomo.service';
 import { filter, take } from 'rxjs';
+import { ThemeService } from './shared/service/theme.service';
 
 @Component({
     selector: 'app-root',
@@ -24,8 +25,10 @@ export class AppComponent implements OnInit {
               private location: Location,
               protected httpClient: HttpClient,
               private oidcSecurityService: OidcSecurityService,
+              private themeService: ThemeService,
               public translate: TranslateService) {
     translate.addLangs(['it', 'en']);
+    themeService.initTheme();
     translate.getLangs().forEach((lang: string) => {
       translate.reloadLang(lang).subscribe((res) => {
         httpClient.get('assets/i18n/custom_' + lang + '.json').subscribe((data) => {

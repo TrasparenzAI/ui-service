@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   apiUrl: window["env"]["apiUrl"],
+  theme: window["env"]["theme"],
   companyApiUrl: window["env"]["companyApiUrl"],
   conductorApiUrl: window["env"]["conductorApiUrl"],
   resultApiUrl: window["env"]["resultApiUrl"],

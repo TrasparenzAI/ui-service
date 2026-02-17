@@ -2,6 +2,7 @@
     window["env"] = window["env"] || {};
   
     // Environment variables
+    window["env"]["theme"] = "tema-verde";
     window["env"]["apiUrl"] = "https://dica33.ba.cnr.it";
     window["env"]["companyApiUrl"] = window["env"]["apiUrl"] + "/public-sites-service";
     window["env"]["conductorApiUrl"] = "https://monitorai.ba.cnr.it" + "/conductor-server";

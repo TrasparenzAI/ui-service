@@ -1,0 +1,18 @@
+// tema-verde.scss
+
+// 1. Sovrascrivi le variabili BEFORE che Bootstrap Italia usa
+$primary-h: 120;
+$primary-s: 70;
+$primary-b: 30;   // bassa luminosità → colore scuro del tuo brand
+
+$dark: hsl($primary-h, $primary-s * 1%, $primary-b * 1%);
+
+// 2. Importa Bootstrap Italia (che a sua volta importa Bootstrap)
+@import 'bootstrap-italia/src/scss/bootstrap-italia';
+@import 'src/styles.scss';
+
+// Sovrascrittura manuale dei selettori hardcoded
+.it-timeline-wrapper .it-pin-wrapper.it-evidence .pin-text,
+.it-timeline-wrapper .it-pin-wrapper.it-evidence .pin-text span:after {
+  background: hsl($primary-h, $primary-s * 1%, $primary-b * 1%);
+}
