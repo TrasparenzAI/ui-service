@@ -41,6 +41,16 @@
                 "bundleName": "tema-verde", 
                 "inject": false 
               },
+              { 
+                "input": "src/tema-blu.scss", 
+                "bundleName": "tema-blu", 
+                "inject": false 
+              },
+              { 
+                "input": "src/tema-arancione.scss", 
+                "bundleName": "tema-arancione", 
+                "inject": false 
+              },
               "src/styles.scss"
             ],
             "scripts": [
