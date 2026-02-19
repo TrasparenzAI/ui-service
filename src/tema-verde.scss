@@ -14,6 +14,7 @@ $dark: hsl($primary-h, $primary-s * 1%, $primary-b * 1%);
 // Sovrascrittura manuale dei selettori hardcoded
 .it-timeline-wrapper .it-pin-wrapper.it-evidence .pin-text,
 .it-timeline-wrapper .it-pin-wrapper.it-evidence .pin-text span:after,
-.it-timeline-wrapper .it-pin-wrapper.it-evidence .pin-icon {
+.it-timeline-wrapper .it-pin-wrapper.it-evidence .pin-icon,
+.it-carousel-wrapper .splide__pagination button {
   background: hsl($primary-h, $primary-s * 1%, $primary-b * 1%);
 }
