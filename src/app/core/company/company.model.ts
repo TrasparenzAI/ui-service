@@ -73,6 +73,8 @@ export class Company implements Base {
     public createdAt: Date;
     @JsonProperty('updatedAt', ISODateTimeConverter)
     public updatedAt: Date;
+    @JsonProperty('visibile')
+    public visibile: boolean;
 
     constructor() {}
 

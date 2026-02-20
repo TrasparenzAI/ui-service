@@ -37,7 +37,7 @@
             <it-icon [name]="'map-marker-plus'" size="sm" color="primary" prependText></it-icon>
           </it-input>
         </div>
-        <div class="form-group col-md-3">
+        <div class="form-group" [ngClass]="{'col-md-2': isAdmin, 'col-md-3': !isAdmin}">
           <ng-select formControlName="regione"  [placeholder]="'it.company.regione'| translate">
             @for (regione of optionsRegione; track regione.value) {
               <ng-option [value]="regione.value">{{regione.text}}</ng-option>
@@ -45,18 +45,23 @@
           </ng-select>
         </div>
         @if(options && options.length != 0) {
-          <div class="form-group col-md-3">
+          <div class="form-group" [ngClass]="{'col-md-2': isAdmin, 'col-md-3': !isAdmin}">
             <ng-select formControlName="sort"  [placeholder]="'it.order.title'| translate">
               @for (sort of options; track sort.value) {
                 <ng-option [value]="sort.value">{{sort.text}}</ng-option>
               }
             </ng-select>
           </div>
+          @if(isAdmin) {
+            <div class="form-group col-md-2">
+              <it-checkbox [label]="'it.company.visibile'| translate" formControlName="visibile" toggle="true"></it-checkbox>
+            </div>
+          }
         }
       </div>
     </form>
   }
   @if (filterFormSearch) {
-    <company-list [filterForm] = "filterFormSearch"></company-list>
+    <company-list [filterForm] = "filterFormSearch" [isAdmin]="isAdmin"></company-list>
   }
   <app-list-header-layout>

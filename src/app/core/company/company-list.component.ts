@@ -8,6 +8,8 @@ import { animate, keyframes, style, transition, trigger } from '@angular/animati
 import { Company } from './company.model';
 import { CompanyService } from './company.service';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
+import { ModalService } from '../../shared/modal/modal.service';
+import { ApiMessageService, MessageType } from '../api-message.service';
 
 @Component({
     selector: 'company-list',
@@ -75,6 +77,11 @@ import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
                 <div class="col-sm-12">
                   <app-show-email [label]="item.tipoMail5" [value]="item.mail5"></app-show-email>
                 </div>
+                @if (isAdmin) {
+                  <div class="col-sm-4">
+                    <it-checkbox [label]="'it.company.visibile'| translate" [(ngModel)]="item.visibile" toggle="true" (ngModelChange)="changeVisible($event, item)"></it-checkbox>
+                  </div>
+                }
               </app-list-item-company>
             </div>
           }
@@ -90,7 +97,8 @@ import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
             ])))
         ])
     ],
-    standalone: false
+    standalone: false,
+    providers: [ModalService]
 })
 export class CompanyListComponent extends CommonListComponent<Company> implements OnInit {
 
@@ -99,12 +107,15 @@ export class CompanyListComponent extends CommonListComponent<Company> implement
   @Input() showPageOnTop: boolean = false;
   @Input() showPage: boolean = false;
   @Input() infiniteScroll: boolean = true;
+  @Input() isAdmin: boolean = false;
 
   @ViewChild(InfiniteScrollDirective) infiniteScrollDirective;
 
   pageOffset = CompanyService.PAGE_OFFSET;
   public constructor(public service: CompanyService,
                      protected route: ActivatedRoute,
+                     protected modalService: ModalService,
+                     protected apiMessageService: ApiMessageService,
                      protected router: Router,
                      protected changeDetector: ChangeDetectorRef,
                      protected navigationService: NavigationService,
@@ -143,4 +154,35 @@ export class CompanyListComponent extends CommonListComponent<Company> implement
     return true;
   }
 
+  protected changeVisible(value: boolean, item: Company) {
+    this.translateService.get(
+      value ? 'it.company.message-visibile': 'it.company.message-invisibile', 
+      { denominazioneEnte: item.denominazioneEnte}
+    ).subscribe((message: string) => {
+      this.modalService.open({
+        title: 'Conferma azione',
+        message: message,
+        onConfirm: () => {
+          if (value) {
+            this.service.setVisibile(item.id).subscribe((result: Company) => {
+              item = result;
+              this.changeDetector.detectChanges();
+              this.filterForm.updateValueAndValidity({ emitEvent: true });
+            });
+          } else {
+            this.service.setInvisibile(item.id).subscribe((result: Company) => {
+              item = result;
+              this.changeDetector.detectChanges();
+              this.filterForm.updateValueAndValidity({ emitEvent: true });
+            });
+          }
+        },
+        onClose: () => {
+          item.visibile = !value;
+          this.changeDetector.detectChanges();
+          this.apiMessageService.sendMessage(MessageType.WARNING, 'Operazione annullata.');
+        }
+      });
+    });
+  }
 }

@@ -196,6 +196,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
           this.tabFailedActive = false;
           if (!this.company) {
             this.apiMessageService.sendMessage(MessageType.ERROR,  `PA non presente!`);
+            this.router.navigate(['error/not-found-no-back']);
           }
         });
         if (this.userData) {
