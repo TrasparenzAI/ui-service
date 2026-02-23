@@ -133,7 +133,12 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
               protected router: Router) {}
 
   ngOnInit(): void {
-    if (environment.oidc.enable) { 
+    if (this.authGuard.isDevAuthBypassEnabled()) {
+      this.authenticated = true;
+      this.userData = this.authGuard.getDevBypassUserData();
+      this.isAdmin = true;
+      this.isSuperuser = true;
+    } else if (environment.oidc.enable) { 
       if (!environment.oidc.force) {
         this.oidcSecurityService
         .checkAuth()

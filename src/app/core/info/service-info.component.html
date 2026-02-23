@@ -6,6 +6,7 @@
         <tr class="bg-dark text-white font-monospace">
             <th scope="col">#</th>
             <th scope="col" translate>it.service-info.table.cols.microservice</th>
+            <th scope="col" translate>it.service-info.table.cols.status</th>
             <th scope="col" translate>it.service-info.table.cols.version</th>
             <th scope="col" translate>it.service-info.table.cols.date</th>
         </tr>
@@ -16,8 +17,19 @@
             <tr>
                 <th scope="row">{{idx + 1}}</th>
                 <td class="fw-bolder">{{service.artifact}}</td>
-                <td class="fst-italic">{{service.version}}</td>
-                <td>{{service.time | date: 'dd/MM/yyyy HH:mm:ss'}}</td>
+                <td>
+                  <span class="badge" [ngClass]="service.status === 'UP' ? 'bg-success' : 'bg-danger'">
+                    {{ ('it.service-info.status.' + (service.status || 'unknown')) | translate }}
+                  </span>
+                </td>
+                <td class="fst-italic">{{service.version || ('it.service-info.unavailable' | translate)}}</td>
+                <td>
+                  @if (service.time) {
+                    {{service.time | date: 'dd/MM/yyyy HH:mm:ss'}}
+                  } @else {
+                    {{'it.service-info.unavailable' | translate}}
+                  }
+                </td>
             </tr>
         }  
         </ng-container>

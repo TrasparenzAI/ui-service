@@ -15,6 +15,9 @@ export class AuthInterceptor implements HttpInterceptor {
   ) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    if (environment.devBypassAdminAuth && !environment.production) {
+      return next.handle(req);
+    }
     if (environment.oidc.enable) {
       if (req.url.indexOf(environment.companyApiUrl) != -1 || 
           req.url.indexOf(environment.conductorApiUrl) != -1 ||

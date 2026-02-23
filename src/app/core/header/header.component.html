@@ -10,7 +10,25 @@
     <li><a class="list-item" [routerLinkActive]="['active']" routerLink="/credits">Credits</a></li>
     @if(menuLinks && menuLinks.length !== 0) {
       @for(menulink of menuLinks; track menulink ) {
-        <li><a class="list-item" href="{{menulink.url}}" target="{{menulink.target}}">{{menulink.label}}</a></li>
+        @if (isDropdownMenu(menulink)) {
+          <li class="slim-menu-dropdown">
+            <it-dropdown mode="nav" class="slim-menu-dropdown-trigger">
+              <span button>{{ getMenuLabel(menulink) }}</span>
+              <ng-container list>
+                @for (childMenu of getMenuChildren(menulink); track childMenu) {
+                  <it-dropdown-item
+                    [href]="getMenuHref(childMenu)"
+                    [externalLink]="isExternalMenuItem(childMenu)"
+                    (click)="onDropdownMenuItemClick($event, childMenu)">
+                    {{ getMenuLabel(childMenu) }}
+                  </it-dropdown-item>
+                }
+              </ng-container>
+            </it-dropdown>
+          </li>
+        } @else {
+          <li><a class="list-item" [href]="getMenuHref(menulink)" [attr.target]="getMenuTarget(menulink)">{{getMenuLabel(menulink)}}</a></li>
+        }
       }
     }
   </ul>

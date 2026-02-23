@@ -61,6 +61,15 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   protected optionsRule: Array<SelectControlOption> = [];
 
   protected optionsWorkflow: Array<SelectControlOption> = [];
+  protected menuEntryTypes: Array<SelectControlOption> = [
+    { value: 'link', text: 'Link' },
+    { value: 'dropdown', text: 'Menu a tendina' }
+  ];
+  protected menuChildTypes: Array<SelectControlOption> = [
+    { value: 'link', text: 'Link' },
+    { value: 'email', text: 'Email' },
+    { value: 'phone', text: 'Telefono' }
+  ];
 
   protected number_workflows_preserve_id: number;
   protected workflow_id_preserve_id: number;
@@ -216,7 +225,6 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   }
 
   showAccordion(event: any, item: any) {
-    console.log('Accordion aperto:', item);
     this.accordions.forEach((accordion: ItAccordionComponent) => {
       if (accordion.id !== item.id) {
         if (accordion.isOpen()) accordion.hide();
@@ -323,10 +331,14 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
           }
           if (conf.key === ConfigurationService.MENU) {
             this.menuid = conf.id;
-            let jsonvalue = JSON.parse(conf.value);
-            jsonvalue?.dettagli.forEach((result: any) => {
-              this.dettagliArray.push(this.createDettaglioMenuFormGroup(result));
-            });
+            try {
+              const jsonvalue = JSON.parse(conf.value || '{}');
+              jsonvalue?.dettagli?.forEach((result: any) => {
+                this.dettagliArray.push(this.createDettaglioMenuFormGroup(result));
+              });
+            } catch {
+              // Keep the form usable even if the persisted menu config is malformed.
+            }
           }
           if (conf.key === ConfigurationService.SLICE) {
             this.sliceid = conf.id;
@@ -394,21 +406,129 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     this.dettagliArray.removeAt(index);
   }
 
-  addDettaglioMenu() {
-    this.dettagliArray.push(this.createDettaglioMenuFormGroup());
+  addDettaglioMenu(type: 'link' | 'dropdown' = 'link') {
+    this.dettagliArray.push(this.createDettaglioMenuFormGroup({ type }));
   }
 
   createDettaglioMenuFormGroup(dettaglio?: any): FormGroup {
+    const children = new FormArray([]);
+    const type = this.normalizeMenuEntryType(dettaglio);
+    const childEntries = this.extractMenuChildren(dettaglio);
+
     let formGroup = this.formBuilder.group({
+      type: [type, Validators.required],
       label: [dettaglio?.label || null, Validators.required],
-      url: [dettaglio?.url || undefined, Validators.required],
+      url: [dettaglio?.url || dettaglio?.value || undefined],
       target: [dettaglio?.target || undefined],
+      children: children
+    });
+
+    childEntries.forEach((child: any) => {
+      children.push(this.createDettaglioMenuChildFormGroup(child));
+    });
+    if (type === 'dropdown' && children.length === 0) {
+      children.push(this.createDettaglioMenuChildFormGroup());
+    }
+    this.applyMenuEntryValidators(formGroup);
+    formGroup.get('type').valueChanges.subscribe((value: 'link' | 'dropdown') => {
+      if (value === 'dropdown' && children.length === 0) {
+        children.push(this.createDettaglioMenuChildFormGroup());
+      }
+      this.applyMenuEntryValidators(formGroup);
     });
     return formGroup;
   }
 
   get dettagliArray(): FormArray {
     return this.menuForm.get('dettagli') as FormArray;
+  }
+
+  getDettaglioMenuChildren(index: number): FormArray {
+    return this.dettagliArray.at(index).get('children') as FormArray;
+  }
+
+  removeDettaglioMenuChild(menuIndex: number, childIndex: number) {
+    const children = this.getDettaglioMenuChildren(menuIndex);
+    children.removeAt(childIndex);
+    this.applyMenuEntryValidators(this.dettagliArray.at(menuIndex) as FormGroup);
+  }
+
+  addDettaglioMenuChild(menuIndex: number) {
+    const children = this.getDettaglioMenuChildren(menuIndex);
+    children.push(this.createDettaglioMenuChildFormGroup());
+    this.applyMenuEntryValidators(this.dettagliArray.at(menuIndex) as FormGroup);
+  }
+
+  createDettaglioMenuChildFormGroup(dettaglio?: any): FormGroup {
+    const type = this.normalizeMenuChildType(dettaglio);
+    const value = dettaglio?.value || dettaglio?.url || undefined;
+    const formGroup = this.formBuilder.group({
+      type: [type, Validators.required],
+      label: [dettaglio?.label || null, Validators.required],
+      value: [value, Validators.required],
+      target: [dettaglio?.target || undefined],
+    });
+    this.applyMenuChildValidators(formGroup);
+    formGroup.get('type').valueChanges.subscribe(() => this.applyMenuChildValidators(formGroup));
+    return formGroup;
+  }
+
+  private extractMenuChildren(dettaglio?: any): any[] {
+    if (Array.isArray(dettaglio?.children)) {
+      return dettaglio.children;
+    }
+    return [];
+  }
+
+  private normalizeMenuEntryType(dettaglio?: any): 'link' | 'dropdown' {
+    if (dettaglio?.type === 'dropdown') {
+      return 'dropdown';
+    }
+    if (Array.isArray(dettaglio?.children) && dettaglio.children.length > 0) {
+      return 'dropdown';
+    }
+    return 'link';
+  }
+
+  private normalizeMenuChildType(dettaglio?: any): 'link' | 'email' | 'phone' {
+    const type = dettaglio?.type;
+    if (type === 'email' || type === 'phone' || type === 'link') {
+      return type;
+    }
+    return 'link';
+  }
+
+  private applyMenuEntryValidators(formGroup: FormGroup): void {
+    const type = formGroup.get('type')?.value;
+    const urlControl = formGroup.get('url');
+    const children = formGroup.get('children') as FormArray;
+    if (type === 'dropdown') {
+      urlControl.clearValidators();
+      children.setValidators([Validators.minLength(1)]);
+    } else {
+      urlControl.setValidators([Validators.required]);
+      children.clearValidators();
+    }
+    urlControl.updateValueAndValidity({ emitEvent: false });
+    children.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private applyMenuChildValidators(formGroup: FormGroup): void {
+    const type = formGroup.get('type')?.value;
+    const valueControl = formGroup.get('value');
+    const targetControl = formGroup.get('target');
+    if (type === 'email') {
+      valueControl.setValidators([Validators.required, Validators.pattern(/^(mailto:)?[^\s@]+@[^\s@]+\.[^\s@]+$/i)]);
+      targetControl.clearValidators();
+    } else if (type === 'phone') {
+      valueControl.setValidators([Validators.required, Validators.pattern(/^(tel:)?[0-9+\-()\s]+$/)]);
+      targetControl.clearValidators();
+    } else {
+      valueControl.setValidators([Validators.required]);
+      targetControl.clearValidators();
+    }
+    valueControl.updateValueAndValidity({ emitEvent: false });
+    targetControl.updateValueAndValidity({ emitEvent: false });
   }
 
   removeDettaglioSlice(index: number) {

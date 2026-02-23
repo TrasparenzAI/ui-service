@@ -13,13 +13,16 @@ export class ServiceInfo {
     public version: string;
     @JsonProperty('group')
     public group: string;
+    @JsonProperty('status', String, true)
+    public status?: string;
 
-    constructor(artifact: string, name: string, time: Date, version: string, group: string) {
+    constructor(artifact: string, name: string, time: Date, version: string, group: string, status?: string) {
         this.artifact = artifact;
         this.name = name;
         this.time = time;
         this.version = version;
         this.group = group;
+        this.status = status;
     }
 }
 

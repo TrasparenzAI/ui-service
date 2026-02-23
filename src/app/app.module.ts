@@ -70,6 +70,9 @@ import { MatomoRouteTrackerService } from './shared/service/matomo.service';
         { provide: APP_BASE_HREF, useValue: environment.baseHref },
         { provide: ErrorHandler, useClass: GlobalErrorHandler },
         provideAppInitializer(() => {
+          if (!environment.oidc.enable || (environment.devBypassAdminAuth && !environment.production)) {
+            return Promise.resolve();
+          }
           const oidcService = inject(OidcSecurityService);
           return oidcService.checkAuth().toPromise();
         }),

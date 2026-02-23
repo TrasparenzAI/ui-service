@@ -180,8 +180,11 @@
               <a itButton="outline-primary" (click)="confirmMenu()" class="me-2" [disabled]="!menuForm.valid">
                 <it-icon name="pencil" color="primary"></it-icon>{{'it.navigation.confirm' | translate}}
               </a>
-              <a itButton="outline-success" class="text-success" (click)="addDettaglioMenu();" translate>
+              <a itButton="outline-success" class="text-success me-2" (click)="addDettaglioMenu('link');" translate>
                 <it-icon name="plus-circle" color="success"></it-icon>it.configuration.menu.add
+              </a>
+              <a itButton="outline-success" class="text-success" (click)="addDettaglioMenu('dropdown');" translate>
+                <it-icon name="plus-circle" color="success"></it-icon>it.configuration.menu.add-dropdown
               </a>
             </div>
           </div>              
@@ -191,17 +194,22 @@
                   [formGroupName]="i" 
                   class="shadow dettaglio-item p-3 mb-3 border rounded">
                 <div class="row mt-4">
+                  <div class="form-group col-md-2">
+                    <it-select formControlName="type" [label]="'it.configuration.menu.type'| translate">
+                      <option *ngFor="let type of menuEntryTypes" [value]="type.value">{{ type.text }}</option>
+                    </it-select>
+                  </div>
                   <div class="form-group col-md-3">
                     <it-input formControlName="label" required [label]="'it.configuration.menu.label'| translate">
                       <it-icon name="key" size="sm" color="primary" prependText></it-icon>
                     </it-input>
                   </div>
-                  <div class="form-group col-md-6">
+                  <div class="form-group col-md-4" *ngIf="dettaglioControl.get('type')?.value === 'link'">
                     <it-input formControlName="url" required [label]="'it.configuration.menu.url'| translate">
                       <it-icon name="link" size="sm" color="primary" prependText></it-icon>
                     </it-input>
                   </div>
-                  <div class="form-group col-md-2">
+                  <div class="form-group col-md-2" *ngIf="dettaglioControl.get('type')?.value === 'link'">
                     <it-input formControlName="target" [label]="'it.configuration.menu.target'| translate">
                       <it-icon name="arrow-right" size="sm" color="primary" prependText></it-icon>
                     </it-input>
@@ -210,6 +218,49 @@
                     <a itButton="outline-danger" class="text-danger" translate (click)="removeDettaglioMenu(i);">
                       <it-icon name="delete" color="danger"></it-icon>delete
                     </a>
+                  </div>
+                </div>
+                <div class="row mt-3" *ngIf="dettaglioControl.get('type')?.value === 'dropdown'">
+                  <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <h6 class="mb-0" translate>it.configuration.menu.dropdown-items</h6>
+                      <a itButton="outline-success" class="text-success" (click)="addDettaglioMenuChild(i)" translate>
+                        <it-icon name="plus-circle" color="success"></it-icon>it.configuration.menu.add-dropdown-item
+                      </a>
+                    </div>
+                    <div formArrayName="children">
+                      <div *ngFor="let childControl of getDettaglioMenuChildren(i).controls; let j = index"
+                        [formGroupName]="j"
+                        class="border rounded p-2 mb-2">
+                        <div class="row">
+                          <div class="form-group col-md-2">
+                            <it-select formControlName="type" [label]="'it.configuration.menu.item-type'| translate">
+                              <option *ngFor="let type of menuChildTypes" [value]="type.value">{{ type.text }}</option>
+                            </it-select>
+                          </div>
+                          <div class="form-group col-md-3">
+                            <it-input formControlName="label" required [label]="'it.configuration.menu.label'| translate">
+                              <it-icon name="key" size="sm" color="primary" prependText></it-icon>
+                            </it-input>
+                          </div>
+                          <div class="form-group col-md-4">
+                            <it-input formControlName="value" required [label]="'it.configuration.menu.value'| translate">
+                              <it-icon name="link" size="sm" color="primary" prependText></it-icon>
+                            </it-input>
+                          </div>
+                          <div class="form-group col-md-2" *ngIf="childControl.get('type')?.value === 'link'">
+                            <it-input formControlName="target" [label]="'it.configuration.menu.target'| translate">
+                              <it-icon name="arrow-right" size="sm" color="primary" prependText></it-icon>
+                            </it-input>
+                          </div>
+                          <div class="col-md-1 text-end ms-auto">
+                            <a itButton="outline-danger" class="text-danger" translate (click)="removeDettaglioMenuChild(i, j);">
+                              <it-icon name="delete" color="danger"></it-icon>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

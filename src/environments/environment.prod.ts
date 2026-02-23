@@ -11,6 +11,7 @@ export const environment = {
   crawlerApiUrl: window["env"]["crawlerApiUrl"],
   debug: window["env"]["debug"] || false,
   baseHref: window["env"]["baseHref"] || "/",
+  devBypassAdminAuth: window["env"]["devBypassAdminAuth"] === true || window["env"]["devBypassAdminAuth"] === 'true',
   oidc: {
     enable: window["env"]["oidc.enable"] || false,
     force: window["env"]["oidc.force"] || false,

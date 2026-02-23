@@ -8,6 +8,9 @@ export class AuthRedirectGuard implements CanActivate {
   constructor(private auth: OidcSecurityService, private router: Router) {}
 
   canActivate(): boolean {
+    if (environment.devBypassAdminAuth && !environment.production) {
+        return true;
+    }
     if (environment.oidc.enable && !environment.oidc.force) {
         this.auth.checkAuth().subscribe(({ isAuthenticated }) => {
             if (isAuthenticated) {

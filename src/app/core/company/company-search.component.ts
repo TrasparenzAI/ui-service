@@ -43,7 +43,9 @@ export class CompanySearchComponent implements OnInit, OnDestroy{
   }
 
   ngOnInit(): void {
-    if (environment.oidc.enable) { 
+    if (this.authGuard.isDevAuthBypassEnabled()) {
+      this.isAdmin = true;
+    } else if (environment.oidc.enable) { 
       if (!environment.oidc.force) {
         this.oidcSecurityService
         .checkAuth()

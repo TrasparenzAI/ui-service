@@ -2,6 +2,7 @@ import { ActivatedRouteSnapshot, RouterStateSnapshot, Router, UrlSegment } from 
 import { Injectable, Injector} from '@angular/core';
 import { ApiMessageService } from '../core/api-message.service';
 import { CommonService } from '../common/controller/common.service';
+import { environment } from '../../environments/environment';
 
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -24,7 +25,12 @@ export class AuthGuardService  {
       if (result) {
         return true;
       }
-      this.router.navigateByUrl('/auth/signin', { state: { redirect: url } });
+      const shouldEnforceOidc = environment.oidc.enable && !(environment.devBypassAdminAuth && !environment.production);
+      if (shouldEnforceOidc) {
+        this.router.navigateByUrl('/auth/signin', { state: { redirect: url } });
+      } else {
+        this.router.navigate(['error/unauthorized']);
+      }
     }));
   }
 

@@ -9,13 +9,13 @@ export class ThemeService {
 
   initTheme() {
     const theme = environment.theme;
-    console.log(theme);
-    if (theme) {
-        const link = this.document.createElement('link');
-        link.id = 'app-theme';
-        link.rel = 'stylesheet';
-        link.href = `${theme}.css`;
-        this.document.head.appendChild(link);
+    if (!theme) {
+      return;
     }
+    const link = this.document.createElement('link');
+    link.id = 'app-theme';
+    link.rel = 'stylesheet';
+    link.href = `${theme}.css`;
+    this.document.head.appendChild(link);
   }
 }

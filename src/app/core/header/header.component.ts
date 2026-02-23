@@ -24,11 +24,62 @@ import { ConfigurationService } from '../configuration/configuration.service';
       width: 24px!important;
       height: 24px!important;
     }
+    .it-header-slim-wrapper .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-toggle.nav-link {
+      color: #fff !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+      font-size: 1rem !important;
+      line-height: 2rem;
+      display: block;
+      text-transform: none !important;
+      text-decoration: none !important;
+    }
+    .it-header-slim-wrapper .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-toggle.nav-link .icon {
+      vertical-align: middle;
+    }
+    @media (min-width: 992px) {
+      .it-header-slim-wrapper .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-toggle.nav-link {
+        position: relative;
+        top: 0;
+      }
+    }
+    .it-header-slim-wrapper .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-toggle.nav-link span {
+      color: #fff !important;
+    }
+    .it-header-slim-wrapper .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-toggle.nav-link .icon {
+      fill: #fff !important;
+    }
+    .it-header-slim-wrapper.theme-light .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-toggle.nav-link {
+      color: #06c !important;
+    }
+    .it-header-slim-wrapper.theme-light .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-toggle.nav-link span {
+      color: #06c !important;
+    }
+    .it-header-slim-wrapper.theme-light .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-toggle.nav-link .icon {
+      fill: #06c !important;
+    }
+    .it-header-slim-wrapper .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-menu .link-list {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      height: auto;
+    }
+    .it-header-slim-wrapper .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-menu .link-list li {
+      display: block;
+      width: 100%;
+    }
+    .it-header-slim-wrapper .it-header-slim-wrapper-content .nav-mobile ul.link-list li.slim-menu-dropdown .dropdown-menu .link-list li a {
+      line-height: 1.25rem;
+      padding-top: 8px;
+      padding-bottom: 8px;
+      white-space: nowrap;
+    }
   `,
     standalone: false
 })
 export class HeaderComponent implements OnInit, OnDestroy {
-
   @ViewChild(ItHeaderComponent) private itHeaderComponent?: ItHeaderComponent;
 
   public onUserActivated: Subscription = new Subscription();
@@ -84,8 +135,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
       });
     });
     this.configurationService.getMenuLink().subscribe((menu: any) => {
-      this.menuLinks = menu?.dettagli;
+      const links = Array.isArray(menu?.dettagli) ? menu.dettagli : [];
+      this.menuLinks = links;
     });
+    if (this.authGuard.isDevAuthBypassEnabled()) {
+      this.authenticated = true;
+      this.isAdmin = true;
+      this.userData = this.authGuard.getDevBypassUserData();
+      return;
+    }
     if (environment.oidc.enable) { 
       if (!environment.oidc.force) {
         this.oidcSecurityService
@@ -171,6 +229,82 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.itHeaderComponent?.toggleCollapse();
       }
     });
+  }
+
+  isDropdownMenu(menuLink: any): boolean {
+    return this.getMenuChildren(menuLink).length > 0 || menuLink?.type === 'dropdown';
+  }
+
+  getMenuChildren(menuLink: any): any[] {
+    if (Array.isArray(menuLink?.children)) {
+      return menuLink.children;
+    }
+    return [];
+  }
+
+  getMenuLabel(menuItem: any): string {
+    return menuItem?.label || menuItem?.value || menuItem?.url || '';
+  }
+
+  getMenuHref(menuItem: any): string {
+    const value = menuItem?.value || menuItem?.url || '#';
+    const type = this.getMenuItemType(menuItem);
+    if (type === 'email') {
+      return value.startsWith('mailto:') ? value : `mailto:${value}`;
+    }
+    if (type === 'phone') {
+      return value.startsWith('tel:') ? value : `tel:${value}`;
+    }
+    return value;
+  }
+
+  getMenuTarget(menuItem: any): string {
+    const type = this.getMenuItemType(menuItem);
+    if (type === 'email' || type === 'phone') {
+      return '_self';
+    }
+    return menuItem?.target || undefined;
+  }
+
+  isExternalMenuItem(menuItem: any): boolean {
+    const href = this.getMenuHref(menuItem);
+    if (!href) {
+      return false;
+    }
+    return this.getMenuTarget(menuItem) === '_blank'
+      || href === '#'
+      || href.startsWith('http://')
+      || href.startsWith('https://')
+      || href.startsWith('//')
+      || href.startsWith('mailto:')
+      || href.startsWith('tel:');
+  }
+
+  onDropdownMenuItemClick(event: Event, menuItem: any): void {
+    const href = this.getMenuHref(menuItem);
+    if (!href || href === '#') {
+      event.preventDefault();
+      return;
+    }
+    if (this.getMenuTarget(menuItem) === '_blank') {
+      event.preventDefault();
+      window.open(href, '_blank', 'noopener');
+    }
+  }
+
+  private getMenuItemType(menuItem: any): 'link' | 'email' | 'phone' {
+    const type = menuItem?.type;
+    if (type === 'email' || type === 'phone' || type === 'link') {
+      return type;
+    }
+    const value = menuItem?.value || menuItem?.url || '';
+    if (typeof value === 'string' && value.startsWith('mailto:')) {
+      return 'email';
+    }
+    if (typeof value === 'string' && value.startsWith('tel:')) {
+      return 'phone';
+    }
+    return 'link';
   }
 
   logout() {
