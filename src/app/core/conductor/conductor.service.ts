@@ -12,12 +12,14 @@ import { SpringError } from '../../common/model/spring-error.model';
 import { environment } from '../../../environments/environment';
 import { AuthGuard } from '../../auth/auth-guard';
 import { RoleEnum } from '../../auth/role.enum';
+import { ConfigurationService } from '../configuration/configuration.service';
 
 @Injectable()
 export class ConductorService extends CommonService<Workflow> {
 
   public constructor(protected httpClient: HttpClient,
                      protected apiMessageService: ApiMessageService,
+                     protected configurationService: ConfigurationService,
                      protected router: Router,
                      protected translateService: TranslateService,
                      private authGuard: AuthGuard,
@@ -251,38 +253,42 @@ export class ConductorService extends CommonService<Workflow> {
 
 
   public startMainWorkflow(codiceIpa?: string, ruleName?: string): Observable<string> {
-    return this.startMainWorkflowNow(this.inputParamter(codiceIpa, ruleName));
+    return this.inputParamter(codiceIpa, ruleName).pipe(
+      switchMap((params) => this.startMainWorkflowNow(params))
+    );
   }
 
-  public inputParamter(codiceIpa?: string, ruleName?: string): any {
-    return {
-      name: ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
-      version: 1,
-      correlationId: codiceIpa || ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
-      input: {
-        page_size: 1,
-        codice_categoria: ``,
-        codice_ipa: codiceIpa,
-        id_ipa_from: 0,
-        parent_workflow_id: ``,
-        execute_child: true,
-        force_jsoup: true,
-        crawling_mode: `htmlSource`,
-        crawler_save_object: true,
-        crawler_save_screenshot: true,
-        root_rule: ruleName || Rule.AMMINISTRAZIONE_TRASPARENTE,
-        rule_name: Rule.AMMINISTRAZIONE_TRASPARENTE,
-        connection_timeout: 60000,
-        read_timeout: 60000,
-        connection_timeout_max: 120000,
-        read_timeout_max: 120000,
-        crawler_child_type: `SUB_WORKFLOW`,
-        crawler_uri: environment.crawlerApiUrl,
-        result_base_url: environment.resultApiUrl,
-        rule_base_url: environment.ruleApiUrl,
-        public_company_base_url: environment.companyApiUrl,
-        result_aggregator_base_url: environment.resultAggregatorapiUrl
+  public inputParamter(codiceIpa?: string, ruleName?: string): Observable<any> {
+    return this.configurationService.getWorkflowVersion().pipe(map((versione: number) => {
+      return {
+        name: ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
+        version: versione,
+        correlationId: codiceIpa || ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
+        input: {
+          page_size: 1,
+          codice_categoria: ``,
+          codice_ipa: codiceIpa,
+          id_ipa_from: 0,
+          parent_workflow_id: ``,
+          execute_child: true,
+          force_jsoup: true,
+          crawling_mode: `htmlSource`,
+          crawler_save_object: true,
+          crawler_save_screenshot: true,
+          root_rule: ruleName || Rule.AMMINISTRAZIONE_TRASPARENTE,
+          rule_name: Rule.AMMINISTRAZIONE_TRASPARENTE,
+          connection_timeout: 60000,
+          read_timeout: 60000,
+          connection_timeout_max: 120000,
+          read_timeout_max: 120000,
+          crawler_child_type: `SUB_WORKFLOW`,
+          crawler_uri: environment.crawlerApiUrl,
+          result_base_url: environment.resultApiUrl,
+          rule_base_url: environment.ruleApiUrl,
+          public_company_base_url: environment.companyApiUrl,
+          result_aggregator_base_url: environment.resultAggregatorapiUrl
+        }
       }
-    }
+    }));
   }
 }

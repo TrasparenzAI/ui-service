@@ -7,7 +7,7 @@ import { LoginResponse, OidcSecurityService } from 'angular-auth-oidc-client';
 import { OrgChart } from "d3-org-chart";
 import { ItModalComponent, ItTabContainerComponent, ItTabItemComponent, NotificationPosition, SelectControlOption } from 'design-angular-kit';
 import { jsPDF } from "jspdf";
-import { Observable, map, of as observableOf, of, switchMap, tap } from 'rxjs';
+import { Observable, map, of as observableOf, of, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthGuard } from '../../auth/auth-guard';
 import { RoleEnum } from '../../auth/role.enum';
