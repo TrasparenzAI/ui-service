@@ -14,7 +14,6 @@ import { RoleEnum } from '../../auth/role.enum';
 import { Helpers } from '../../common/helpers/helpers';
 import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
 import { ApiMessageService, MessageType } from '../api-message.service';
-import { ConductorService } from '../conductor/conductor.service';
 import { Workflow } from '../conductor/workflow.model';
 import { Configuration } from '../configuration/configuration.model';
 import { ConfigurationService } from '../configuration/configuration.service';
@@ -124,7 +123,6 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
               private ruleService: RuleService,
               private resultService: ResultService,
               private configurationService: ConfigurationService,
-              private conductorService: ConductorService,
               private authGuard: AuthGuard,
               private companyService: CompanyService,
               private translateService: TranslateService,

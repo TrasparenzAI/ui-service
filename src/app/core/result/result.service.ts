@@ -168,6 +168,9 @@ export class ResultService extends CommonService<Result> {
           { params }
         ).pipe(
           switchMap((result: any[]) => {
+            if (!result || result.length === 0) {
+              return of([]);
+            }            
             try {
               const items: Array<Observable<Workflow>> = result.map((item) => {
                 const instance: Workflow = this.buildGenericInstance(item, Workflow);
@@ -199,10 +202,14 @@ export class ResultService extends CommonService<Result> {
   }
 
   public lastWorflowCompleted(codiceIpa?: string, invokeConductor? :boolean): Observable<Workflow> {
-    return this.listWorkflows(codiceIpa, invokeConductor).pipe(switchMap((workflows: Workflow[]) => {      
-      return observableOf(workflows.filter((workflow: Workflow) => {
+    return this.listWorkflows(codiceIpa, invokeConductor).pipe(switchMap((workflows: Workflow[]) => {  
+      let completed = workflows.filter((workflow: Workflow) => {
         return workflow.isCompleted;
-      })[0]);
+      });
+      if (completed) {
+        return observableOf(completed[0]);
+      }
+      return observableOf(undefined);
     }));
   }
 
