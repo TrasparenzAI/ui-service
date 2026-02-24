@@ -346,7 +346,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
           if (conf.key === ConfigurationService.WORKFLOW_CRON_BODY) {
             this.workflowBODYid = conf.id;
             let jsonvalue = JSON.parse(conf.value);
-            this.workflowBODYForm.controls.version.patchValue(jsonvalue.input.version || 1);
+            this.workflowBODYForm.controls.version.patchValue(jsonvalue.version || 1);
             this.workflowBODYForm.controls.page_size.patchValue(jsonvalue.input.page_size);
             this.workflowBODYForm.controls.codice_categoria.patchValue(jsonvalue.input.codice_categoria);
             this.workflowBODYForm.controls.codice_ipa.patchValue(jsonvalue.input.codice_ipa);
