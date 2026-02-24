@@ -205,15 +205,9 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
             this.filterFormSearch.valueChanges.subscribe((value: any) => {            
               this.manageChart(value.workflowId);
             });          
-            this.conductorService.getAll({
-              includeClosed: true,
-              includeTasks: false
-            }).subscribe((workflows: Workflow[]) => {
+            this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
               this.optionsWorkflow = [];
-              this.conductorService.getAll({
-                includeClosed: true,
-                includeTasks: false
-              },`/${ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW}/correlated/${this.codiceIpa}`).subscribe((ipaWorkflows: Workflow[]) => {
+              this.resultService.listWorkflows(this.codiceIpa).subscribe((ipaWorkflows: Workflow[]) => {
                 ipaWorkflows.concat(workflows).sort((a,b) => (a.startTime < b.startTime)? 1 : -1).forEach((workflow: Workflow) => {
                   this.optionsWorkflow.push({
                     value: workflow.workflowId,
@@ -222,7 +216,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
                       status: this.translateService.instant(`it.workflow.status.${workflow.status}`)
                     }),
                     selected: workflow.workflowId === queryParams['workflowId'],
-                    ruleName: workflow.input.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
+                    ruleName: workflow.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
                   });
                 });  
                 this.manageChart(workflowId);
@@ -277,13 +271,11 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
       }
     }
     if (!workflowId) {
-      return this.configurationService.getAll().pipe(switchMap((configurations: Configuration[]) => {
-        return configurations.filter((configuration: Configuration) => {
-          return configuration.key === ConfigurationService.WORKFLOW_CRON_BODY;
-        }).map((configuration: Configuration) => {
-          let jsonvalue = JSON.parse(configuration.value);
-          return String(jsonvalue.input.root_rule);
-        });
+      /* In questo caso recupero la regola dell'ultimo flusso completato, anche rispetto al codice IPA */
+      return this.resultService.lastWorflowCompleted(undefined, false).pipe(switchMap((workflow: Workflow) => {
+        return this.resultService.lastWorflowCompleted(this.codiceIpa, false).pipe(switchMap((wokflowIpa: Workflow) => {
+          return of((workflow?.endTime?.getTime() || 0) >= (wokflowIpa?.endTime?.getTime() || 0) ? workflow?.root_rule : wokflowIpa?.root_rule);
+        }));
       }));
     }
     return of(Rule.AMMINISTRAZIONE_TRASPARENTE);
@@ -405,7 +397,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
     if (queryParams.workflowId) {
       return observableOf(queryParams.workflowId);
     }
-    return this.conductorService.lastWorflow().pipe(map((workflow: Workflow) => {
+    return this.resultService.lastWorflow().pipe(map((workflow: Workflow) => {
       return workflow.workflowId;
     }));
   }
@@ -772,10 +764,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
         this.saveRules();
         this.loadSelectRules();
       } else {
-        this.conductorService.getAll({
-          includeClosed: true,
-          includeTasks: false
-        }).subscribe((workflows: Workflow[]) => {
+        this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
           let numero = workflows.filter((workflow: Workflow) => workflow.input.root_rule == currentNode.data.nodeId).length;
           if (numero > 0) {
             this.apiMessageService.sendMessage(

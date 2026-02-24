@@ -16,6 +16,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { DurationFormatPipe } from '../../shared/pipes/durationFormat.pipe';
 import * as Leaflet from 'leaflet';
 import 'leaflet.markercluster';
+import { ResultService } from '../result/result.service';
 
 @Component({
     selector: 'company-map',
@@ -65,6 +66,7 @@ export class CompanyMapComponent implements OnInit {
     private apiMessageService: ApiMessageService,
     private resultAggregatorService: ResultAggregatorService,
     private conductorService: ConductorService,
+    private resultService: ResultService,
     private datepipe: DatePipe,
     private durationFormatPipe: DurationFormatPipe,
     private router: Router) {
@@ -172,10 +174,7 @@ export class CompanyMapComponent implements OnInit {
       }
     });
     this.workflowId = workflowId;    
-    this.conductorService.getAll({
-      includeClosed: true,
-      includeTasks: false
-    }).subscribe((workflows: Workflow[]) => {
+    this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
       workflows.forEach((workflow: Workflow) => {
         if (workflow.isCompleted) {
           this.optionsWorkflow.push({
@@ -185,7 +184,7 @@ export class CompanyMapComponent implements OnInit {
               duration: this.durationFormatPipe.transform(workflow.executionTime)
             }),
             selected: workflow.workflowId === workflow.workflowId,
-            ruleName: workflow.input.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
+            ruleName: workflow.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
           });
         }
       });
@@ -227,7 +226,7 @@ export class CompanyMapComponent implements OnInit {
         if (queryParams.workflowId) {
           this.initMap(queryParams.workflowId, queryParams);
         } else {
-          this.conductorService.lastWorflowCompleted().subscribe((workflow: Workflow) => {
+          this.resultService.lastWorflowCompleted().subscribe((workflow: Workflow) => {
             this.initMap(workflow.workflowId, queryParams);
           });
         }

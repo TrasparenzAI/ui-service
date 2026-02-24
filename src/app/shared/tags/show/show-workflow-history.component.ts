@@ -205,14 +205,8 @@ export class ShowWorkflowHistoryComponent implements OnInit{
           }      
       });
     });
-    this.conductorService.getAll({
-      includeClosed: true,
-      includeTasks: false
-    }).subscribe((workflows: Workflow[]) => {
-      this.conductorService.getAll({
-        includeClosed: true,
-        includeTasks: false
-      },`/${ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW}/correlated/${this.codiceIpa}`).subscribe((ipaWorkflows: Workflow[]) => {
+    this.resultService.listWorkflows(undefined, true).subscribe((workflows: Workflow[]) => {
+      this.resultService.listWorkflows(this.codiceIpa, true).subscribe((ipaWorkflows: Workflow[]) => {
         this.workflows = ipaWorkflows.concat(workflows).sort((a,b) => (a.startTime < b.startTime)? 1 : -1);
         this.changeDetectorRef.detectChanges();
       });

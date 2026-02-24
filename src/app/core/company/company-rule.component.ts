@@ -92,7 +92,7 @@ export class CompanyRuleComponent implements OnInit, OnChanges {
     if (this.isAuthenticated) {
       return this.conductorService.getById(workflowId, {'includeTasks': false}, false, false).pipe(
         map((result: Workflow) => {
-          return result.input.root_rule;
+          return result.root_rule;
         }),
         catchError((error) => {
           return this.ruleFromConfiguration();
@@ -109,7 +109,7 @@ export class CompanyRuleComponent implements OnInit, OnChanges {
         return configuration.key === ConfigurationService.WORKFLOW_CRON_BODY;
       }).map((configuration: Configuration) => {
         let jsonvalue = JSON.parse(configuration.value);
-        return String(jsonvalue.input.root_rule);
+        return String(jsonvalue.root_rule);
       });
     }));
   }

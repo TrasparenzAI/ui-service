@@ -36,6 +36,14 @@ export abstract class CommonService<T extends Base> {
     return null;
   }
 
+  public buildGenericInstance(json: any, obj: any): any {
+    let jsonConvert: JsonConvert = new JsonConvert();
+        jsonConvert.ignorePrimitiveChecks = false; // don't allow assigning number to string etc.
+        jsonConvert.valueCheckingMode = ValueCheckingMode.ALLOW_NULL; // never allow null
+        jsonConvert.ignoreRequiredCheck = true;
+    return jsonConvert.deserializeObject(json, obj);  
+  }
+
   public buildInstance(json: any): T {
     let jsonConvert: JsonConvert = new JsonConvert();
         jsonConvert.ignorePrimitiveChecks = false; // don't allow assigning number to string etc.
@@ -215,7 +223,7 @@ export abstract class CommonService<T extends Base> {
    * @param {number} id
    * @returns {Observable<T>}
    */
-  public getById(id: string, filter?: {}, redirectOnError?: boolean, showMessage: boolean = true): Observable<T> {
+  public getById(id: string, filter?: {}, redirectOnError?: boolean, showMessage: boolean = true, objONError?: T): Observable<T> {
     let params = new HttpParams();
     params = this.appendToImmutableHttpParams(filter, params);
     if (!id) {
@@ -240,8 +248,10 @@ export abstract class CommonService<T extends Base> {
               }),
               catchError( (httpErrorResponse: HttpErrorResponse) => {
                 const springError = new SpringError(httpErrorResponse, this.translateService, redirectOnError);
-                if (showMessage) this.apiMessageService.sendMessage(MessageType.ERROR, springError.getRestErrorMessage());                
-                return throwError(() => springError);
+                if (showMessage) this.apiMessageService.sendMessage(MessageType.ERROR, springError.getRestErrorMessage()); 
+                if (redirectOnError)               
+                  return throwError(() => springError);
+                return observableOf(objONError);
               })
             );
         })
