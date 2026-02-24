@@ -88,9 +88,9 @@ export class CompanyRuleComponent implements OnInit, OnChanges {
     }
   }
   
-  workflowRuleName(workflowId: string): Observable<string> {
+  workflowRuleName(workflowId: string): Observable<string> {    
     if (this.isAuthenticated) {
-      return this.conductorService.getById(workflowId, {'includeTasks': false}, false, false).pipe(
+      return this.resultService.getWorkflow(workflowId).pipe(
         map((result: Workflow) => {
           return result.root_rule;
         }),

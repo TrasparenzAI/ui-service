@@ -155,6 +155,32 @@ export class ResultService extends CommonService<Result> {
     }));    
   }
 
+  public getWorkflow(workflowId: string): Observable<Workflow> {
+    let params = new HttpParams().set('workflowId', workflowId);
+    return this.getApiBase().pipe(
+      switchMap((apiBase) => {
+        return this.httpClient.get<any[]>(
+          `${apiBase}/v1/workflows`,
+          { params }
+        ).pipe(
+          map((result: any) => {
+            let arrays = this.getResultArrays(result);
+            const items: Workflow[] = arrays.map((item) => {
+              const instance: Workflow = this.buildGenericInstance(item, Workflow);
+              return instance;
+            });
+            return items[0];
+          }),
+          catchError((httpErrorResponse: HttpErrorResponse) => {
+            const springError = new SpringError(httpErrorResponse, this.translateService);
+            this.apiMessageService.sendMessage(MessageType.ERROR, springError.getRestErrorMessage());
+            return throwError(() => springError);
+          })
+        );
+      })
+    );  
+  }
+
   public listWorkflows(codiceIpa?: string, invokeConductor :boolean = true): Observable<Workflow[]> {
     let params = new HttpParams();
     if (codiceIpa) {
