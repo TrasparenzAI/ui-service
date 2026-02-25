@@ -13,9 +13,10 @@ export class GlobalErrorHandler implements ErrorHandler {
   ) { }
 
   handleError(error: any) {
+    const shouldEnforceOidc = environment.oidc.enable && !(environment.devBypassAdminAuth && !environment.production);
     if ((error instanceof SpringError && error?.redirectOnError) || !(error instanceof SpringError)) {
       if (error?.httpErrorResponse?.status === 401) {
-        if (environment.oidc.enable) {
+        if (shouldEnforceOidc) {
           sessionStorage.setItem('redirect', this.router.url);
           this.router.navigateByUrl('/auth/signin', { state: { redirect: this.router.url } });
         } else {

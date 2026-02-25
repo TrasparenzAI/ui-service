@@ -38,7 +38,10 @@ export class Helpers {
     return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
   }
 
-  public static firstLetter(word: string) {
+  public static firstLetter(word?: string) {
+    if (!word) {
+      return '';
+    }
     return word.charAt(0).toUpperCase();
   }
 
@@ -308,4 +311,3 @@ export class Helpers {
   }
   
 }
-

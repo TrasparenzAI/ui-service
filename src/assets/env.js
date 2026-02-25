@@ -13,6 +13,7 @@
     window["env"]["crawlerApiUrl"] = "http://150.145.95.77:8080/crawl";
 
     window["env"]["baseHref"] = "/";
+    window["env"]["devBypassAdminAuth"] = true;
     window["env"]["production"] = false;
     window["env"]["oidc.enable"] = true;
     window["env"]["oidc.force"] = false;

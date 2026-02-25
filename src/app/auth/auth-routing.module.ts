@@ -6,10 +6,12 @@ import { FormsModule } from '@angular/forms';
 import { environment } from '../../environments/environment';
 import { AutoLoginAllRoutesGuard } from 'angular-auth-oidc-client';
 
+const shouldEnforceOidc = environment.oidc.enable && !(environment.devBypassAdminAuth && !environment.production);
+
 const authRoutes: Routes = [
   { 
     path: 'auth/signin', 
-    canActivate: (environment.oidc.enable)?[AutoLoginAllRoutesGuard]:[], 
+    canActivate: shouldEnforceOidc ? [AutoLoginAllRoutesGuard] : [], 
     component: SigninComponent 
   }
 ];

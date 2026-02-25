@@ -59,6 +59,13 @@ export class ListItemCompanyComponent {
     private oidcSecurityService: OidcSecurityService,
     private authGuard: AuthGuard
   ) {
+    if (this.authGuard.isDevAuthBypassEnabled()) {
+      this.authenticated = true;
+      this.userData = this.authGuard.getDevBypassUserData();
+      this.isAdmin = true;
+      this.isSuperuser = true;
+      return;
+    }
     if (environment.oidc.enable) { 
       if (!environment.oidc.force) {
         this.oidcSecurityService

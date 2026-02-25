@@ -15,7 +15,8 @@ export class SigninComponent implements OnInit {
 
     ngForm: FormGroup;
     submitted = false;
-    oidcEnable = environment.oidc.enable;
+    private shouldEnforceOidc = environment.oidc.enable && !(environment.devBypassAdminAuth && !environment.production);
+    oidcEnable = this.shouldEnforceOidc;
     oidcForce = environment.oidc.force;
     authenticated = false;
     
@@ -29,7 +30,7 @@ export class SigninComponent implements OnInit {
             username: ['', Validators.required],
             password: ['', Validators.required]
         });
-        if (environment.oidc.enable) {
+        if (this.shouldEnforceOidc) {
             this.authenticated = true;
             this.oidcSecurityService.checkAuth().subscribe(({ isAuthenticated, userData, accessToken, idToken }) => {
                 this.authenticated = isAuthenticated;
@@ -44,6 +45,9 @@ export class SigninComponent implements OnInit {
     get f() { return this.ngForm.controls; }
 
     onSigninSSO() {
+        if (!this.shouldEnforceOidc) {
+            return;
+        }
         this.oidcSecurityService.authorize();
     }
     

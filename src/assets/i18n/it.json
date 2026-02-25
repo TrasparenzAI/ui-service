@@ -45,10 +45,17 @@
       "table": {
         "cols": {
           "microservice": "Microservizio",
+          "status": "Stato",
           "version": "Versione (Tag)",
           "date": "Data di Build"
         }
-      }
+      },
+      "status": {
+        "UP": "Raggiungibile",
+        "UNREACHABLE": "Non raggiungibile",
+        "unknown": "Sconosciuto"
+      },
+      "unavailable": "N/D"
     },
     "configuration" : {
       "slice": {
@@ -68,8 +75,14 @@
         "title": "Impostazioni menu",
         "subtitle": "Voci di menu",
         "add": "Aggiungi nuova voce",
+        "add-dropdown": "Aggiungi menu a tendina",
+        "add-dropdown-item": "Aggiungi voce al menu a tendina",
+        "dropdown-items": "Voci del menu a tendina",
+        "type": "Tipo voce",
+        "item-type": "Tipo elemento",
         "label": "Etichetta",
         "url": "URL",
+        "value": "Valore",
         "target": "Target"
       },
       "color": "Impostazioni colori compliance sezioni",

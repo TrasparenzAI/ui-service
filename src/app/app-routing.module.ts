@@ -23,7 +23,8 @@ import { ChatComponent } from './core/ai/chat.component';
 import { HistoryComponent } from './core/result/history.component';
 
 // Guard condizionale basata sull'environment
-const oidcGuard = (environment.oidc.enable)
+const shouldEnforceOidc = environment.oidc.enable && !(environment.devBypassAdminAuth && !environment.production);
+const oidcGuard = (shouldEnforceOidc)
   ? [autoLoginPartialRoutesGuard]
   : [];
 

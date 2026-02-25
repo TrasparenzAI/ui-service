@@ -7,9 +7,9 @@ import {Helpers} from '../../common/helpers/helpers';
 })
 export class FirstLetterPipe implements PipeTransform {
 
-  transform(value: string, args: any[]): string {
-    if (value === null) {
-      return 'not_assigned';
+  transform(value?: string): string {
+    if (typeof value !== 'string' || value.length === 0) {
+      return '';
     }
     return Helpers.firstLetter(value);
   }

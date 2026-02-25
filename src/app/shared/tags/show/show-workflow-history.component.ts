@@ -160,7 +160,12 @@ export class ShowWorkflowHistoryComponent implements OnInit{
       this.isAbleToStartWorkflow = hasRole;
       this.isCSVVisible = hasRole;
     });
-    if (environment.oidc.enable) { 
+    if (this.authGuard.isDevAuthBypassEnabled()) {
+      this.authenticated = true;
+      this.userData = this.authGuard.getDevBypassUserData();
+      this.isAdmin = true;
+      return;
+    } else if (environment.oidc.enable) { 
       if (!environment.oidc.force) {
         this.oidcSecurityService
         .checkAuth()

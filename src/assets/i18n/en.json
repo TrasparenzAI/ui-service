@@ -39,6 +39,23 @@
         "go-to-homepage": "Return to homepage"
       }
     },
+    "service-info": {
+      "title": "List of Microservices",
+      "table": {
+        "cols": {
+          "microservice": "Microservice",
+          "status": "Status",
+          "version": "Version (Tag)",
+          "date": "Build Date"
+        }
+      },
+      "status": {
+        "UP": "Reachable",
+        "UNREACHABLE": "Unreachable",
+        "unknown": "Unknown"
+      },
+      "unavailable": "N/A"
+    },
     "configuration": {
       "workflow": {
         "startnow": "Are you sure you want to run a full scan with the current parameters?",
@@ -49,8 +66,14 @@
         "title": "Menu Settings",
         "subtitle": "Menu Items",
         "add": "Add new entry",
+        "add-dropdown": "Add dropdown menu",
+        "add-dropdown-item": "Add dropdown item",
+        "dropdown-items": "Dropdown items",
+        "type": "Entry type",
+        "item-type": "Item type",
         "label": "Label",
         "url": "URL",
+        "value": "Value",
         "target": "Target"
       },
       "color": "Color settings",
