@@ -58,14 +58,8 @@ export class HistoryComponent implements OnInit {
           this.root?.container?.children?.clear();
           this.loadingChart.set(true);
       }, 0);
-      this.conductorService.getAll({
-        includeClosed: true,
-        includeTasks: false
-      }).subscribe((workflows: Workflow[]) => {
-        this.conductorService.getAll({
-          includeClosed: true,
-          includeTasks: false
-        },`/${ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW}/correlated/${queryParams.codiceIpa}`).subscribe((ipaWorkflows: Workflow[]) => {
+      this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
+        this.resultService.listWorkflows(queryParams.codiceIpa).subscribe((ipaWorkflows: Workflow[]) => {
           let workflowsMap = {};
           ipaWorkflows.concat(workflows).sort((a,b) => (a.startTime < b.startTime)? 1 : -1).forEach((workflow: Workflow) => {
             workflowsMap[workflow.workflowId] = this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy');

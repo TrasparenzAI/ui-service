@@ -48,7 +48,14 @@ export class Workflow implements Base {
     public tasks: Task[];
     @JsonProperty('input')
     public input: any;    
+    @JsonProperty('rootRule')
+    public rootRule: string;
+    @JsonProperty('codiceIpa')
+    public codiceIpa: string;
 
+    public get root_rule() {
+        return this.rootRule || this.input?.root_rule;
+    } 
 
     public get executionTime(): number {
         if (this.endTime) {

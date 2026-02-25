@@ -31,6 +31,11 @@
         <form [formGroup]="workflowBODYForm">
           <div class="row mb-3">
             <div class="form-group col-12 col-lg-2 mt-2">
+              <it-input type="number" required [min]="1" 
+                [max]="200" [step]="1" formControlName="version" 
+                [label]="'it.configuration.cron.body.version'| translate"></it-input>
+            </div>
+            <div class="form-group col-12 col-lg-2 mt-2">
               <it-input type="number" required [min]="100" 
                 [max]="2000" [step]="100" formControlName="page_size" 
                 [label]="'it.configuration.cron.body.page_size'| translate"></it-input>
@@ -42,7 +47,7 @@
                   }
               </ng-select>
             </div>
-            <div class="form-group col-12 col-lg-6">
+            <div class="form-group col-12 col-lg-4 mt-2">
               <app-rule-select [optionsRule]="optionsRule" [form]="workflowBODYForm" controlName="rule_name"></app-rule-select>
             </div>
           </div>

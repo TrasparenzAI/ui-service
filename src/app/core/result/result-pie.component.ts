@@ -84,10 +84,7 @@ export class ResultPieComponent implements OnInit {
     this.route.queryParams.subscribe((queryParams) => {
       this.ruleName = queryParams.ruleName || Rule.AMMINISTRAZIONE_TRASPARENTE;
       this.workflowId = queryParams.workflowId;
-      this.conductorService.getAll({
-        includeClosed: true,
-        includeTasks: false
-      }).subscribe((workflows: Workflow[]) => {        
+      this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {        
         this.isWorkflowLoaded = true;
         let lastWorkflowId;
         workflows.forEach((workflow: Workflow) => {
@@ -101,7 +98,7 @@ export class ResultPieComponent implements OnInit {
                 startTime: this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy'),
                 duration: this.durationFormatPipe.transform(workflow.executionTime)
               }),
-              ruleName: workflow.input.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
+              ruleName: workflow.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
             });
           }
         });

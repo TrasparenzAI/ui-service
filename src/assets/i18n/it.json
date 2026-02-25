@@ -99,6 +99,7 @@
         "workflow-preserve": "Numero di controlli da conservare: {{number_workflows_preserve}}",
         "workflow-id": "Controlli da conservare",
         "body": {
+          "version": "Versione del flusso",
           "page_size": "Dimensione pagina",
           "execute_child": "Esegui regole figlie",
           "crawler_save_object": "Salva pagina sempre",

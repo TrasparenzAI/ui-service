@@ -100,26 +100,8 @@ export class HomeComponent implements OnInit {
       })[0];
       this.loadChart(wokflow.resultCount, workflowId);
     });
-    this.conductorService.getAll({
-      includeClosed: true,
-      includeTasks: false
-    }).pipe(
-      catchError(() => {
-        this.workflows = [];
-        this.currentWorkflow = undefined;
-        this.isWorkflowLoaded = true;
-        return of([] as Workflow[]);
-      })
-    ).subscribe((workflows: Workflow[]) => {
-      if (!workflows?.length) {
-        this.workflows = [];
-        this.currentWorkflow = undefined;
-        this.isWorkflowLoaded = true;
-        return;
-      }
-      this.resultService.getWorkflowMap(Rule.AMMINISTRAZIONE_TRASPARENTE, workflows.map(a => a.workflowId)).pipe(
-        catchError(() => of({}))
-      ).subscribe((result: any) => {
+    this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
+      this.resultService.getWorkflowMap(Rule.AMMINISTRAZIONE_TRASPARENTE, workflows.map(a => a.workflowId)).subscribe((result: any) => {
         this.workflows = workflows;
         workflows.forEach((workflow, i) => {
           if (workflow.isCompleted) {

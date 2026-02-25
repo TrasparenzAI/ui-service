@@ -240,10 +240,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     Object.keys(CodiceCategoria).forEach((key) => {
       this.optionsCategoria.push({ value: key, text: CodiceCategoria[key]});
     });
-    this.conductorService.getAll({
-      includeClosed: true,
-      includeTasks: false
-    }).subscribe((workflows: Workflow[]) => {
+    this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
       workflows.forEach((workflow: Workflow) => {
         this.optionsWorkflow.push({
           value: workflow.workflowId,
@@ -286,6 +283,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     this.colorChanges(this.colorForm, "status_501", "ngx_status_501");
 
     this.workflowBODYForm = this.formBuilder.group({
+      version: new FormControl(1),
       page_size: new FormControl(1000),
       codice_categoria: new FormControl(''),
       codice_ipa: new FormControl(''),
@@ -360,6 +358,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
           if (conf.key === ConfigurationService.WORKFLOW_CRON_BODY) {
             this.workflowBODYid = conf.id;
             let jsonvalue = JSON.parse(conf.value);
+            this.workflowBODYForm.controls.version.patchValue(jsonvalue.version || 1);
             this.workflowBODYForm.controls.page_size.patchValue(jsonvalue.input.page_size);
             this.workflowBODYForm.controls.codice_categoria.patchValue(jsonvalue.input.codice_categoria);
             this.workflowBODYForm.controls.codice_ipa.patchValue(jsonvalue.input.codice_ipa);
@@ -671,7 +670,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     let input = {
       name: ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
       correlationId: ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
-      version: 1,
+      version: this.workflowBODYForm.controls.version.value,
       input: {
         page_size: this.workflowBODYForm.controls.page_size.value,
         codice_categoria: this.workflowBODYForm.controls.codice_categoria.value||'',
@@ -720,7 +719,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     conf.value = JSON.stringify({
       name: ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
       correlationId: ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
-      version: 1,
+      version: this.workflowBODYForm.controls.version.value,
       input: {
         page_size: this.workflowBODYForm.controls.page_size.value,
         codice_categoria: this.workflowBODYForm.controls.codice_categoria.value||'',

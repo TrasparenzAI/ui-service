@@ -1,4 +1,6 @@
-import { of as observableOf, throwError as observableThrowError, Observable, map, catchError} from 'rxjs';
+import { forkJoin, of, throwError } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
+import { of as observableOf, throwError as observableThrowError, Observable, map} from 'rxjs';
 import { Injectable} from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { CommonService} from '../../common/controller/common.service';
@@ -7,10 +9,11 @@ import { Router} from '@angular/router';
 import { ConfigService} from '../config.service';
 import { TranslateService } from '@ngx-translate/core';
 import { Result } from './result.model';
-import { switchMap} from 'rxjs/operators';
 import { SpringError } from '../../common/model/spring-error.model';
 import { environment } from '../../../environments/environment';
 import { Status } from '../rule/status.enum';
+import { Workflow } from '../conductor/workflow.model';
+import { ConductorService } from '../conductor/conductor.service';
 
 @Injectable()
 export class ResultService extends CommonService<Result> {
@@ -20,8 +23,9 @@ export class ResultService extends CommonService<Result> {
 
   public constructor(protected httpClient: HttpClient,
                      protected apiMessageService: ApiMessageService,
+                     protected conductorService: ConductorService,
                      protected router: Router,
-                     protected translateService: TranslateService,                     
+                     protected translateService: TranslateService,
                      protected configService: ConfigService) {
     super(httpClient, apiMessageService, translateService, router, configService);
   }
@@ -149,6 +153,96 @@ export class ResultService extends CommonService<Result> {
           })
         );
     }));    
+  }
+
+  public getWorkflow(workflowId: string): Observable<Workflow> {
+    let params = new HttpParams().set('workflowId', workflowId);
+    return this.getApiBase().pipe(
+      switchMap((apiBase) => {
+        return this.httpClient.get<any[]>(
+          `${apiBase}/v1/workflows`,
+          { params }
+        ).pipe(
+          map((result: any) => {
+            let arrays = this.getResultArrays(result);
+            const items: Workflow[] = arrays.map((item) => {
+              const instance: Workflow = this.buildGenericInstance(item, Workflow);
+              return instance;
+            });
+            return items[0];
+          }),
+          catchError((httpErrorResponse: HttpErrorResponse) => {
+            const springError = new SpringError(httpErrorResponse, this.translateService);
+            this.apiMessageService.sendMessage(MessageType.ERROR, springError.getRestErrorMessage());
+            return throwError(() => springError);
+          })
+        );
+      })
+    );  
+  }
+
+  public listWorkflows(codiceIpa?: string, invokeConductor :boolean = true): Observable<Workflow[]> {
+    let params = new HttpParams();
+    if (codiceIpa) {
+      params = params.set('codiceIpa', codiceIpa);
+    }
+
+    return this.getApiBase().pipe(
+      switchMap((apiBase) => {
+        return this.httpClient.get<any[]>(
+          `${apiBase}/v1/workflows/listConductorLike`,
+          { params }
+        ).pipe(
+          switchMap((result: any[]) => {
+            if (!result || result.length === 0) {
+              return of([]);
+            }            
+            try {
+              const items: Array<Observable<Workflow>> = result.map((item) => {
+                const instance: Workflow = this.buildGenericInstance(item, Workflow);
+                if (instance.isRunning && invokeConductor) {
+                    return this.conductorService.getById(
+                      instance.getId(), 
+                      { includeClosed: true, includeTasks: false }, 
+                      false, 
+                      false, 
+                      instance
+                    );
+                }
+                return of(instance);
+              });
+              return forkJoin(items);
+            } catch (ex) {
+              this.apiMessageService.sendMessage(MessageType.ERROR, ex.message);
+              return throwError(() => ex);
+            }
+          }),
+          catchError((httpErrorResponse: HttpErrorResponse) => {
+            const springError = new SpringError(httpErrorResponse, this.translateService);
+            this.apiMessageService.sendMessage(MessageType.ERROR, springError.getRestErrorMessage());
+            return throwError(() => springError);
+          })
+        );
+      })
+    );
+  }
+
+  public lastWorflowCompleted(codiceIpa?: string, invokeConductor? :boolean): Observable<Workflow> {
+    return this.listWorkflows(codiceIpa, invokeConductor).pipe(switchMap((workflows: Workflow[]) => {  
+      let completed = workflows.filter((workflow: Workflow) => {
+        return workflow.isCompleted;
+      });
+      if (completed) {
+        return observableOf(completed[0]);
+      }
+      return observableOf(undefined);
+    }));
+  }
+
+  public lastWorflow(codiceIpa?: string): Observable<Workflow> {
+    return this.listWorkflows(codiceIpa).pipe(switchMap((workflows: Workflow[]) => {      
+      return observableOf(workflows[0]);
+    }));
   }
 
 }

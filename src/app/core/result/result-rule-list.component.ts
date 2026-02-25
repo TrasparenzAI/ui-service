@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, Input, ViewEncapsulation } from '@angular/core';
 import { CommonListComponent } from '../../common/controller/common-list.component';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { NavigationService } from '../navigation.service';
 import { TranslateService } from '@ngx-translate/core';
 import { animate, keyframes, style, transition, trigger } from '@angular/animations';
@@ -9,8 +9,7 @@ import { Result } from './result.model';
 import { ResultService } from './result.service';
 import * as _ from "lodash";
 import { ConfigurationService } from '../configuration/configuration.service';
-import { map, Observable, of, switchMap } from 'rxjs';
-import { ConductorService } from '../conductor/conductor.service';
+import { map, Observable, switchMap } from 'rxjs';
 import { Workflow } from '../conductor/workflow.model';
 import { Rule } from '../rule/rule.model';
 import { DatePipe } from '@angular/common';
@@ -140,7 +139,7 @@ export class ResultRuleListComponent extends CommonListComponent<Result> impleme
   pageOffset = ResultService.PAGE_OFFSET;
   public constructor(public service: ResultService,
                      private formBuilder: FormBuilder,
-                     private conductorService: ConductorService,
+                     private resultService: ResultService,
                      private datepipe: DatePipe,
                      private ruleService: RuleService,
                      protected route: ActivatedRoute,
@@ -172,10 +171,7 @@ export class ResultRuleListComponent extends CommonListComponent<Result> impleme
           codiceCategoria: new FormControl(),
         });
       }
-      return this.conductorService.getAll({
-        includeClosed: true,
-        includeTasks: false
-      }).pipe(map((workflows: Workflow[]) => {
+      return this.resultService.listWorkflows().pipe(map((workflows: Workflow[]) => {
         workflows.forEach((workflow: Workflow) => {
           this.optionsWorkflow.push({
             value: workflow.workflowId,
@@ -183,7 +179,7 @@ export class ResultRuleListComponent extends CommonListComponent<Result> impleme
               startTime: this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy HH:mm:ss'),
               status: this.translateService.instant(`it.workflow.status.${workflow.status}`)
             }),
-            ruleName: workflow.input.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
+            ruleName: workflow.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE
           });
         });
         if (workflowId == undefined) {

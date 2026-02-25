@@ -91,7 +91,10 @@ export class Company implements Base {
     }
 
     public get responsabile() {
-        return `${this.nomeResponsabile} ${this.cognomeResponsabile}`;
+        if (this.nomeResponsabile || this.cognomeResponsabile) {
+            return `${this.nomeResponsabile} ${this.cognomeResponsabile}`;
+        }
+        return undefined;
     }
 
 

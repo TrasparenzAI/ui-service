@@ -36,8 +36,8 @@ import saveAs from 'file-saver';
         <it-list>
           @for (workflow of workflows; track workflow) {
             <it-list-item>
-              <div class="d-flex justify-content-start w-100">
-                <div class="d-flex">
+              <div class="d-flex justify-content-between align-items-start py-3">
+                <div class="flex-grow-1 me-3">
                   <span class="text-monospace">
                     @if (!workflow.isRunning) {
                       {{'it.workflow.full_label' | translate: { startTime: workflow.startTime | date:'dd/MM/yyyy', endTime: workflow.endTime | date:'dd/MM/yyyy HH:mm:ss', executionTime: workflow.executionTime | durationFormat} }}
@@ -47,7 +47,7 @@ import saveAs from 'file-saver';
                     }
                   </span>
                 </div>
-                <div class="w-100 ms-auto">
+                <div class="d-flex flex-column flex-shrink-0">
                   @if (!workflow.isRunning) {
                     <a
                       (click)="workflowModal.toggle()"
@@ -59,7 +59,7 @@ import saveAs from 'file-saver';
                         <div>{{'it.workflow.status.'+ workflow.status | translate}}</div>
                       </div>
                     </a>
-                    @if (isAbleToStartWorkflow && workflow.correlationId == codiceIpa) {
+                    @if (isAbleToStartWorkflow && (workflow.correlationId == codiceIpa || workflow.codiceIpa == codiceIpa) ) {
                       <a
                         itButton="danger"
                         (click)="removeWorkflow(workflow)"
@@ -210,14 +210,8 @@ export class ShowWorkflowHistoryComponent implements OnInit{
           }      
       });
     });
-    this.conductorService.getAll({
-      includeClosed: true,
-      includeTasks: false
-    }).subscribe((workflows: Workflow[]) => {
-      this.conductorService.getAll({
-        includeClosed: true,
-        includeTasks: false
-      },`/${ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW}/correlated/${this.codiceIpa}`).subscribe((ipaWorkflows: Workflow[]) => {
+    this.resultService.listWorkflows(undefined, true).subscribe((workflows: Workflow[]) => {
+      this.resultService.listWorkflows(this.codiceIpa, true).subscribe((ipaWorkflows: Workflow[]) => {
         this.workflows = ipaWorkflows.concat(workflows).sort((a,b) => (a.startTime < b.startTime)? 1 : -1);
         this.changeDetectorRef.detectChanges();
       });

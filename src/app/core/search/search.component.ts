@@ -89,10 +89,7 @@ export class SearchComponent implements OnInit {
           });
         });
       });      
-      this.conductorService.getAll({
-        includeClosed: true,
-        includeTasks: false
-      }).subscribe((workflows: Workflow[]) => {
+      this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
         this.optionsWorkflow.push({value: '', text: '*', selected: false});
         workflows.forEach((workflow: Workflow) => {
           this.optionsWorkflow.push({
@@ -101,7 +98,7 @@ export class SearchComponent implements OnInit {
               startTime: this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy HH:mm:ss'),
               status: this.translateService.instant(`it.workflow.status.${workflow.status}`)
             }),
-            ruleName: workflow.input.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE,
+            ruleName: workflow.root_rule || Rule.AMMINISTRAZIONE_TRASPARENTE,
             selected: workflow.workflowId === queryParams['workflowId']
           });
         });
