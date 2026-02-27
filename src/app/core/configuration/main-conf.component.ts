@@ -5,7 +5,7 @@ import { Bs5UnixCronComponent, CronLocalization, Tab } from '@sbzen/ng-cron';
 import { ItAccordionComponent, ItModalComponent, NotificationPosition, SelectControlOption } from 'design-angular-kit';
 import { ApiMessageService, MessageType } from '../api-message.service';
 import { TranslateService } from '@ngx-translate/core';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
 import { Rule } from '../rule/rule.model';
 import { environment } from '../../../environments/environment';
@@ -517,10 +517,10 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     const valueControl = formGroup.get('value');
     const targetControl = formGroup.get('target');
     if (type === 'email') {
-      valueControl.setValidators([Validators.required, Validators.pattern(/^(mailto:)?[^\s@]+@[^\s@]+\.[^\s@]+$/i)]);
+      valueControl.setValidators([Validators.required, Validators.pattern(/^(mailto:)?[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/i)]);
       targetControl.clearValidators();
     } else if (type === 'phone') {
-      valueControl.setValidators([Validators.required, Validators.pattern(/^(tel:)?[0-9+\-()\s]+$/)]);
+      valueControl.setValidators([Validators.required, Validators.pattern(/^(tel:)?[\s\-()+]*(?:[0-9][\s\-()+]*){4,}$/)]);
       targetControl.clearValidators();
     } else {
       valueControl.setValidators([Validators.required]);
@@ -780,5 +780,19 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     }
   }
 
-
+  getValueErrorMessage(control: AbstractControl): string {    
+    const valueControl = control.get('value');
+    const type = control.get('type')?.value;
+    let message = '';
+    if (valueControl?.hasError('pattern')) {
+      if (type === 'email') {
+        message = this.translateService.instant('it.errors.pattern-email');
+      } else if (type === 'phone') {
+        message = this.translateService.instant('it.errors.pattern-phone');
+      } else {
+        message = this.translateService.instant('it.errors.pattern-invalid'); 
+      }
+    }
+    return message;
+  }
 }

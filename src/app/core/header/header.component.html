@@ -15,12 +15,12 @@
             <it-dropdown mode="nav" class="slim-menu-dropdown-trigger">
               <span button>{{ getMenuLabel(menulink) }}</span>
               <ng-container list>
-                @for (childMenu of getMenuChildren(menulink); track childMenu) {
+                @for (childMenu of getMenuChildren(menulink); track childMenu) {                  
                   <it-dropdown-item
                     [href]="getMenuHref(childMenu)"
                     [externalLink]="isExternalMenuItem(childMenu)"
                     (click)="onDropdownMenuItemClick($event, childMenu)">
-                    {{ getMenuLabel(childMenu) }}
+                    <it-icon name="{{getMenuIcon(childMenu)}}" class="bg-light" color="primary"></it-icon> <span>{{ getMenuLabel(childMenu) }}</span>
                   </it-dropdown-item>
                 }
               </ng-container>

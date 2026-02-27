@@ -2,6 +2,9 @@
   "it": {
     "errors": {
       "url-invalid": "URL non valido!",
+      "pattern-invalid": "Formato non valido!",
+      "pattern-email": "Inserisci un'email valida (es. utente@esempio.it oppure mailto:utente@esempio.it)",
+      "pattern-phone": "Inserisci un numero di telefono valido (es. +39 02 1234567 oppure tel:+39 02 1234567)",      
       "invalid-field": "Valore non valido",
       "required-field": "Campo obbligatorio!",
       "min-invalid": "Il valore deve essere superiore al numero minimo {{min}}",

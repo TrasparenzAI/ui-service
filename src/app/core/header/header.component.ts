@@ -258,6 +258,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return value;
   }
 
+  getMenuIcon(menuItem: any): string {
+    const type = this.getMenuItemType(menuItem);
+    switch(type) {
+      case `email`: return 'mail';
+      case `phone`: return 'telephone';
+      default: return `link`;
+    }    
+  }
+
   getMenuTarget(menuItem: any): string {
     const type = this.getMenuItemType(menuItem);
     if (type === 'email' || type === 'phone') {

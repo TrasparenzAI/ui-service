@@ -200,9 +200,7 @@
                   class="shadow dettaglio-item p-3 mb-3 border rounded">
                 <div class="row mt-4">
                   <div class="form-group col-md-2">
-                    <it-select formControlName="type" [label]="'it.configuration.menu.type'| translate">
-                      <option *ngFor="let type of menuEntryTypes" [value]="type.value">{{ type.text }}</option>
-                    </it-select>
+                    <it-select [options]="menuEntryTypes" formControlName="type" [label]="'it.configuration.menu.type'| translate"></it-select>
                   </div>
                   <div class="form-group col-md-3">
                     <it-input formControlName="label" required [label]="'it.configuration.menu.label'| translate">
@@ -236,12 +234,10 @@
                     <div formArrayName="children">
                       <div *ngFor="let childControl of getDettaglioMenuChildren(i).controls; let j = index"
                         [formGroupName]="j"
-                        class="border rounded p-2 mb-2">
-                        <div class="row">
+                        class="border rounded p-2 mb-2 shadow">
+                        <div class="row pt-3">
                           <div class="form-group col-md-2">
-                            <it-select formControlName="type" [label]="'it.configuration.menu.item-type'| translate">
-                              <option *ngFor="let type of menuChildTypes" [value]="type.value">{{ type.text }}</option>
-                            </it-select>
+                            <it-select [options]="menuChildTypes" formControlName="type" [label]="'it.configuration.menu.item-type'| translate"></it-select>
                           </div>
                           <div class="form-group col-md-3">
                             <it-input formControlName="label" required [label]="'it.configuration.menu.label'| translate">
@@ -251,6 +247,9 @@
                           <div class="form-group col-md-4">
                             <it-input formControlName="value" required [label]="'it.configuration.menu.value'| translate">
                               <it-icon name="link" size="sm" color="primary" prependText></it-icon>
+                              <ng-container error>
+                                <div>{{getValueErrorMessage(childControl)}}</div>
+                              </ng-container>
                             </it-input>
                           </div>
                           <div class="form-group col-md-2" *ngIf="childControl.get('type')?.value === 'link'">
