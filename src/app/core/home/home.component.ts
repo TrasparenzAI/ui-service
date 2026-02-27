@@ -109,7 +109,7 @@ export class HomeComponent implements OnInit {
               this.currentWorkflow = workflow;
             }
           }
-          workflow.resultCount = result[workflow.workflowId];
+          workflow.resultCount = result[workflow.workflowId]|| {};
           if (this.currentWorkflow && !this.series){
             this.loadChart(workflow.resultCount, workflow.workflowId);
           }
@@ -196,5 +196,9 @@ export class HomeComponent implements OnInit {
 
   public getBGColor(key) {
     return this.statusColor[`status_${key}`] + `!important`; 
+  }
+
+  onWorkflowRimosso(item: Workflow) {
+    this.workflows = this.workflows.filter(i => i !== item);
   }
 }

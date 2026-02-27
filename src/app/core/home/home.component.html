@@ -102,7 +102,7 @@
           @if(workflow?.workflowId !== currentWorkflow?.workflowId) {
             <it-carousel-item>
               <div class="card-wrapper">
-                <app-workflow-card class="w-100" [workflow]="workflow"></app-workflow-card>
+                <app-workflow-card class="w-100" [workflow]="workflow" (workflowRimosso)="onWorkflowRimosso($event)"></app-workflow-card>
               </div>
             </it-carousel-item>  
           }
