@@ -223,7 +223,7 @@ export class WorkflowCardComponent implements OnInit{
   }
 
   private detectWorkflow() {
-    this.conductorService.getById(this.workflow.workflowId).subscribe((workflow: Workflow) => {
+    this.conductorService.getById(this.workflow.workflowId, { includeClosed: true, includeTasks: false }).subscribe((workflow: Workflow) => {
       this.workflow = workflow;
       this.workflowTotalElements(workflow);
     })

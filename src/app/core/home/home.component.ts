@@ -6,7 +6,7 @@ import { Rule } from '../rule/rule.model';
 import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
-import { catchError, debounceTime, of } from 'rxjs';
+import { debounceTime } from 'rxjs';
 import { DurationFormatPipe } from '../../shared/pipes/durationFormat.pipe';
 import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout';
 import { HttpClient } from '@angular/common/http';

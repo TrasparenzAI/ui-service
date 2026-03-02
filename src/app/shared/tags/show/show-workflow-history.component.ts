@@ -221,7 +221,7 @@ export class ShowWorkflowHistoryComponent implements OnInit{
   startMainWorkflow(ruleName?: string) {
     this.conductorService.startMainWorkflow(this.codiceIpa, ruleName).subscribe((workflowId: string) => {
       this.apiMessageService.sendMessage(MessageType.SUCCESS, `it.workflow.message.new`);
-      this.conductorService.getById(workflowId).subscribe((result: Workflow) => {
+      this.conductorService.getById(workflowId, { includeClosed: true, includeTasks: false }).subscribe((result: Workflow) => {
         this.workflows.unshift(result);
         this.changeDetectorRef.detectChanges();
         let status = Status.RUNNING
