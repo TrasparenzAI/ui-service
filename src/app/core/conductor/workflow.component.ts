@@ -127,37 +127,37 @@ import saveAs from 'file-saver';
           <it-list>
             @if (statusColor){
               <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente'}" href="." iconLeft="true">
-                <span class="fst-italic card-text">{{'it.rule.status.all' | translate}}</span>
+                <span class="fst-italic card-text text-body">{{'it.rule.status.all' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge]="'primary'" [rounded]="true" class="text-sm-left">{{ workflow.totalResult| number: undefined : 'it-IT' }}</span>
                 </ng-container>
               </it-list-item>
               <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 200}" href="." iconLeft="true">
-                <span class="fst-italic card-text">{{'it.rule.status.200.title' | translate}}</span>
+                <span class="fst-italic card-text text-body">{{'it.rule.status.200.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(200)" [rounded]="true" class="text-sm-left">{{ workflow.getResultFromStatus('200') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
               </it-list-item>
               <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 202}" href="." iconLeft="true">
-                <span class="fst-italic card-text">{{'it.rule.status.202.title' | translate}}</span>
+                <span class="fst-italic card-text text-body">{{'it.rule.status.202.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(202)" [rounded]="true" class="text-sm-left">{{ workflow.getResultFromStatus('202') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
               </it-list-item>
               <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 400}" href="." iconLeft="true">
-                <span class="fst-italic card-text">{{'it.rule.status.400.title' | translate}}</span>
+                <span class="fst-italic card-text text-body">{{'it.rule.status.400.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(400)" [rounded]="true" class="text-sm-left">{{ workflow.getResultFromStatus('400') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
               </it-list-item>
               <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 407}" href="." iconLeft="true">
-                <span class="fst-italic card-text">{{'it.rule.status.407.title' | translate}}</span>
+                <span class="fst-italic card-text text-body">{{'it.rule.status.407.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(407)" [rounded]="true">{{ workflow.getResultFromStatus('407') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
               </it-list-item>
               <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 500}" href="." iconLeft="true">
-                <span class="fst-italic card-text">{{'it.rule.status.500.title' | translate}}</span>
+                <span class="fst-italic card-text text-body">{{'it.rule.status.500.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(500)" [rounded]="true">{{ workflow.getResultFromStatus('500') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
