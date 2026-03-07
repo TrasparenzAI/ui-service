@@ -25,67 +25,70 @@
     </div>
     <div class="col-xl-3">
       @if (statusColor) {
-        <it-card space="true" background="true">
-          <div class="d-flex bg-dark text-white h3 legend mb-2 justify-content-center">
+        <it-card space="true" background="true" fullHeight="true">
+          <div class="d-flex bg-dark text-white h3 mb-2 justify-content-center">
             <span translate>it.home.legend</span>
           </div>
-          <it-list linkList="true" multiline="true">
-            <it-list-item>
-              <span itBadge [style.background]="getBGColor(200)">&nbsp;&nbsp;</span>
-              <span class="list-item-title-icon-wrapper">
-                <span class="list-item-title h3" translate>it.rule.status.200.title</span>
-              </span>
-              <small class="d-block fw-light ps-5" translate>it.rule.status.200.subtitle</small>
-            </it-list-item>
-            <it-list-item>
-              <span class="divider"></span>
-            </it-list-item>
-            <it-list-item>
-              <span itBadge [style.background]="getBGColor(202)">&nbsp;&nbsp;</span>
-              <span class="list-item-title-icon-wrapper">
-                <span class="list-item-title h3" translate>it.rule.status.202.title</span>
-              </span>
-              <small class="d-block fw-light ps-5" translate>it.rule.status.202.subtitle</small>
-            </it-list-item>
-            <it-list-item>
-              <span class="divider"></span>
-            </it-list-item>
-            <it-list-item>
-              <span itBadge [style.background]="getBGColor(400)">&nbsp;&nbsp;</span>
-              <span class="list-item-title-icon-wrapper">
-                <span class="list-item-title h3" translate>it.rule.status.400.title</span>
-              </span>
-              <small class="d-block fw-light ps-5" translate>it.rule.status.400.subtitle</small>
-            </it-list-item>
-            <it-list-item>
-              <span class="divider"></span>
-            </it-list-item>
-            <it-list-item>
-              <span itBadge [style.background]="getBGColor(407)">&nbsp;&nbsp;</span>
-              <span class="list-item-title-icon-wrapper">
-                <span class="list-item-title h3" translate>it.rule.status.407.title</span>
-              </span>
-              <small class="d-block fw-light ps-5" translate>it.rule.status.407.subtitle</small>
-            </it-list-item>
-            <it-list-item>
-              <span class="divider"></span>
-            </it-list-item>
-            <it-list-item>
-              <span itBadge [style.background]="getBGColor(500)">&nbsp;&nbsp;</span>
-              <span class="list-item-title-icon-wrapper">
-                <span class="list-item-title h3" translate>it.rule.status.500.title</span>
-              </span>
-              <small class="d-block fw-light ps-5" translate>it.rule.status.500.subtitle</small>
-            </it-list-item>
-            <it-list-item>
-              <span class="divider"></span>
-            </it-list-item>
-          </it-list>
-          <it-callout color="note" label="{{'it.rule.legend.title' | translate}}">
-            <a href="https://www.indicepa.gov.it" target="_blank" class="px-0">
-              <span class="text-monospace d-block mt-n4 mb-n2" translate>it.rule.legend.subtitle</span>
-            </a>
-          </it-callout>
+          <div class="it-card-body">
+            <it-list linkList="true" multiline="true">
+              <it-list-item>
+                <span itBadge [style.background]="getBGColor(200)">&nbsp;&nbsp;</span>
+                <span class="list-item-title-icon-wrapper">
+                  <span class="list-item-title h3" translate>it.rule.status.200.title</span>
+                </span>
+                <small class="d-block fw-light ps-5" translate>it.rule.status.200.subtitle</small>
+              </it-list-item>
+              <it-list-item>
+                <span class="divider"></span>
+              </it-list-item>
+              <it-list-item>
+                <span itBadge [style.background]="getBGColor(202)">&nbsp;&nbsp;</span>
+                <span class="list-item-title-icon-wrapper">
+                  <span class="list-item-title h3" translate>it.rule.status.202.title</span>
+                </span>
+                <small class="d-block fw-light ps-5" translate>it.rule.status.202.subtitle</small>
+              </it-list-item>
+              <it-list-item>
+                <span class="divider"></span>
+              </it-list-item>
+              <it-list-item>
+                <span itBadge [style.background]="getBGColor(400)">&nbsp;&nbsp;</span>
+                <span class="list-item-title-icon-wrapper">
+                  <span class="list-item-title h3" translate>it.rule.status.400.title</span>
+                </span>
+                <small class="d-block fw-light ps-5" translate>it.rule.status.400.subtitle</small>
+              </it-list-item>
+              <it-list-item>
+                <span class="divider"></span>
+              </it-list-item>
+              <it-list-item>
+                <span itBadge [style.background]="getBGColor(407)">&nbsp;&nbsp;</span>
+                <span class="list-item-title-icon-wrapper">
+                  <span class="list-item-title h3" translate>it.rule.status.407.title</span>
+                </span>
+                <small class="d-block fw-light ps-5" translate>it.rule.status.407.subtitle</small>
+              </it-list-item>
+              <it-list-item>
+                <span class="divider"></span>
+              </it-list-item>
+              <it-list-item>
+                <span itBadge [style.background]="getBGColor(500)">&nbsp;&nbsp;</span>
+                <span class="list-item-title-icon-wrapper">
+                  <span class="list-item-title h3" translate>it.rule.status.500.title</span>
+                </span>
+                <small class="d-block fw-light ps-5" translate>it.rule.status.500.subtitle</small>
+              </it-list-item>
+              <it-list-item>
+                <span class="divider"></span>
+              </it-list-item>
+            </it-list>
+            <it-callout color="note" label="{{'it.rule.legend.title' | translate}}">
+              <a href="https://www.indicepa.gov.it" target="_blank" class="px-0">
+                <span class="text-monospace d-block mt-n4 mb-n2" translate>it.rule.legend.subtitle</span>
+              </a>
+            </it-callout>
+
+          </div>
         </it-card>  
       }
     </div>

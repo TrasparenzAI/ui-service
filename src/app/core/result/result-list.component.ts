@@ -4,12 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormGroup } from '@angular/forms';
 import { NavigationService } from '../navigation.service';
 import { TranslateService } from '@ngx-translate/core';
-import { animate, keyframes, style, transition, trigger } from '@angular/animations';
 import { Result } from './result.model';
 import { ResultService } from './result.service';
-import * as _ from "lodash";
 import { ConfigurationService } from '../configuration/configuration.service';
 import { Rule } from '../rule/rule.model';
+import * as _ from "lodash";
 
 @Component({
     selector: 'result-list',
@@ -34,7 +33,7 @@ import { Rule } from '../rule/rule.model';
           [infiniteScrollDistance]="1"
           (scrolled)="onScroll()">
           @for (item of items; track item) {
-            <div class="col-sm-12 px-md-2 pb-2" @scale [ngClass]="classForDisplayCard()">
+            <div class="col-sm-12 px-md-2 pb-2 scale-in" [ngClass]="classForDisplayCard()">
               <app-list-item-result [item]="item" [codiceIpa]="codiceIpa" [filterForm]="filterForm">
                 <div [ngClass]="{'row': showGaugeBands}">
                   <div [ngClass]="{'col-md-6': showGaugeBands}" class="callout callout-highlight" [style.color]="getColor(item.status)" [style.border-color]="getColor(item.status)">
@@ -103,23 +102,22 @@ import { Rule } from '../rule/rule.model';
       }
     </app-grid-layout>
     `,
-    styles: [
-        ` 
+    styles: [`
       .callout { max-width: unset!important; }
-    `
-    ],
+
+      .scale-in {
+        animation: scaleIn 500ms ease-in-out;
+      }
+
+      @keyframes scaleIn {
+        from { transform: scale(0.3); }
+        to   { transform: scale(1); }
+      }
+    `],
     host: {
-        '[class.callout.success.callout-title]': '0.9 * height',
+      '[class.callout.success.callout-title]': '0.9',
     },
     encapsulation: ViewEncapsulation.None,
-    animations: [
-        trigger('scale', [
-            transition('void => *', animate('500ms ease-in-out', keyframes([
-                style({ transform: 'scale(0.3)' }),
-                style({ transform: 'scale(1)' })
-            ])))
-        ])
-    ],
     standalone: false
 })
 export class ResultListComponent extends CommonListComponent<Result> implements OnInit {

@@ -4,10 +4,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { NavigationService } from '../navigation.service';
 import { TranslateService } from '@ngx-translate/core';
-import { animate, keyframes, style, transition, trigger } from '@angular/animations';
 import { Result } from './result.model';
 import { ResultService } from './result.service';
-import * as _ from "lodash";
 import { ConfigurationService } from '../configuration/configuration.service';
 import { map, Observable, switchMap } from 'rxjs';
 import { Workflow } from '../conductor/workflow.model';
@@ -16,6 +14,7 @@ import { DatePipe } from '@angular/common';
 import { RuleService } from '../rule/rule.service';
 import { Status } from '../rule/status.enum';
 import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
+import * as _ from "lodash";
 
 @Component({
     selector: 'result-rule-list',
@@ -78,7 +77,7 @@ import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
             [infiniteScrollDistance]="1"
             (scrolled)="onScroll()">
             @for (item of items; track item) {
-              <div class="col-sm-12 px-md-2 pb-2" @scale [ngClass]="classForDisplayCard()">
+              <div class="col-sm-12 px-md-2 pb-2 scale-in"  [ngClass]="classForDisplayCard()">
               <app-list-item-company [item]="item.company" [filterForm]="filterForm">
                 <div class="col-sm-12">
                   <app-show-text [label]="'it.company.codiceIpa'" [value]="item.company.codiceIpa"></app-show-text>
@@ -107,20 +106,23 @@ import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
     `,
     styles: [        ` 
       .callout { max-width: unset!important; }
+
+      .scale-in {
+        animation: scaleIn 500ms ease-in-out;
+      }
+
+      @keyframes scaleIn {
+        from { transform: scale(0.3); }
+        to   { transform: scale(1); }
+      }
+
     `
     ],
     host: {
-        '[class.callout.success.callout-title]': '0.9 * height',
+        '[class.callout.success.callout-title]': '0.9',
     },
     encapsulation: ViewEncapsulation.None,
-    animations: [
-        trigger('scale', [
-            transition('void => *', animate('500ms ease-in-out', keyframes([
-                style({ transform: 'scale(0.3)' }),
-                style({ transform: 'scale(1)' })
-            ])))
-        ])
-    ],
+
     standalone: false
 })
 export class ResultRuleListComponent extends CommonListComponent<Result> implements OnInit {

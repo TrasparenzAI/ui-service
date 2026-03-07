@@ -31,7 +31,7 @@ export class AppComponent implements OnInit {
     themeService.initTheme();
     translate.getLangs().forEach((lang: string) => {
       translate.reloadLang(lang).subscribe((res) => {
-        httpClient.get('assets/i18n/custom_' + lang + '.json').subscribe((data) => {
+        httpClient.get('assets/i18n/custom_' + lang + '.json').subscribe((data: any) => {
           if (data) {
             translate.setTranslation(lang, data, true);
           }

@@ -17,22 +17,22 @@ import saveAs from 'file-saver';
     selector: 'app-workflow-card',
     template: `
     @if(workflow) {
-      <it-card space="true" background="true">
+      <it-card space="true" background="true" fullHeight="true">
         @if (!title) {
-          <div class="d-flex bg-dark text-white legend h3 mb-2 justify-content-center text-center">
+          <div class="d-flex bg-dark text-white h3 mb-2 justify-content-center text-center">
             <span>{{'it.workflow.label' | translate: { startTime: workflow.startTime | date:'dd/MM/yyyy'} }}</span>
           </div>
         }
         <div class="category-top">
           <div class="d-flex justify-content-end flex-column flex-xl-row">
             @if (title) {
-              <div class="d-flex">
-                <a class="category" [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente'}">{{'it.workflow.label' | translate: { startTime: workflow.startTime | date:'dd/MM/yyyy'} }}</a>
+              <div class="d-flex ps-2 pt-2">
+                <a class="category text-uppercase h6" [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente'}">{{'it.workflow.label' | translate: { startTime: workflow.startTime | date:'dd/MM/yyyy'} }}</a>
                 @if (!workflow.isTotalCompleted()) {<div class="ps-2"><it-spinner small="true"></it-spinner></div>}
               </div>
             }
             @if (!workflow.isRunning) {
-              <div class="ms-auto d-flex">
+              <div class="ms-auto d-flex p-2">
                 @if (workflow.isCompleted && isCSVVisible) {
                   <a href="" (click)="downloadCsv(workflow.workflowId)" class="align-top me-1">
                     @if (!isLoadingCsv) {
@@ -123,7 +123,7 @@ import saveAs from 'file-saver';
             }
           </div>
         </div>
-        <div class="card-text">
+        <div class="it-card-body px-2">
           <it-list>
             @if (statusColor){
               <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente'}" href="." iconLeft="true">
@@ -166,7 +166,7 @@ import saveAs from 'file-saver';
           </it-list>
         </div>
         @if (!workflow.isRunning) {
-          <a class="read-more" [routerLink]="['/company-map']" [queryParams]="{workflowId: workflow.workflowId, ruleName:'amministrazione-trasparente', zoom: 5, nolocation: true, filter: true}">
+          <a class="read-more ps-2" [routerLink]="['/company-map']" [queryParams]="{workflowId: workflow.workflowId, ruleName:'amministrazione-trasparente', zoom: 5, nolocation: true, filter: true}">
             <span class="text">Leggi di più <span class="visually-hidden">Leggi di più ....</span></span>
             <it-icon name="arrow-right"></it-icon>
           </a>
