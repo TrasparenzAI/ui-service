@@ -1,386 +1,927 @@
 <div class="container pt-4">
   <div class="border border-top-0 border-bottom-0">
-    <it-accordion (showEvent)="showAccordion($event, this)" title="{{'it.configuration.cron.title'| translate}}{{'it.configuration.cron.next-date'| translate:{nextDate: nextDate| date:'dd/MM/yyyy \'alle ore\' HH'} }}{{'it.configuration.cron.next-next-date'| translate:{nextDate: nextNextDate| date:'dd/MM/yyyy \'alle ore\' HH'} }}" opened="true">
+    <it-accordion
+      (showEvent)="showAccordion($event, this)"
+      title="{{ 'it.configuration.cron.title' | translate }}{{
+        'it.configuration.cron.next-date'
+          | translate
+            : { nextDate: nextDate | date: 'dd/MM/yyyy \'alle ore\' HH' }
+      }}{{
+        'it.configuration.cron.next-next-date'
+          | translate
+            : { nextDate: nextNextDate | date: 'dd/MM/yyyy \'alle ore\' HH' }
+      }}"
+      opened="true"
+    >
       <div class="d-md-flex">
         <div class="p-2 flex-grow-1">
-          <bs5-unix-cron #cron [(ngModel)]="cronValue" (tabChanged)="onTabChanged($event)" [activeTab]="activeTab" [tabs]="tabs" [localization]="localization"></bs5-unix-cron>
+          <bs5-unix-cron
+            #cron
+            [(ngModel)]="cronValue"
+            (tabChanged)="onTabChanged($event)"
+            [activeTab]="activeTab"
+            [tabs]="tabs"
+            [localization]="localization"
+          ></bs5-unix-cron>
         </div>
         <div class="d-flex d-md-block">
           <a itButton="outline-primary" (click)="cronConfirm()" class="ms-auto">
-            <it-icon name="pencil" color="primary"></it-icon>{{'it.navigation.confirm' | translate}}
+            <it-icon name="pencil" color="primary"></it-icon
+            >{{ "it.navigation.confirm" | translate }}
           </a>
         </div>
       </div>
-    </it-accordion> 
-    <it-accordion (showEvent)="showAccordion($event, this)" title="{{'it.configuration.cron.workflow'| translate}}">
+    </it-accordion>
+    <it-accordion
+      (showEvent)="showAccordion($event, this)"
+      title="{{ 'it.configuration.cron.workflow' | translate }}"
+    >
       <form #workflowURLForm="ngForm">
         <div class="d-flex">
           <div class="flex-grow-1">
-            <it-input [(ngModel)]="workflowURL" name="workflowURL" type="url" required [label]="'it.configuration.cron.workflow-url'| translate">
-              <it-icon name="link" size="sm" color="primary" prependText></it-icon>
-            </it-input>  
+            <it-input
+              [(ngModel)]="workflowURL"
+              name="workflowURL"
+              type="url"
+              required
+              [label]="'it.configuration.cron.workflow-url' | translate"
+            >
+              <it-icon
+                name="link"
+                size="sm"
+                color="primary"
+                prependText
+              ></it-icon>
+            </it-input>
           </div>
           <div>
-            <a itButton="outline-primary" (click)="cronConfirmWorkflowURL()" class="ms-2" [disabled]="!workflowURLForm.valid">
-              <it-icon name="pencil" color="primary"></it-icon>{{'it.navigation.confirm' | translate}}
+            <a
+              itButton="outline-primary"
+              (click)="cronConfirmWorkflowURL()"
+              class="ms-2"
+              [disabled]="!workflowURLForm.valid"
+            >
+              <it-icon name="pencil" color="primary"></it-icon
+              >{{ "it.navigation.confirm" | translate }}
             </a>
           </div>
         </div>
       </form>
-      <it-callout appearance="highlight" color="note" label="{{'it.configuration.cron.workflow-body' | translate}}">
+      <it-callout
+        appearance="highlight"
+        color="note"
+        label="{{ 'it.configuration.cron.workflow-body' | translate }}"
+      >
         <form [formGroup]="workflowBODYForm">
           <div class="row mb-3">
             <div class="form-group col-12 col-lg-2 mt-2">
-              <it-input type="number" required [min]="1" 
-                [max]="200" [step]="1" formControlName="version" 
-                [label]="'it.configuration.cron.body.version'| translate"></it-input>
+              <it-input
+                type="number"
+                required
+                [min]="1"
+                [max]="200"
+                [step]="1"
+                formControlName="version"
+                [label]="'it.configuration.cron.body.version' | translate"
+              ></it-input>
             </div>
             <div class="form-group col-12 col-lg-2 mt-2">
-              <it-input type="number" required [min]="100" 
-                [max]="2000" [step]="100" formControlName="page_size" 
-                [label]="'it.configuration.cron.body.page_size'| translate"></it-input>
+              <it-input
+                type="number"
+                required
+                [min]="100"
+                [max]="2000"
+                [step]="100"
+                formControlName="page_size"
+                [label]="'it.configuration.cron.body.page_size' | translate"
+              ></it-input>
             </div>
             <div class="form-group col-12 col-lg-4 mt-2">
-              <ng-select formControlName="codice_categoria" [placeholder]="'it.company.codiceCategoria'| translate">
-                  @for (categoria of optionsCategoria; track categoria.value) {
-                      <ng-option [value]="categoria.value">{{categoria.text}}</ng-option>
-                  }
+              <ng-select
+                formControlName="codice_categoria"
+                [placeholder]="'it.company.codiceCategoria' | translate"
+              >
+                @for (categoria of optionsCategoria; track categoria.value) {
+                  <ng-option [value]="categoria.value">{{
+                    categoria.text
+                  }}</ng-option>
+                }
               </ng-select>
             </div>
             <div class="form-group col-12 col-lg-4 mt-2">
-              <app-rule-select [optionsRule]="optionsRule" [form]="workflowBODYForm" controlName="rule_name"></app-rule-select>
+              <app-rule-select
+                [optionsRule]="optionsRule"
+                [form]="workflowBODYForm"
+                controlName="rule_name"
+              ></app-rule-select>
             </div>
           </div>
-          <div class="row mb-3">  
+          <div class="row mb-3">
             <div class="form-check col-12 col-lg-3">
-              <it-checkbox formControlName="force_jsoup" [label]="'it.configuration.cron.body.force_jsoup'| translate" toggle="true"></it-checkbox>
+              <it-checkbox
+                formControlName="force_jsoup"
+                [label]="'it.configuration.cron.body.force_jsoup' | translate"
+                toggle="true"
+              ></it-checkbox>
             </div>
             <div class="form-check col-12 col-lg-3 mt-0">
-              <it-checkbox formControlName="execute_child" [label]="'it.configuration.cron.body.execute_child'| translate" toggle="true"></it-checkbox>
+              <it-checkbox
+                formControlName="execute_child"
+                [label]="'it.configuration.cron.body.execute_child' | translate"
+                toggle="true"
+              ></it-checkbox>
             </div>
             <div class="form-check col-12 col-lg-3 mt-0">
-              <it-checkbox formControlName="crawler_save_object" [label]="'it.configuration.cron.body.crawler_save_object'| translate" toggle="true"></it-checkbox>
+              <it-checkbox
+                formControlName="crawler_save_object"
+                [label]="
+                  'it.configuration.cron.body.crawler_save_object' | translate
+                "
+                toggle="true"
+              ></it-checkbox>
             </div>
             <div class="form-check col-12 col-lg-3 mt-0">
-              <it-checkbox formControlName="crawler_save_screenshot" [label]="'it.configuration.cron.body.crawler_save_screenshot'| translate" toggle="true"></it-checkbox>
+              <it-checkbox
+                formControlName="crawler_save_screenshot"
+                [label]="
+                  'it.configuration.cron.body.crawler_save_screenshot'
+                    | translate
+                "
+                toggle="true"
+              ></it-checkbox>
             </div>
           </div>
           <div class="row">
             <div class="form-group col-md-2">
-              <it-input type="number" required [min]="1000" 
-                [itTooltip]="'it.configuration.cron.body.connection_timeout'| translate"
-                [max]="60000" [step]="1000" formControlName="connection_timeout" 
-                [label]="'it.configuration.cron.body.connection_timeout'| translate"></it-input>
+              <it-input
+                type="number"
+                required
+                [min]="1000"
+                [itTooltip]="
+                  'it.configuration.cron.body.connection_timeout' | translate
+                "
+                [max]="60000"
+                [step]="1000"
+                formControlName="connection_timeout"
+                [label]="
+                  'it.configuration.cron.body.connection_timeout' | translate
+                "
+              ></it-input>
             </div>
             <div class="form-group col-md-2">
-              <it-input type="number" required [min]="1000" 
-                [itTooltip]="'it.configuration.cron.body.read_timeout'| translate"
-                [max]="60000" [step]="1000" formControlName="read_timeout" 
-                [label]="'it.configuration.cron.body.read_timeout'| translate"></it-input>
+              <it-input
+                type="number"
+                required
+                [min]="1000"
+                [itTooltip]="
+                  'it.configuration.cron.body.read_timeout' | translate
+                "
+                [max]="60000"
+                [step]="1000"
+                formControlName="read_timeout"
+                [label]="'it.configuration.cron.body.read_timeout' | translate"
+              ></it-input>
             </div>
             <div class="form-group col-md-2">
-              <it-input type="number" required [min]="1000" 
-                [itTooltip]="'it.configuration.cron.body.connection_timeout_max'| translate"
-                [max]="120000" [step]="1000" formControlName="connection_timeout_max" 
-                [label]="'it.configuration.cron.body.connection_timeout_max'| translate"></it-input>
+              <it-input
+                type="number"
+                required
+                [min]="1000"
+                [itTooltip]="
+                  'it.configuration.cron.body.connection_timeout_max'
+                    | translate
+                "
+                [max]="120000"
+                [step]="1000"
+                formControlName="connection_timeout_max"
+                [label]="
+                  'it.configuration.cron.body.connection_timeout_max'
+                    | translate
+                "
+              ></it-input>
             </div>
             <div class="form-group col-md-2">
-              <it-input type="number" required [min]="1000" 
-                [itTooltip]="'it.configuration.cron.body.read_timeout_max'| translate"
-                [max]="120000" [step]="1000" formControlName="read_timeout_max" 
-                [label]="'it.configuration.cron.body.read_timeout_max'| translate"></it-input>
+              <it-input
+                type="number"
+                required
+                [min]="1000"
+                [itTooltip]="
+                  'it.configuration.cron.body.read_timeout_max' | translate
+                "
+                [max]="120000"
+                [step]="1000"
+                formControlName="read_timeout_max"
+                [label]="
+                  'it.configuration.cron.body.read_timeout_max' | translate
+                "
+              ></it-input>
             </div>
             <div class="form-group col-md-2">
               <it-select
-                [itTooltip]="'it.configuration.cron.body.crawling_mode'| translate"
+                [itTooltip]="
+                  'it.configuration.cron.body.crawling_mode' | translate
+                "
                 formControlName="crawling_mode"
-                [label]="'it.configuration.cron.body.crawling_mode'| translate"
-                defaultOption="Seleziona un elemento">
+                [label]="'it.configuration.cron.body.crawling_mode' | translate"
+                defaultOption="Seleziona un elemento"
+              >
                 <option value="httpStream">HTTP STREAM</option>
                 <option value="htmlSource">HTML SOURCE</option>
               </it-select>
             </div>
             <div class="form-group col-md-2">
               <it-select
-                [itTooltip]="'it.configuration.cron.body.crawler_child_type'| translate"
+                [itTooltip]="
+                  'it.configuration.cron.body.crawler_child_type' | translate
+                "
                 formControlName="crawler_child_type"
-                [label]="'it.configuration.cron.body.crawler_child_type'| translate"
-                defaultOption="Seleziona un elemento">
+                [label]="
+                  'it.configuration.cron.body.crawler_child_type' | translate
+                "
+                defaultOption="Seleziona un elemento"
+              >
                 <option value="START_WORKFLOW">START WORKFLOW</option>
                 <option value="SUB_WORKFLOW">SUB WORKFLOW</option>
               </it-select>
             </div>
           </div>
-          <it-callout [label]="'it.configuration.cron.body.url_service'| translate">
+          <it-callout
+            [label]="'it.configuration.cron.body.url_service' | translate"
+          >
             <div class="row">
               <div class="form-group col-md-4">
-                <it-input formControlName="result_base_url" type="url" required [label]="'it.configuration.cron.body.result_base_url'| translate">
-                  <it-icon name="link" size="sm" color="primary" prependText></it-icon>
+                <it-input
+                  formControlName="result_base_url"
+                  type="url"
+                  required
+                  [label]="
+                    'it.configuration.cron.body.result_base_url' | translate
+                  "
+                >
+                  <it-icon
+                    name="link"
+                    size="sm"
+                    color="primary"
+                    prependText
+                  ></it-icon>
                 </it-input>
               </div>
               <div class="form-group col-md-4">
-                <it-input formControlName="crawler_uri" type="url" required [label]="'it.configuration.cron.body.crawler_uri'| translate">
-                  <it-icon name="link" size="sm" color="primary" prependText></it-icon>
+                <it-input
+                  formControlName="crawler_uri"
+                  type="url"
+                  required
+                  [label]="'it.configuration.cron.body.crawler_uri' | translate"
+                >
+                  <it-icon
+                    name="link"
+                    size="sm"
+                    color="primary"
+                    prependText
+                  ></it-icon>
                 </it-input>
               </div>
               <div class="form-group col-md-4">
-                <it-input formControlName="task_scheduler_base_url" type="url" [label]="'it.configuration.cron.body.task_scheduler_base_url'| translate">
-                  <it-icon name="link" size="sm" color="primary" prependText></it-icon>
+                <it-input
+                  formControlName="task_scheduler_base_url"
+                  type="url"
+                  [label]="
+                    'it.configuration.cron.body.task_scheduler_base_url'
+                      | translate
+                  "
+                >
+                  <it-icon
+                    name="link"
+                    size="sm"
+                    color="primary"
+                    prependText
+                  ></it-icon>
                 </it-input>
               </div>
             </div>
             <div class="row">
               <div class="form-group col-md-4">
-                <it-input formControlName="rule_base_url" type="url" required [label]="'it.configuration.cron.body.rule_base_url'| translate">
-                  <it-icon name="link" size="sm" color="primary" prependText></it-icon>
+                <it-input
+                  formControlName="rule_base_url"
+                  type="url"
+                  required
+                  [label]="
+                    'it.configuration.cron.body.rule_base_url' | translate
+                  "
+                >
+                  <it-icon
+                    name="link"
+                    size="sm"
+                    color="primary"
+                    prependText
+                  ></it-icon>
                 </it-input>
               </div>
               <div class="form-group col-md-4">
-                <it-input formControlName="public_company_base_url" type="url" required [label]="'it.configuration.cron.body.public_company_base_url'| translate">
-                  <it-icon name="link" size="sm" color="primary" prependText></it-icon>
+                <it-input
+                  formControlName="public_company_base_url"
+                  type="url"
+                  required
+                  [label]="
+                    'it.configuration.cron.body.public_company_base_url'
+                      | translate
+                  "
+                >
+                  <it-icon
+                    name="link"
+                    size="sm"
+                    color="primary"
+                    prependText
+                  ></it-icon>
                 </it-input>
               </div>
               <div class="form-group col-md-4">
-                <it-input formControlName="result_aggregator_base_url" type="url" required [label]="'it.configuration.cron.body.result_aggregator_base_url'| translate">
-                  <it-icon name="link" size="sm" color="primary" prependText></it-icon>
+                <it-input
+                  formControlName="result_aggregator_base_url"
+                  type="url"
+                  required
+                  [label]="
+                    'it.configuration.cron.body.result_aggregator_base_url'
+                      | translate
+                  "
+                >
+                  <it-icon
+                    name="link"
+                    size="sm"
+                    color="primary"
+                    prependText
+                  ></it-icon>
                 </it-input>
               </div>
             </div>
           </it-callout>
           <div class="row">
             <div class="form-group col-md-4">
-              <it-range [min]="3" [max]="24" [step]="1" formControlName="number_workflows_preserve">
-                {{'it.configuration.cron.workflow-preserve'| translate: {number_workflows_preserve: workflowBODYForm.get('number_workflows_preserve').value} }}
+              <it-range
+                [min]="3"
+                [max]="24"
+                [step]="1"
+                formControlName="number_workflows_preserve"
+              >
+                {{
+                  "it.configuration.cron.workflow-preserve"
+                    | translate
+                      : {
+                          number_workflows_preserve: workflowBODYForm.get(
+                            "number_workflows_preserve"
+                          ).value,
+                        }
+                }}
               </it-range>
             </div>
-            @if(optionsWorkflow && optionsWorkflow.length != 0) {
+            @if (optionsWorkflow && optionsWorkflow.length != 0) {
               <div class="form-group col-md-8">
-                <ng-select formControlName="workflow_id_preserve" [multiple]="true" [placeholder]="'it.configuration.cron.workflow-id'| translate">
-                    @for (workflow of optionsWorkflow; track workflow.value) {
-                        <ng-option [value]="workflow.value">{{workflow.text}}</ng-option>
-                    }
+                <ng-select
+                  formControlName="workflow_id_preserve"
+                  [multiple]="true"
+                  [placeholder]="
+                    'it.configuration.cron.workflow-id' | translate
+                  "
+                >
+                  @for (workflow of optionsWorkflow; track workflow.value) {
+                    <ng-option [value]="workflow.value">{{
+                      workflow.text
+                    }}</ng-option>
+                  }
                 </ng-select>
               </div>
             }
           </div>
           <div class="row justify-content-md-end">
             <div class="form-group col-md-auto">
-              <a itButton="outline-success" (click)="startWorkflowNow()" class="me-2 text-success" [disabled]="!workflowBODYForm.valid">
-                <it-icon name="arrow-right-circle" color="success"></it-icon>{{'it.navigation.start-now' | translate}}
+              <a
+                itButton="outline-success"
+                (click)="startWorkflowNow()"
+                class="me-2 text-success"
+                [disabled]="!workflowBODYForm.valid"
+              >
+                <it-icon name="arrow-right-circle" color="success"></it-icon
+                >{{ "it.navigation.start-now" | translate }}
               </a>
-              <a itButton="outline-primary" (click)="cronConfirmWorkflowBODY()" class="me-2" [disabled]="!workflowBODYForm.valid">
-                <it-icon name="pencil" color="primary"></it-icon>{{'it.navigation.confirm' | translate}}
+              <a
+                itButton="outline-primary"
+                (click)="cronConfirmWorkflowBODY()"
+                class="me-2"
+                [disabled]="!workflowBODYForm.valid"
+              >
+                <it-icon name="pencil" color="primary"></it-icon
+                >{{ "it.navigation.confirm" | translate }}
               </a>
             </div>
           </div>
-        </form>        
+        </form>
       </it-callout>
     </it-accordion>
-    <it-accordion (showEvent)="showAccordion($event, this)" title="{{'it.configuration.menu.title'| translate}}">
+    <it-accordion
+      (showEvent)="showAccordion($event, this)"
+      title="{{ 'it.configuration.menu.title' | translate }}"
+    >
       <form [formGroup]="menuForm">
         <div class="card mb-4">
-          <div class="card-header px-0 d-xl-flex justify-content-between align-items-center border-success">
-            <h5 class="card-title text-success mb-0" translate>it.configuration.menu.subtitle</h5>
+          <div
+            class="card-header px-0 d-xl-flex justify-content-between align-items-center border-success"
+          >
+            <h5 class="card-title text-success mb-0" translate>
+              it.configuration.menu.subtitle
+            </h5>
             <div>
-              <a itButton="outline-primary" (click)="confirmMenu()" class="me-2" [disabled]="!menuForm.valid">
-                <it-icon name="pencil" color="primary"></it-icon>{{'it.navigation.confirm' | translate}}
+              <a
+                itButton="outline-primary"
+                (click)="confirmMenu()"
+                class="me-2"
+                [disabled]="!menuForm.valid"
+              >
+                <it-icon name="pencil" color="primary"></it-icon
+                >{{ "it.navigation.confirm" | translate }}
               </a>
-              <a itButton="outline-success" class="text-success me-2" (click)="addDettaglioMenu('link');" translate>
-                <it-icon name="plus-circle" color="success"></it-icon>it.configuration.menu.add
+              <a
+                itButton="outline-success"
+                class="text-success me-2"
+                (click)="addDettaglioMenu('link')"
+                translate
+              >
+                <it-icon name="plus-circle" color="success"></it-icon
+                >it.configuration.menu.add
               </a>
-              <a itButton="outline-success" class="text-success" (click)="addDettaglioMenu('dropdown');" translate>
-                <it-icon name="plus-circle" color="success"></it-icon>it.configuration.menu.add-dropdown
+              <a
+                itButton="outline-success"
+                class="text-success"
+                (click)="addDettaglioMenu('dropdown')"
+                translate
+              >
+                <it-icon name="plus-circle" color="success"></it-icon
+                >it.configuration.menu.add-dropdown
               </a>
             </div>
-          </div>              
+          </div>
           <div class="card-body px-0">
             <div formArrayName="dettagli">
-              <div *ngFor="let dettaglioControl of dettagliArray.controls; let i = index"
-                  [formGroupName]="i" 
-                  class="shadow dettaglio-item p-3 mb-3 border rounded">
-                <div class="row mt-4">
-                  <div class="form-group col-md-2">
-                    <it-select [options]="menuEntryTypes" formControlName="type" [label]="'it.configuration.menu.type'| translate"></it-select>
-                  </div>
-                  <div class="form-group col-md-3">
-                    <it-input formControlName="label" required [label]="'it.configuration.menu.label'| translate">
-                      <it-icon name="key" size="sm" color="primary" prependText></it-icon>
-                    </it-input>
-                  </div>
-                  <div class="form-group col-md-4" *ngIf="dettaglioControl.get('type')?.value === 'link'">
-                    <it-input formControlName="url" required [label]="'it.configuration.menu.url'| translate">
-                      <it-icon name="link" size="sm" color="primary" prependText></it-icon>
-                    </it-input>
-                  </div>
-                  <div class="form-group col-md-2" *ngIf="dettaglioControl.get('type')?.value === 'link'">
-                    <it-input formControlName="target" [label]="'it.configuration.menu.target'| translate">
-                      <it-icon name="arrow-right" size="sm" color="primary" prependText></it-icon>
-                    </it-input>
-                  </div>
-                  <div class="col-md-2 text-end ms-auto">
-                    <a itButton="outline-danger" class="text-danger" translate (click)="removeDettaglioMenu(i);">
-                      <it-icon name="delete" color="danger"></it-icon>delete
-                    </a>
-                  </div>
-                </div>
-                <div class="row mt-3" *ngIf="dettaglioControl.get('type')?.value === 'dropdown'">
-                  <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <h6 class="mb-0" translate>it.configuration.menu.dropdown-items</h6>
-                      <a itButton="outline-success" class="text-success" (click)="addDettaglioMenuChild(i)" translate>
-                        <it-icon name="plus-circle" color="success"></it-icon>it.configuration.menu.add-dropdown-item
+              @for (
+                dettaglioControl of dettagliArray.controls;
+                track dettaglioControl;
+                let i = $index
+              ) {
+                <div
+                  [formGroupName]="i"
+                  class="shadow dettaglio-item p-3 mb-3 border rounded"
+                >
+                  <div class="row mt-4">
+                    <div class="form-group col-md-2">
+                      <it-select
+                        [options]="menuEntryTypes"
+                        formControlName="type"
+                        [label]="'it.configuration.menu.type' | translate"
+                      ></it-select>
+                    </div>
+                    <div class="form-group col-md-3">
+                      <it-input
+                        formControlName="label"
+                        required
+                        [label]="'it.configuration.menu.label' | translate"
+                      >
+                        <it-icon
+                          name="key"
+                          size="sm"
+                          color="primary"
+                          prependText
+                        ></it-icon>
+                      </it-input>
+                    </div>
+                    @if (dettaglioControl.get("type")?.value === "link") {
+                      <div class="form-group col-md-4">
+                        <it-input
+                          formControlName="url"
+                          required
+                          [label]="'it.configuration.menu.url' | translate"
+                        >
+                          <it-icon
+                            name="link"
+                            size="sm"
+                            color="primary"
+                            prependText
+                          ></it-icon>
+                        </it-input>
+                      </div>
+                    }
+                    @if (dettaglioControl.get("type")?.value === "link") {
+                      <div class="form-group col-md-2">
+                        <it-input
+                          formControlName="target"
+                          [label]="'it.configuration.menu.target' | translate"
+                        >
+                          <it-icon
+                            name="arrow-right"
+                            size="sm"
+                            color="primary"
+                            prependText
+                          ></it-icon>
+                        </it-input>
+                      </div>
+                    }
+                    <div class="col-md-2 text-end ms-auto">
+                      <a
+                        itButton="outline-danger"
+                        class="text-danger"
+                        translate
+                        (click)="removeDettaglioMenu(i)"
+                      >
+                        <it-icon name="delete" color="danger"></it-icon>delete
                       </a>
                     </div>
-                    <div formArrayName="children">
-                      <div *ngFor="let childControl of getDettaglioMenuChildren(i).controls; let j = index"
-                        [formGroupName]="j"
-                        class="border rounded p-2 mb-2 shadow">
-                        <div class="row pt-3">
-                          <div class="form-group col-md-2">
-                            <it-select [options]="menuChildTypes" formControlName="type" [label]="'it.configuration.menu.item-type'| translate"></it-select>
-                          </div>
-                          <div class="form-group col-md-3">
-                            <it-input formControlName="label" required [label]="'it.configuration.menu.label'| translate">
-                              <it-icon name="key" size="sm" color="primary" prependText></it-icon>
-                            </it-input>
-                          </div>
-                          <div class="form-group col-md-4">
-                            <it-input formControlName="value" required [label]="'it.configuration.menu.value'| translate">
-                              <it-icon name="link" size="sm" color="primary" prependText></it-icon>
-                              <ng-container error>
-                                <div>{{getValueErrorMessage(childControl)}}</div>
-                              </ng-container>
-                            </it-input>
-                          </div>
-                          <div class="form-group col-md-2" *ngIf="childControl.get('type')?.value === 'link'">
-                            <it-input formControlName="target" [label]="'it.configuration.menu.target'| translate">
-                              <it-icon name="arrow-right" size="sm" color="primary" prependText></it-icon>
-                            </it-input>
-                          </div>
-                          <div class="col-md-1 text-end ms-auto">
-                            <a itButton="outline-danger" class="text-danger" translate (click)="removeDettaglioMenuChild(i, j);">
-                              <it-icon name="delete" color="danger"></it-icon>
-                            </a>
-                          </div>
+                  </div>
+                  @if (dettaglioControl.get("type")?.value === "dropdown") {
+                    <div class="row mt-3">
+                      <div class="col-12">
+                        <div
+                          class="d-flex justify-content-between align-items-center mb-2"
+                        >
+                          <h6 class="mb-0" translate>
+                            it.configuration.menu.dropdown-items
+                          </h6>
+                          <a
+                            itButton="outline-success"
+                            class="text-success"
+                            (click)="addDettaglioMenuChild(i)"
+                            translate
+                          >
+                            <it-icon
+                              name="plus-circle"
+                              color="success"
+                            ></it-icon
+                            >it.configuration.menu.add-dropdown-item
+                          </a>
+                        </div>
+                        <div formArrayName="children">
+                          @for (
+                            childControl of getDettaglioMenuChildren(i)
+                              .controls;
+                            track childControl;
+                            let j = $index
+                          ) {
+                            <div
+                              [formGroupName]="j"
+                              class="border rounded p-2 mb-2 shadow"
+                            >
+                              <div class="row pt-3">
+                                <div class="form-group col-md-2">
+                                  <it-select
+                                    [options]="menuChildTypes"
+                                    formControlName="type"
+                                    [label]="
+                                      'it.configuration.menu.item-type'
+                                        | translate
+                                    "
+                                  ></it-select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                  <it-input
+                                    formControlName="label"
+                                    required
+                                    [label]="
+                                      'it.configuration.menu.label' | translate
+                                    "
+                                  >
+                                    <it-icon
+                                      name="key"
+                                      size="sm"
+                                      color="primary"
+                                      prependText
+                                    ></it-icon>
+                                  </it-input>
+                                </div>
+                                <div class="form-group col-md-4">
+                                  <it-input
+                                    formControlName="value"
+                                    required
+                                    [label]="
+                                      'it.configuration.menu.value' | translate
+                                    "
+                                  >
+                                    <it-icon
+                                      name="link"
+                                      size="sm"
+                                      color="primary"
+                                      prependText
+                                    ></it-icon>
+                                    <ng-container error>
+                                      <div>
+                                        {{ getValueErrorMessage(childControl) }}
+                                      </div>
+                                    </ng-container>
+                                  </it-input>
+                                </div>
+                                @if (
+                                  childControl.get("type")?.value === "link"
+                                ) {
+                                  <div class="form-group col-md-2">
+                                    <it-input
+                                      formControlName="target"
+                                      [label]="
+                                        'it.configuration.menu.target'
+                                          | translate
+                                      "
+                                    >
+                                      <it-icon
+                                        name="arrow-right"
+                                        size="sm"
+                                        color="primary"
+                                        prependText
+                                      ></it-icon>
+                                    </it-input>
+                                  </div>
+                                }
+                                <div class="col-md-1 text-end ms-auto">
+                                  <a
+                                    itButton="outline-danger"
+                                    class="text-danger"
+                                    translate
+                                    (click)="removeDettaglioMenuChild(i, j)"
+                                  >
+                                    <it-icon
+                                      name="delete"
+                                      color="danger"
+                                    ></it-icon>
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          }
                         </div>
                       </div>
                     </div>
-                  </div>
+                  }
                 </div>
-              </div>
+              }
             </div>
           </div>
         </div>
       </form>
     </it-accordion>
-    <it-accordion (showEvent)="showAccordion($event, this)" title="{{'it.configuration.slice.title'| translate}}">
+    <it-accordion
+      (showEvent)="showAccordion($event, this)"
+      title="{{ 'it.configuration.slice.title' | translate }}"
+    >
       <form [formGroup]="sliceForm">
         <div class="card mb-4">
-          <div class="card-header px-0 d-xl-flex justify-content-between align-items-center border-success">
-            <h5 class="card-title text-success mb-0" translate>it.configuration.slice.subtitle</h5>
+          <div
+            class="card-header px-0 d-xl-flex justify-content-between align-items-center border-success"
+          >
+            <h5 class="card-title text-success mb-0" translate>
+              it.configuration.slice.subtitle
+            </h5>
             <div>
-              <a itButton="outline-primary" (click)="confirmSlice()" class="me-2" [disabled]="!sliceForm.valid">
-                <it-icon name="pencil" color="primary"></it-icon>{{'it.navigation.confirm' | translate}}
+              <a
+                itButton="outline-primary"
+                (click)="confirmSlice()"
+                class="me-2"
+                [disabled]="!sliceForm.valid"
+              >
+                <it-icon name="pencil" color="primary"></it-icon
+                >{{ "it.navigation.confirm" | translate }}
               </a>
-              <a itButton="outline-success" class="text-success" (click)="addDettaglioSlice();" translate>
-                <it-icon name="plus-circle" color="success"></it-icon>it.configuration.slice.add
+              <a
+                itButton="outline-success"
+                class="text-success"
+                (click)="addDettaglioSlice()"
+                translate
+              >
+                <it-icon name="plus-circle" color="success"></it-icon
+                >it.configuration.slice.add
               </a>
             </div>
-          </div>              
+          </div>
           <div class="card-body px-0">
             <div formArrayName="dettagli">
-              <div *ngFor="let dettaglioSliceControl of dettagliSliceArray.controls; let i = index"
-                  [formGroupName]="i" 
-                  class="shadow dettaglio-item p-3 mb-3 border rounded">
-                <div class="row mt-4">
-                  <div class="form-group col-md-2">
-                    <div class="d-flex">
-                      <ngx-colors ngx-colors-trigger [hideTextInput]="true" formControlName="ngxcolor"></ngx-colors>
-                      <it-input class="w-100" required formControlName="color" [label]="'it.configuration.slice.color'| translate"></it-input>  
+              @for (
+                dettaglioSliceControl of dettagliSliceArray.controls;
+                track dettaglioSliceControl;
+                let i = $index
+              ) {
+                <div
+                  [formGroupName]="i"
+                  class="shadow dettaglio-item p-3 mb-3 border rounded"
+                >
+                  <div class="row mt-4">
+                    <div class="form-group col-md-2">
+                      <div class="d-flex">
+                        <ngx-colors
+                          ngx-colors-trigger
+                          [hideTextInput]="true"
+                          formControlName="ngxcolor"
+                        ></ngx-colors>
+                        <it-input
+                          class="w-100"
+                          required
+                          formControlName="color"
+                          [label]="'it.configuration.slice.color' | translate"
+                        ></it-input>
+                      </div>
+                    </div>
+                    <div class="form-group col-md-4">
+                      <it-range
+                        [min]="1"
+                        [max]="126"
+                        [step]="1"
+                        formControlName="min"
+                      >
+                        {{
+                          "it.configuration.slice.min"
+                            | translate
+                              : {
+                                  number:
+                                    dettaglioSliceControl.get("min")?.value,
+                                }
+                        }}
+                      </it-range>
+                    </div>
+                    <div class="form-group col-md-4">
+                      <it-range
+                        [min]="1"
+                        [max]="126"
+                        [step]="1"
+                        formControlName="max"
+                      >
+                        {{
+                          "it.configuration.slice.max"
+                            | translate
+                              : {
+                                  number:
+                                    dettaglioSliceControl.get("max")?.value,
+                                }
+                        }}
+                      </it-range>
+                    </div>
+                    <div class="col-md-2 text-end ms-auto">
+                      <a
+                        itButton="outline-danger"
+                        class="text-danger"
+                        translate
+                        (click)="removeDettaglioSlice(i)"
+                      >
+                        <it-icon name="delete" color="danger"></it-icon>delete
+                      </a>
                     </div>
                   </div>
-                  <div class="form-group col-md-4">
-                    <it-range [min]="1" [max]="126" [step]="1" formControlName="min">
-                      {{'it.configuration.slice.min'| translate: {number: dettaglioSliceControl.get('min')?.value} }}
-                    </it-range>
-                  </div>
-                  <div class="form-group col-md-4">
-                    <it-range [min]="1" [max]="126" [step]="1" formControlName="max">
-                      {{'it.configuration.slice.max'| translate: {number: dettaglioSliceControl.get('max')?.value} }}
-                    </it-range>
-                  </div>
-                  <div class="col-md-2 text-end ms-auto">
-                    <a itButton="outline-danger" class="text-danger" translate (click)="removeDettaglioSlice(i);">
-                      <it-icon name="delete" color="danger"></it-icon>delete
-                    </a>
-                  </div>
                 </div>
-              </div>
+              }
             </div>
           </div>
         </div>
       </form>
     </it-accordion>
-    <it-accordion (showEvent)="showAccordion($event, this)" title="{{'it.configuration.color'| translate}}">
+    <it-accordion
+      (showEvent)="showAccordion($event, this)"
+      title="{{ 'it.configuration.color' | translate }}"
+    >
       <form [formGroup]="colorForm">
         <div class="row mb-3">
           <div class="form-group col-md-4">
             <div class="d-flex">
-              <ngx-colors ngx-colors-trigger [hideTextInput]="true" formControlName="ngx_status_200"></ngx-colors>
-              <it-input class="w-100" required formControlName="status_200" [label]="'it.rule.status.200.ruletitle'| translate"></it-input>  
+              <ngx-colors
+                ngx-colors-trigger
+                [hideTextInput]="true"
+                formControlName="ngx_status_200"
+              ></ngx-colors>
+              <it-input
+                class="w-100"
+                required
+                formControlName="status_200"
+                [label]="'it.rule.status.200.ruletitle' | translate"
+              ></it-input>
             </div>
           </div>
           <div class="form-group col-md-4">
             <div class="d-flex">
-              <ngx-colors ngx-colors-trigger [hideTextInput]="true" formControlName="ngx_status_202"></ngx-colors>
-              <it-input class="w-100"  formControlName="status_202" [label]="'it.rule.status.202.ruletitle'| translate"></it-input>  
+              <ngx-colors
+                ngx-colors-trigger
+                [hideTextInput]="true"
+                formControlName="ngx_status_202"
+              ></ngx-colors>
+              <it-input
+                class="w-100"
+                formControlName="status_202"
+                [label]="'it.rule.status.202.ruletitle' | translate"
+              ></it-input>
             </div>
           </div>
           <div class="form-group col-md-4">
             <div class="d-flex">
-              <ngx-colors ngx-colors-trigger [hideTextInput]="true" formControlName="ngx_status_400"></ngx-colors>
-              <it-input class="w-100" formControlName="status_400" [label]="'it.rule.status.400.ruletitle'| translate"></it-input>  
+              <ngx-colors
+                ngx-colors-trigger
+                [hideTextInput]="true"
+                formControlName="ngx_status_400"
+              ></ngx-colors>
+              <it-input
+                class="w-100"
+                formControlName="status_400"
+                [label]="'it.rule.status.400.ruletitle' | translate"
+              ></it-input>
             </div>
           </div>
         </div>
         <div class="row mb-3">
           <div class="form-group col-md-4">
             <div class="d-flex">
-              <ngx-colors ngx-colors-trigger [hideTextInput]="true" formControlName="ngx_status_407"></ngx-colors>
-              <it-input class="w-100" formControlName="status_407"  [label]="'it.rule.status.407.ruletitle'| translate"></it-input>  
+              <ngx-colors
+                ngx-colors-trigger
+                [hideTextInput]="true"
+                formControlName="ngx_status_407"
+              ></ngx-colors>
+              <it-input
+                class="w-100"
+                formControlName="status_407"
+                [label]="'it.rule.status.407.ruletitle' | translate"
+              ></it-input>
             </div>
           </div>
           <div class="form-group col-md-4">
             <div class="d-flex">
-              <ngx-colors ngx-colors-trigger [hideTextInput]="true" formControlName="ngx_status_500"></ngx-colors>
-              <it-input class="w-100" formControlName="status_500" [label]="'it.rule.status.500.ruletitle'| translate"></it-input>  
+              <ngx-colors
+                ngx-colors-trigger
+                [hideTextInput]="true"
+                formControlName="ngx_status_500"
+              ></ngx-colors>
+              <it-input
+                class="w-100"
+                formControlName="status_500"
+                [label]="'it.rule.status.500.ruletitle' | translate"
+              ></it-input>
             </div>
           </div>
           <div class="form-group col-md-4">
             <div class="d-flex">
-              <ngx-colors ngx-colors-trigger [hideTextInput]="true" formControlName="ngx_status_501"></ngx-colors>
-              <it-input class="w-100" formControlName="status_501" [label]="'it.rule.status.501.ruletitle'| translate"></it-input>  
+              <ngx-colors
+                ngx-colors-trigger
+                [hideTextInput]="true"
+                formControlName="ngx_status_501"
+              ></ngx-colors>
+              <it-input
+                class="w-100"
+                formControlName="status_501"
+                [label]="'it.rule.status.501.ruletitle' | translate"
+              ></it-input>
             </div>
           </div>
         </div>
         <div class="row justify-content-md-end">
           <div class="form-group col-md-auto">
-            <a itButton="outline-primary" (click)="confirmColor()" class="me-2" [disabled]="!colorForm.valid">
-              <it-icon name="pencil" color="primary"></it-icon>{{'it.navigation.confirm' | translate}}
+            <a
+              itButton="outline-primary"
+              (click)="confirmColor()"
+              class="me-2"
+              [disabled]="!colorForm.valid"
+            >
+              <it-icon name="pencil" color="primary"></it-icon
+              >{{ "it.navigation.confirm" | translate }}
             </a>
           </div>
         </div>
       </form>
-    </it-accordion>    
-</div> 
-  
-<it-modal #headerPopconfirmModal="itModal" closeButton="true" popconfirm="true">
-  <ng-container modalTitle><span translate>modal.title.info</span></ng-container>
+    </it-accordion>
+  </div>
 
-  <p innerHtml="{{'it.configuration.cron.message'| translate:{nextDate: nextDate| date:'dd/MM/yyyy \'alle ore\' HH'} }}"></p>
+  <it-modal
+    #headerPopconfirmModal="itModal"
+    closeButton="true"
+    popconfirm="true"
+  >
+    <ng-container modalTitle
+      ><span translate>modal.title.info</span></ng-container
+    >
 
-  <ng-container footer>
-    <button itButton="primary" (click)="cronSave()" size="sm" type="button" data-bs-dismiss="modal" translate>button.ok</button>
-    <button itButton="outline-secondary" size="sm" type="button" data-bs-dismiss="modal" translate>button.cancel</button>
-  </ng-container>
-</it-modal>
+    <p
+      innerHtml="{{
+        'it.configuration.cron.message'
+          | translate
+            : { nextDate: nextDate | date: 'dd/MM/yyyy \'alle ore\' HH' }
+      }}"
+    ></p>
+
+    <ng-container footer>
+      <button
+        itButton="primary"
+        (click)="cronSave()"
+        size="sm"
+        type="button"
+        data-bs-dismiss="modal"
+        translate
+      >
+        button.ok
+      </button>
+      <button
+        itButton="outline-secondary"
+        size="sm"
+        type="button"
+        data-bs-dismiss="modal"
+        translate
+      >
+        button.cancel
+      </button>
+    </ng-container>
+  </it-modal>
+</div>
