@@ -23,8 +23,47 @@
             "allowedCommonJsDependencies": [
               "rxjs-compat",
               "lodash",
-              "file-saver"
+              "file-saver",
+              "leaflet",
+              "leaflet.markercluster",
+              "cron-parser",
+              "html2canvas",
+              "rgbcolor",
+              "raf",
+              "global/window",
+              "global/document",
+              "@videojs/xhr",
+              "videojs-vtt.js",
+              "mux.js/lib/tools/parse-sidx",
+              "mux.js/lib/utils/clock",
+              "@xmldom/xmldom",
+              "progressbar.js/src/circle.js",
+              "core-js/modules/es.promise.js",
+              "core-js/modules/es.string.match.js",
+              "core-js/modules/es.string.replace.js",
+              "core-js/modules/es.string.starts-with.js",
+              "core-js/modules/es.array.iterator.js",
+              "core-js/modules/web.dom-collections.iterator.js",
+              "core-js/modules/es.array.reduce.js",
+              "core-js/modules/es.string.ends-with.js",
+              "core-js/modules/es.string.split.js",
+              "core-js/modules/es.string.trim.js",
+              "core-js/modules/es.array.index-of.js",
+              "core-js/modules/es.string.includes.js",
+              "core-js/modules/es.array.reverse.js",
+              "core-js/modules/es.regexp.to-string.js"
             ],
+            "stylePreprocessorOptions": {
+              "sass": {
+                "silenceDeprecations": [
+                  "color-functions",
+                  "global-builtin",
+                  "import",
+                  "abs-percent",
+                  "if-function"
+                ]
+              }
+            },
             "assets": [
               "src/assets",
               "src/favicon.ico",
@@ -55,8 +94,7 @@
             ],
             "scripts": [
               "node_modules/jquery/dist/jquery.min.js",
-              "node_modules/popper.js/dist/umd/popper.min.js",
-              "node_modules/html2canvas/dist/html2canvas.js"
+              "node_modules/popper.js/dist/umd/popper.min.js"
             ],
             "extractLicenses": false,
             "sourceMap": true,
