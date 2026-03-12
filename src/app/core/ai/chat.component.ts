@@ -10,7 +10,7 @@ import 'deep-chat';
       <div class="d-flex">
         <deep-chat
             #chat
-            avatars="true"
+            [avatars]="avatars"
             [request]="requestConfig"
             [stream]="streamConfig"
             [textInput]="textInputConfig"
@@ -27,6 +27,7 @@ import 'deep-chat';
 })
 export class ChatComponent implements OnInit {
   protected requestConfig: any;
+  private loadingInterval: any;
   protected streamConfig = {
     simulation: false
   };
@@ -34,6 +35,7 @@ export class ChatComponent implements OnInit {
 
   constructor(private oidcSecurityService: OidcSecurityService) {}
 
+  avatars = { ai: { src: "/assets/images/ai.png" }};        
   customButtons = [
       {
         position: 'inside-left', // oppure 'outside-right', 'inside-left', 'inside-right'
@@ -65,7 +67,7 @@ export class ChatComponent implements OnInit {
       }
     ];
   textInputConfig = {
-    placeholder: { text: 'Benvenuto nella chat di TrasparenzAI ... come posso aiutarti oggi?' },
+    placeholder: { text: 'Benvenuto! Sono Chiara, l’assistente virtuale di TrasparenzAI' },
     styles: {
         container: {
           paddingBottom: '30px',
@@ -75,6 +77,7 @@ export class ChatComponent implements OnInit {
         },
     },
   };
+
   ngOnInit() {
     this.requestConfig = {
       url: `${environment.apiUrl}/ai-integration-service/v1/chat/stream`,
@@ -103,5 +106,5 @@ export class ChatComponent implements OnInit {
   newChat() {
     this.chat?.nativeElement?.clearMessages();
   }
-  
+
 }
