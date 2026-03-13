@@ -130,12 +130,12 @@ export class ConfigurationService extends CommonService<Configuration> {
     );
   }
 
-  public getWorkflowVersion(): Observable<number> {
+  public getWorkflowBody(): Observable<any> {
     return this.getAll().pipe(
         map((configurations: Configuration[]) => {
           let workflowCronBody: any = configurations.filter((conf: Configuration) => conf.key === ConfigurationService.WORKFLOW_CRON_BODY);
           if (workflowCronBody && workflowCronBody.length === 1) {
-            return JSON.parse(workflowCronBody[0].value).input.version;
+            return JSON.parse(workflowCronBody[0].value);
           }
         })
     );
