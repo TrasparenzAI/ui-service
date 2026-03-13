@@ -90,7 +90,7 @@ import saveAs from 'file-saver';
               </div>
             }
             @if (workflow.isRunning){
-              <div class="ms-auto d-flex">
+              <div class="ms-auto d-flex my-2 me-1">
                 <button
                   itPopover="Aggiorna i dati"
                   popoverPlacement="top"
