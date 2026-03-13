@@ -6,8 +6,8 @@
         <app-workflow-card class="w-100" [workflow]="currentWorkflow" [title]="false"></app-workflow-card>
       }
     </div>
-    <div class="col-xl-6 px-0 mx-1 mx-md-0">
-      <div class="ms-2 ms-md-0 shadow-lg bg-light h-100">
+    <div class="col-xl-6">
+      <div class="shadow-lg bg-light h-100">
         @if(currentWorkflow) {
           <div class="d-flex bg-dark text-white h3 mb-2 justify-content-center">
             <span>{{'it.workflow.date' | translate: { startTime: currentWorkflow.startTime | date:'dd/MM/yyyy'} }}</span>
