@@ -16,12 +16,12 @@
               <span button>{{ getMenuLabel(menulink) }}</span>
               <ng-container list>
                 @for (childMenu of getMenuChildren(menulink); track childMenu) {                  
-                  <it-dropdown-item
+                  <li itDropdownItem
                     [href]="getMenuHref(childMenu)"
                     [externalLink]="isExternalMenuItem(childMenu)"
                     (click)="onDropdownMenuItemClick($event, childMenu)">
                     <it-icon name="{{getMenuIcon(childMenu)}}" class="bg-light" color="primary"></it-icon> <span>{{ getMenuLabel(childMenu) }}</span>
-                  </it-dropdown-item>
+                  </li>
                 }
               </ng-container>
             </it-dropdown>
@@ -51,35 +51,35 @@
           <span class="d-none d-md-block" button>{{userData.name}}</span>
           <ng-container list>
             @if (isAdmin) {
-              <it-dropdown-item>
+              <li itDropdownItem>
                 <a routerLink="/configuration" class="px-0">
                   <it-icon size="md" color="primary" name="settings" class="user-icon"></it-icon>
                   <span class="ms-1" translate>it.navigation.configuration</span>      
                 </a>
-              </it-dropdown-item>
-              <it-dropdown-item>
+              </li>
+              <li itDropdownItem>
                 <a routerLink="/service-info" class="px-0">
                   <it-icon size="md" color="primary" name="info-circle" class="user-icon"></it-icon>
                   <span class="ms-1" translate>it.navigation.service-info</span>      
                 </a>
-              </it-dropdown-item>
-              <it-dropdown-item divider="true"></it-dropdown-item>
-              <it-dropdown-item>
+              </li>
+              <li itDropdownItem divider="true"></li>
+              <li itDropdownItem>
                 <a routerLink="/chat-ai" class="px-0">
                   <it-icon size="md" color="primary" name="comment" class="user-icon"></it-icon>
                   <span class="ms-1" translate>it.navigation.chat-ai</span>      
                 </a>
-              </it-dropdown-item>
-              <it-dropdown-item divider="true"></it-dropdown-item>
+              </li>
+              <li itDropdownItem divider="true"></li>
             }
-            <it-dropdown-item>
+            <li itDropdownItem>
               <a href="#"
                 class="px-0"
                 (click)="logout()">
                 <it-icon size="md" color="primary" name="logout" class="user-icon"></it-icon>
                 <span class="ms-1" translate>it.navigation.logout</span>      
               </a>
-            </it-dropdown-item>
+            </li>
           </ng-container>
         </it-dropdown>  
       </div>
@@ -133,30 +133,30 @@
             <hr class="my-0">
           </span>
           <ng-container list>
-            <it-dropdown-item href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'amministrazione-trasparente'}">
+            <li itDropdownItem href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'amministrazione-trasparente'}">
               <span>Amministrazione Trasparente</span>
-            </it-dropdown-item>
-            <it-dropdown-item href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'patrimonio-immobiliare'}">
+            </li>
+            <li itDropdownItem href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'patrimonio-immobiliare'}">
               <span>Patrimonio immobiliare</span>
-            </it-dropdown-item>
-            <it-dropdown-item href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'canoni-locazione-affitto'}">
+            </li>
+            <li itDropdownItem href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'canoni-locazione-affitto'}">
               <span>Canoni di locazione o affitto</span>
-            </it-dropdown-item>
-            <it-dropdown-item href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'bandi-gara-contratti'}">
+            </li>
+            <li itDropdownItem href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'bandi-gara-contratti'}">
               <span>Bandi di gara e contratti</span>
-            </it-dropdown-item>
-            <it-dropdown-item href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'bandi-concorso'}">
+            </li>
+            <li itDropdownItem href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'bandi-concorso'}">
               <span>Bandi di concorso</span>
-            </it-dropdown-item>
-            <it-dropdown-item href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'prevenzione-corruzione'}">
+            </li>
+            <li itDropdownItem href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'prevenzione-corruzione'}">
               <span>Prevenzione della corruzione</span>
-            </it-dropdown-item>
-            <it-dropdown-item href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'indicatore-tempestivita-pagamenti'}">
+            </li>
+            <li itDropdownItem href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'indicatore-tempestivita-pagamenti'}">
               <span>Indicatore di tempestività dei pagamenti</span>
-            </it-dropdown-item>
-            <it-dropdown-item href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'bilanci'}">
+            </li>
+            <li itDropdownItem href="#" (click)="toggleCollapse()" routerLink="/search" [queryParams]="{ruleName: 'bilanci'}">
               <span>Bilanci</span>
-            </it-dropdown-item>
+            </li>
           </ng-container>
         </it-dropdown>
       </it-navbar-item>
@@ -164,7 +164,7 @@
         <it-dropdown mode="nav">
           <span button translate>it.navigation.grafici-mappe.title</span>
           <ng-container list>
-            <it-dropdown-item>
+            <li itDropdownItem>
               <a href="#"  
                 translate 
                 (click)="toggleCollapse()" 
@@ -173,8 +173,8 @@
                 <it-icon size="sm" name="chart-line"></it-icon>
                 <span translate>it.navigation.grafici-mappe.grafico-regola</span>      
               </a>
-            </it-dropdown-item>
-            <it-dropdown-item>
+            </li>
+            <li itDropdownItem>
               <a href="#"  
                 translate 
                 (click)="toggleCollapse()" 
@@ -184,9 +184,9 @@
                 <it-icon size="sm" name="map-marker-circle"></it-icon>
                 <span translate>it.navigation.grafici-mappe.mappa-regola</span>
               </a>
-            </it-dropdown-item>
+            </li>
             @if (isAdmin) {
-              <it-dropdown-item>
+              <li itDropdownItem>
                 <a href="#"  
                   translate 
                   (click)="toggleCollapse()" 
@@ -195,8 +195,8 @@
                   <it-icon size="sm" name="presentation"></it-icon>
                   <span translate>it.navigation.grafici-mappe.grafico-statistiche-regola</span>
                 </a>
-              </it-dropdown-item>
-              <it-dropdown-item>
+              </li>
+              <li itDropdownItem>
                 <a href="#"  
                   translate 
                   (click)="toggleCollapse()" 
@@ -205,7 +205,7 @@
                   <it-icon size="sm" name="box"></it-icon>
                   <span translate>it.navigation.grafici-mappe.statistiche-regola</span>
                 </a>
-              </it-dropdown-item>
+              </li>
             }
           </ng-container>
         </it-dropdown>

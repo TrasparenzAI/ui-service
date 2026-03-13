@@ -45,9 +45,9 @@
           <span translate>it.rule.graph.export.title</span>
         </span>
         <ng-container list>
-          <it-dropdown-item [disabled]="!(data && data.length > 0)" (click)="exportImg(false)"><span translate>it.rule.graph.export.visible</span></it-dropdown-item>
-          <it-dropdown-item [disabled]="!(data && data.length > 0)" (click)="exportImg(true)"><span translate>it.rule.graph.export.all</span></it-dropdown-item>
-          <it-dropdown-item [disabled]="!(data && data.length > 0)" (click)="exportPdf()"><span translate>it.rule.graph.export.pdf</span></it-dropdown-item>
+          <li itDropdownItem [disabled]="!(data && data.length > 0)" (click)="exportImg(false)"><span translate>it.rule.graph.export.visible</span></li>
+          <li itDropdownItem [disabled]="!(data && data.length > 0)" (click)="exportImg(true)"><span translate>it.rule.graph.export.all</span></li>
+          <li itDropdownItem [disabled]="!(data && data.length > 0)" (click)="exportPdf()"><span translate>it.rule.graph.export.pdf</span></li>
         </ng-container>
       </it-dropdown>
     </div>

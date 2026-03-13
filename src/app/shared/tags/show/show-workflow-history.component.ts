@@ -110,15 +110,15 @@ import saveAs from 'file-saver';
               <span listHeading translate>it.rule.name</span>
     
               <ng-container list>
-                <it-dropdown-item divider="true"></it-dropdown-item>
+                <li itDropdownItem divider="true"></li>
     
                 @for (item of optionsRule; track item) {
-                  <it-dropdown-item
+                  <li itDropdownItem
                     (click)="startMainWorkflow(item.value)"
                     externalLink="true"
                     [large]="true">
                     {{ item.text }}
-                  </it-dropdown-item>
+                  </li>
                 }
               </ng-container>
             </it-dropdown>

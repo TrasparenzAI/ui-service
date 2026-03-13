@@ -56,24 +56,24 @@ import saveAs from 'file-saver';
                     <ng-container list>
                       @if (workflow.isFailed || workflow.isPaused || workflow.isTerminated) {
                         @if (!workflow.isPaused) {
-                          <it-dropdown-item iconPosition="left" externalLink="true" (click)="retryWorkflow()" iconName="restore">
+                          <li itDropdownItem iconPosition="left" externalLink="true" (click)="retryWorkflow()" iconName="restore">
                             <span class="ms-1" translate>it.workflow.retry</span>
-                          </it-dropdown-item>
+                          </li>
                         }
                         @if (workflow.isPaused) {
-                          <it-dropdown-item iconPosition="left" externalLink="true" (click)="resumeWorkflow()" iconName="refresh">
+                          <li itDropdownItem iconPosition="left" externalLink="true" (click)="resumeWorkflow()" iconName="refresh">
                             <span class="ms-1" translate>it.workflow.resume</span>
-                          </it-dropdown-item>
+                          </li>
                         }
                         @if (!workflow.isPaused) {
-                          <it-dropdown-item iconPosition="left" externalLink="true" (click)="restartWorkflow();" iconName="exchange-circle">
+                          <li itDropdownItem iconPosition="left" externalLink="true" (click)="restartWorkflow();" iconName="exchange-circle">
                             <span class="ms-1" translate>it.workflow.restart</span>
-                          </it-dropdown-item>
+                          </li>
                         }
                       }
-                      <it-dropdown-item iconPosition="left" externalLink="true" (click)="removeWorkflow();" iconName="delete">
+                      <li itDropdownItem iconPosition="left" externalLink="true" (click)="removeWorkflow();" iconName="delete">
                         <span class="ms-1" translate>it.workflow.remove</span>
-                      </it-dropdown-item>
+                      </li>
                     </ng-container>
                   </it-dropdown>
                 } @else {
@@ -110,12 +110,12 @@ import saveAs from 'file-saver';
                       button
                     translate>{{'it.workflow.status.'+ workflow.status | translate}}</span>
                     <ng-container list>
-                      <it-dropdown-item iconPosition="left" externalLink="true" (click)="pauseWorkflow();" iconName="locked">
+                      <li itDropdownItem iconPosition="left" externalLink="true" (click)="pauseWorkflow();" iconName="locked">
                         <span class="ms-1" translate>it.workflow.pause</span>
-                      </it-dropdown-item>
-                      <it-dropdown-item iconPosition="left" externalLink="true" (click)="terminateWorkflow();" iconName="delete">
+                      </li>
+                      <li itDropdownItem iconPosition="left" externalLink="true" (click)="terminateWorkflow();" iconName="delete">
                         <span class="ms-1" translate>it.workflow.terminate</span>
-                      </it-dropdown-item>
+                      </li>
                     </ng-container>
                   </it-dropdown>
                 }
@@ -126,42 +126,42 @@ import saveAs from 'file-saver';
         <div class="it-card-body px-2">
           <it-list>
             @if (statusColor){
-              <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente'}" href="." iconLeft="true">
+              <li itListItem [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente'}" href="." iconLeft="true">
                 <span class="fst-italic card-text text-body">{{'it.rule.status.all' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge]="'primary'" [rounded]="true" class="text-sm-left">{{ workflow.totalResult| number: undefined : 'it-IT' }}</span>
                 </ng-container>
-              </it-list-item>
-              <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 200}" href="." iconLeft="true">
+              </li>
+              <li itListItem [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 200}" href="." iconLeft="true">
                 <span class="fst-italic card-text text-body">{{'it.rule.status.200.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(200)" [rounded]="true" class="text-sm-left">{{ workflow.getResultFromStatus('200') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
-              </it-list-item>
-              <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 202}" href="." iconLeft="true">
+              </li>
+              <li itListItem [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 202}" href="." iconLeft="true">
                 <span class="fst-italic card-text text-body">{{'it.rule.status.202.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(202)" [rounded]="true" class="text-sm-left">{{ workflow.getResultFromStatus('202') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
-              </it-list-item>
-              <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 400}" href="." iconLeft="true">
+              </li>
+              <li itListItem [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 400}" href="." iconLeft="true">
                 <span class="fst-italic card-text text-body">{{'it.rule.status.400.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(400)" [rounded]="true" class="text-sm-left">{{ workflow.getResultFromStatus('400') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
-              </it-list-item>
-              <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 407}" href="." iconLeft="true">
+              </li>
+              <li itListItem [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 407}" href="." iconLeft="true">
                 <span class="fst-italic card-text text-body">{{'it.rule.status.407.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(407)" [rounded]="true">{{ workflow.getResultFromStatus('407') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
-              </it-list-item>
-              <it-list-item [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 500}" href="." iconLeft="true">
+              </li>
+              <li itListItem [routerLink]="['/search']" [queryParams]="{workflowId: workflow.workflowId, ruleName: 'amministrazione-trasparente', status: 500}" href="." iconLeft="true">
                 <span class="fst-italic card-text text-body">{{'it.rule.status.500.title' | translate}}</span>
                 <ng-container multiple>
                   <span @scale [itBadge] [style.background]="getBGColor(500)" [rounded]="true">{{ workflow.getResultFromStatus('500') | number: undefined : 'it-IT' }}</span>
                 </ng-container>
-              </it-list-item>
+              </li>
             }
           </it-list>
         </div>
