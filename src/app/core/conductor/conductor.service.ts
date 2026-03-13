@@ -259,10 +259,10 @@ export class ConductorService extends CommonService<Workflow> {
   }
 
   public inputParamter(codiceIpa?: string, ruleName?: string): Observable<any> {
-    return this.configurationService.getWorkflowVersion().pipe(map((versione: number) => {
+    return this.configurationService.getWorkflowBody().pipe(map((body: any) => {
       return {
         name: ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
-        version: versione,
+        version: body.version,
         correlationId: codiceIpa || ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW,
         input: {
           page_size: 1,
@@ -270,23 +270,23 @@ export class ConductorService extends CommonService<Workflow> {
           codice_ipa: codiceIpa,
           id_ipa_from: 0,
           parent_workflow_id: ``,
-          execute_child: true,
-          force_jsoup: true,
-          crawling_mode: `htmlSource`,
+          execute_child: body.input.execute_child || true,
+          force_jsoup: body.input.force_jsoup || true,
+          crawling_mode: body.input.crawling_mode || `htmlSource`,
           crawler_save_object: true,
           crawler_save_screenshot: true,
           root_rule: ruleName || Rule.AMMINISTRAZIONE_TRASPARENTE,
-          rule_name: Rule.AMMINISTRAZIONE_TRASPARENTE,
-          connection_timeout: 60000,
-          read_timeout: 60000,
-          connection_timeout_max: 120000,
-          read_timeout_max: 120000,
+          rule_name: body.input.rule_name || Rule.AMMINISTRAZIONE_TRASPARENTE,
+          connection_timeout: body.input.connection_timeout || 60000,
+          read_timeout: body.input.read_timeout || 60000,
+          connection_timeout_max: body.input.connection_timeout_max || 120000,
+          read_timeout_max: body.input.read_timeout_max || 120000,
           crawler_child_type: `SUB_WORKFLOW`,
-          crawler_uri: environment.crawlerApiUrl,
-          result_base_url: environment.resultApiUrl,
-          rule_base_url: environment.ruleApiUrl,
-          public_company_base_url: environment.companyApiUrl,
-          result_aggregator_base_url: environment.resultAggregatorapiUrl
+          crawler_uri: body.input.crawler_uri || environment.crawlerApiUrl,
+          result_base_url: body.input.result_base_url || environment.resultApiUrl,
+          rule_base_url: body.input.rule_base_url || environment.ruleApiUrl,
+          public_company_base_url: body.input.public_company_base_url || environment.companyApiUrl,
+          result_aggregator_base_url: body.input.result_aggregator_base_url || environment.resultAggregatorapiUrl
         }
       }
     }));
