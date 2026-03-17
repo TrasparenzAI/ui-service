@@ -61,6 +61,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
       position: relative;
       display: inline-flex;
       align-items: center;
+      min-width: 130px;
       height: 38px;
       width: 30%;
     }
@@ -95,6 +96,10 @@ export class ChatComponent implements OnInit, AfterViewInit {
       color: #5c6f82;
     }
     .model-select:focus + .bi-select-arrow { color: #0073e6; }
+    .avatar {
+      width: 3em;
+      height: 3em;
+    }
   `;
 
   customButtons = [
