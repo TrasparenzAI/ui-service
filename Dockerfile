@@ -40,6 +40,7 @@ ENV RESULT_AGGREGATOR_API_URL=$API_URL/result-aggregator-service
 ENV TASK_SCHEDULER_API_URL=$API_URL/task-scheduler-service
 ENV RULE_API_URL=$API_URL/rule-service
 ENV CRAWLER_API_URL=$API_URL/crawl
+ENV AI_API_URL=$API_URL/ai-integration-service
 
 ENV DEV_BYPASS_ADMIN_AUTH=false
 

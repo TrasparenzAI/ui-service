@@ -12,6 +12,7 @@
     window["env"]["ruleApiUrl"] = "${RULE_API_URL}";
     window["env"]["taskSchedulerApiUrl"] = "${TASK_SCHEDULER_API_URL}";
     window["env"]["crawlerApiUrl"] = "${CRAWLER_API_URL}";
+    window["env"]["aiApiUrl"] = "${AI_API_URL}";
 
     window["env"]["baseHref"] = "${BASE_HREF}";
     window["env"]["devBypassAdminAuth"] = ${DEV_BYPASS_ADMIN_AUTH};
