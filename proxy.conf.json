@@ -8,5 +8,10 @@
     "target": "http://localhost:8081/",
     "pathRewrite": {"^/result-service" : ""},
     "secure": false
-  }  
+  },
+  "/ai-integration-service": {
+    "target": "http://localhost:8080/",
+    "pathRewrite": {"^/ai-integration-service" : ""},
+    "secure": false
+  }    
 }

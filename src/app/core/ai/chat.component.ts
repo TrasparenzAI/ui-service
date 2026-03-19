@@ -13,6 +13,9 @@ import 'deep-chat';
       <div class="d-flex mt-2">
         <deep-chat
             #chat
+            images="true"
+            gifs="true"
+            camera="true"
             [avatars]="avatars"
             [connect]="requestConfig"
             [stream]="streamConfig"
@@ -110,11 +113,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
           default: {
             container: { default: { border: '1px solid #e2e2e2', borderRadius: '10px' } },
             svg: {
-              content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.5 0 25 25" fill="none">
-                <path d="M12 22.3201C17.5228 22.3201 22 17.8429 22 12.3201C22 6.79722 17.5228 2.32007 12 2.32007C6.47715 2.32007 2 6.79722 2 12.3201C2 17.8429 6.47715 22.3201 12 22.3201Z" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <line x1="12" y1="7.32007" x2="12" y2="17.3201" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
-                <line x1="7" y1="12.3201" x2="17" y2="12.3201" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>`
+              content: `<svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="group" aria-hidden="true" style="flex-shrink: 0;"><path class="group-hover:-translate-x-[0.5px] transition group-active:translate-x-0" d="M8.99962 2C12.3133 2 14.9996 4.68629 14.9996 8C14.9996 11.3137 12.3133 14 8.99962 14H2.49962C2.30105 13.9998 2.12113 13.8821 2.04161 13.7002C1.96224 13.5181 1.99835 13.3058 2.1334 13.1602L3.93516 11.2178C3.34317 10.2878 2.99962 9.18343 2.99962 8C2.99962 4.68643 5.68609 2.00022 8.99962 2ZM8.99962 3C6.23838 3.00022 3.99961 5.23871 3.99961 8C3.99961 9.11212 4.36265 10.1386 4.97618 10.9688C5.11884 11.1621 5.1035 11.4293 4.94004 11.6055L3.64512 13H8.99962C11.761 13 13.9996 10.7614 13.9996 8C13.9996 5.23858 11.761 3 8.99962 3Z"></path><path class="group-hover:translate-x-[0.5px] transition group-active:translate-x-0" d="M16.5445 9.72754C16.4182 9.53266 16.1678 9.44648 15.943 9.53418C15.7183 9.62215 15.5932 9.85502 15.6324 10.084L15.7369 10.3955C15.9073 10.8986 16.0006 11.438 16.0006 12C16.0006 13.1123 15.6376 14.1386 15.024 14.9687C14.8811 15.1621 14.8956 15.4302 15.0592 15.6064L16.3531 17H11.0006C9.54519 17 8.23527 16.3782 7.32091 15.3848L7.07091 15.1103C6.88996 14.9645 6.62535 14.9606 6.43907 15.1143C6.25267 15.2682 6.20668 15.529 6.31603 15.7344L6.58458 16.0625C7.68048 17.253 9.25377 18 11.0006 18H17.5006C17.6991 17.9998 17.8791 17.8822 17.9586 17.7002C18.038 17.5181 18.0018 17.3058 17.8668 17.1602L16.0631 15.2178C16.6554 14.2876 17.0006 13.1837 17.0006 12C17.0006 11.3271 16.8891 10.6792 16.6842 10.0742L16.5445 9.72754Z"></path></svg>`
             },
             text: { content: 'Nuova chat' }
           }
@@ -157,15 +156,67 @@ export class ChatComponent implements OnInit, AfterViewInit {
 
         const token = await firstValueFrom(this.oidcSecurityService.getAccessToken());
 
-        requestDetails.body = {
-          ...requestDetails.body,
-          model: this.selectedModel || undefined,
-        };
+        if (requestDetails.body instanceof FormData) {
+          // ── Con file allegati ─────────────────────────────────────────────
+          // Deep Chat invia FormData con:
+          //   files    → File nativi del browser
+          //   message1 → JSON string '{"role":"user","text":"..."}'
+          //   message2 → ...
+          const formData = requestDetails.body as FormData;
 
-        requestDetails.headers = {
-          ...requestDetails.headers,
-          Authorization: `Bearer ${token}`,
-        };
+          // 1. Raccogli i messaggi message1, message2, ...
+          const messages: any[] = [];
+          let i = 1;
+          while (formData.has(`message${i}`)) {
+            try { messages.push(JSON.parse(formData.get(`message${i}`) as string)); }
+            catch { /* ignora */ }
+            i++;
+          }
+
+          // 2. Converti i File nativi in base64 data URL
+          const rawFiles = formData.getAll('files') as File[];
+          const convertedFiles = await Promise.all(rawFiles.map(file =>
+            new Promise<any>(resolve => {
+              const reader = new FileReader();
+              reader.onload = e => resolve({
+                name: file.name,
+                type: file.type,
+                data: e.target!.result as string,
+              });
+              reader.readAsDataURL(file);
+            })
+          ));
+
+          // 3. Allega i file all'ultimo messaggio user
+          if (convertedFiles.length > 0 && messages.length > 0) {
+            const idx = [...messages].map(m => m.role).lastIndexOf('user');
+            if (idx >= 0) messages[idx] = { ...messages[idx], files: convertedFiles };
+          }
+
+          // 4. Invia come JSON verso /image/stream
+          this.requestConfig.url = `${environment.aiApiUrl}/v1/chat/image/stream`;
+          requestDetails.body = JSON.stringify({ messages, model: this.selectedModel || undefined });
+          requestDetails.headers = {
+            ...requestDetails.headers,
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          };
+
+        } else {
+          this.requestConfig.url = `${environment.aiApiUrl}/v1/chat/stream`;
+          // ── Solo testo, nessun file ───────────────────────────────────────
+          // body è già un oggetto JS { messages: [...] } — NON serializzare,
+          // Deep Chat lo serializza internamente prima di inviare
+          requestDetails.body = {
+            ...(requestDetails.body ?? {}),
+            model: this.selectedModel || undefined,
+          };
+          requestDetails.headers = {
+            ...requestDetails.headers,
+            'Authorization': `Bearer ${token}`,
+          };
+        }
+
         return requestDetails;
       };
 
@@ -258,7 +309,8 @@ export class ChatComponent implements OnInit, AfterViewInit {
       }));
 
       if (this.availableModels.length > 0) {
-        this.selectedModel = response.defaultModel || this.availableModels[0].value;
+        const defaultExists = this.availableModels.some(m => m.value === response.defaultModel);
+        this.selectedModel = defaultExists ? response.defaultModel : this.availableModels[0].value;
       }
     } catch (error) {
       console.error('Errore nel recupero dei modelli:', error);
