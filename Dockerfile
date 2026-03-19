@@ -58,4 +58,13 @@ ENV MATOMO_TRAKER_URL=
 ENV MATOMO_SITE_ID=
 
 # When the container starts, replace the env.js with values from environment variables
-CMD ["/bin/sh",  "-c",  "sed -i -e 's;<base href=\"/\">;<base href=\"'$BASE_HREF'\">;' /usr/share/nginx/html/index.html && envsubst < /usr/share/nginx/html/assets/env.template.js > /usr/share/nginx/html/assets/env.js && exec nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "\
+  HASH=$(date +%s) && \
+  envsubst < /usr/share/nginx/html/assets/env.template.js > /usr/share/nginx/html/assets/env.${HASH}.js && \
+  rm -f /usr/share/nginx/html/assets/env.js && \
+  sed -i \
+    -e 's;<base href=\"/\">;<base href=\"'$BASE_HREF'\">;' \
+    -e 's;assets/env\\.js;assets/env.'${HASH}'.js;g' \
+    /usr/share/nginx/html/index.html && \
+  exec nginx -g 'daemon off;'"]
+ 
