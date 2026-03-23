@@ -60,6 +60,12 @@
       },
       "unavailable": "N/D"
     },
+    "ai": {
+      "defaultModel": "Modello di default",
+      "systemPrompt": {
+        "label": "Prompt di Sistema"
+      }
+    },
     "configuration" : {
       "slice": {
         "title": "Impostazioni compliance classi",
@@ -123,6 +129,7 @@
           "force_jsoup":"Forza l'utilizzo di JSOUP"
         }
       },
+      "ai": "Impostazioni AI",
       "rule": {
         "delete": {
           "title": "Conferma cancellazione",

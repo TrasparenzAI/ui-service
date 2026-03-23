@@ -26,6 +26,8 @@ export class ConfigurationService extends CommonService<Configuration> {
   public static readonly COLOR = `color`;
   public static readonly MENU = `menu`;
   public static readonly SLICE = `slice`;
+  public static readonly AI_DEFAULT_MODEL = `spring.ai.ollama.chat.options.model`;
+  public static readonly AI_SYSTEM_PROMPT = `ai.systemPrompt`;
 
   private cachedStatusColor: any;
   private cachedSliceColor: any;

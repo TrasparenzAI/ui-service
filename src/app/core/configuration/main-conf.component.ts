@@ -18,6 +18,7 @@ import { FormArray } from '@angular/forms';
 import { Validators } from '@angular/forms';
 import { ResultService } from '../result/result.service';
 import { validColorValidator } from 'ngx-colors';
+import { AIService } from '../ai/ai.service';
 
 import * as parser from 'cron-parser';
 
@@ -57,6 +58,9 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   protected colorid: number;
   protected menuid: number;
   protected sliceid: number;
+  protected aiDefaultModel: number;
+  protected aiSystemPrompt: number;
+
   protected optionsCategoria: Array<SelectControlOption> = [];
   protected optionsRule: Array<SelectControlOption> = [];
 
@@ -73,10 +77,12 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
 
   protected number_workflows_preserve_id: number;
   protected workflow_id_preserve_id: number;
+  protected availableModels: any[];
 
   protected colorForm: FormGroup;
   protected menuForm: FormGroup;
   protected sliceForm: FormGroup;
+  protected aiForm: FormGroup;
 
   readonly localization: CronLocalization = {
     common: {
@@ -205,6 +211,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     private ruleService: RuleService,
     private resultService: ResultService,
     private conductorService: ConductorService,
+    private aiService: AIService,
     private datepipe: DatePipe,
     private elementRef: ElementRef                  
   ) {}
@@ -237,6 +244,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     this.translateService.get('it.configuration').subscribe((labels: any) => {
       this.labels = labels;
     });
+
     Object.keys(CodiceCategoria).forEach((key) => {
       this.optionsCategoria.push({ value: key, text: CodiceCategoria[key]});
     });
@@ -309,6 +317,17 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
       number_workflows_preserve: new FormControl(3),
       workflow_id_preserve: new FormControl('')
     });
+
+    this.aiForm = this.formBuilder.group({
+      defaultModel: new FormControl(),
+      systemPrompt: new FormControl()
+    });
+    this.aiService.getAny(`/v1/models`).subscribe((result:any) => {
+      this.availableModels = result.models.map(m => ({
+        value: m.model,
+        text: m.name.split(':')[0].toUpperCase() + (m.details?.parameter_size ? ` (${m.details.parameter_size})` : ''),
+      }));
+    });
     this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
       configurations.forEach((conf: Configuration) => {
           if (conf.key === ConfigurationService.WORKFLOW_CRON_EXPRESSION) {
@@ -344,6 +363,14 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
             jsonvalue?.dettagli.forEach((result: any) => {
               this.dettagliSliceArray.push(this.createDettaglioSliceFormGroup(result));
             });
+          }
+          if (conf.key === ConfigurationService.AI_DEFAULT_MODEL) {
+            this.aiDefaultModel = conf.id;
+            this.aiForm.controls.defaultModel.patchValue(conf.value);
+          }
+          if (conf.key === ConfigurationService.AI_SYSTEM_PROMPT) {
+            this.aiSystemPrompt = conf.id;
+            this.aiForm.controls.systemPrompt.patchValue(conf.value);
           }
           if (conf.key === ConfigurationService.COLOR) {
             this.colorid = conf.id;
@@ -664,6 +691,29 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
       this.configurationService.setCachedStatusColor(JSON.parse(conf.value));
     });
 
+  }
+
+  confirmAI(): void {
+    let conf: Configuration = new Configuration();
+    conf.id = this.aiDefaultModel;
+    conf.application = `ai-integration-service`;
+    conf.profile = `default`;
+    conf.key = ConfigurationService.AI_DEFAULT_MODEL;
+    conf.value = this.aiForm.controls.defaultModel.value;
+    this.configurationService.save(conf).subscribe((result: any) => {
+      this.aiDefaultModel = result.id;
+
+      conf.id = this.aiSystemPrompt;
+      conf.key = ConfigurationService.AI_SYSTEM_PROMPT;
+      conf.value = this.aiForm.controls.systemPrompt.value;
+      this.configurationService.save(conf).subscribe((result: any) => {
+        this.aiSystemPrompt = result.id;
+        this.aiService.postObject('actuator/refresh').subscribe((result) => {
+          console.log(result);
+        });      
+      });
+
+    });
   }
 
   startWorkflowNow(): void {

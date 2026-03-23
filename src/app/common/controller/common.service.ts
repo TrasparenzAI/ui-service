@@ -481,14 +481,32 @@ export abstract class CommonService<T extends Base> {
     return this.getApiBase()
       .pipe(
         switchMap((apiBase) => {
-
-          // debugger;
-
-          return this.httpClient.post<T>(apiBase + this.getRequestMapping() + '/' + relativePath, Helpers.objToJsonObj(obj))
+          return this.httpClient.post<T>(apiBase + this.getRequestMapping() + '/' + relativePath, obj ? Helpers.objToJsonObj(obj) : undefined)
             .pipe(
               map((result) => {
                 this.apiMessageService.sendMessage(MessageType.SUCCESS, this.saveMessage());
                 return this._buildInstance(result);
+              }),
+              catchError((httpErrorResponse: HttpErrorResponse) => {
+                const springError = new SpringError(httpErrorResponse, this.translateService);
+                this.apiMessageService.sendMessage(MessageType.ERROR, springError.getRestErrorMessage());
+                return throwError(() => springError);
+              })
+            );
+        })
+      );
+  }
+
+  public postObject(relativePath: string, obj?: any): Observable<any> {
+
+    return this.getGateway()
+      .pipe(
+        switchMap((gateway) => {
+          return this.httpClient.post<T>(gateway + '/' + relativePath, obj ? Helpers.objToJsonObj(obj) : undefined)
+            .pipe(
+              map((result) => {
+                this.apiMessageService.sendMessage(MessageType.SUCCESS, this.saveMessage());
+                return result;
               }),
               catchError((httpErrorResponse: HttpErrorResponse) => {
                 const springError = new SpringError(httpErrorResponse, this.translateService);

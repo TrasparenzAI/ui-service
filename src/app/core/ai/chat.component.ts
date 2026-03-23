@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
 
 import 'deep-chat';
+import { AIService } from './ai.service';
 
 @Component({
   selector: 'app-chat',
@@ -13,6 +14,8 @@ import 'deep-chat';
       <div class="d-flex mt-2">
         <deep-chat
             #chat
+            audio="true"
+            microphone="true"
             images="true"
             gifs="true"
             camera="true"
@@ -47,6 +50,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
 
   constructor(
     private oidcSecurityService: OidcSecurityService,
+    private aiService: AIService, 
     private ngZone: NgZone,
     private http: HttpClient,
   ) {}
@@ -300,7 +304,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
       const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
       const response: any = await firstValueFrom(
-        this.http.get<any[]>(`${environment.aiApiUrl}/v1/models`, { headers })
+        this.aiService.getAny(`/v1/models`)
       );
 
       this.availableModels = response.models.map(m => ({

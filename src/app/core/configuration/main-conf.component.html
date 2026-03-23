@@ -883,6 +883,46 @@
         </div>
       </form>
     </it-accordion>
+
+    <it-accordion
+      (showEvent)="showAccordion($event, this)"
+      title="{{ 'it.configuration.ai' | translate }}">
+      <form [formGroup]="aiForm">
+        <div class="row">
+          <div class="form-group col-md-4">
+              <it-select
+                class="w-100"
+                required
+                [options]="availableModels"
+                formControlName="defaultModel"
+                [label]="'it.ai.defaultModel' | translate">
+              </it-select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-md-12">
+            <it-textarea 
+              [label]="'it.ai.systemPrompt.label' | translate" 
+              [placeholder]="'it.ai.systemPrompt.label' | translate" 
+              [rows]="10"
+              required 
+              formControlName="systemPrompt">
+            </it-textarea>
+          </div>
+        </div>
+        <div class="row justify-content-md-end">
+          <div class="form-group col-md-auto">
+            <a
+              itButton="outline-primary"
+              (click)="confirmAI()"
+              class="me-2"
+              [disabled]="!aiForm.valid">
+              <it-icon name="pencil" color="primary"></it-icon>{{ "it.navigation.confirm" | translate }}
+            </a>
+          </div>
+        </div>
+      </form>
+    </it-accordion>
   </div>
 
   <it-modal
