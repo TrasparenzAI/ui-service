@@ -1,7 +1,7 @@
 {
   "name": "trasparenzai",
-  "version": "2.5.0",
-  "buildDate": "2026-03-05T16:21:43.236Z",
+  "version": "2.5.1",
+  "buildDate": "2026-03-26T10:45:32.984Z",
   "license": "GNU Affero General Public License v3.0",
   "scripts": {
     "android": "tns run android",
@@ -95,6 +95,6 @@
     "@sbzen/ng-cron": {
       "@angular/common": "^21.2.1",
       "@angular/core": "^21.2.1"
-    }    
+    }
   }
 }
