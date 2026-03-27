@@ -48,7 +48,7 @@
     "cron-parser": "^4.9.0",
     "d3": "^7.9.0",
     "d3-org-chart": "^3.1.1",
-    "deep-chat": "^2.4.2",
+    "deep-chat-dev": "^9.0.359",
     "design-angular-kit": "^21.1.0",
     "file-saver": "^2.0.5",
     "flag-icon-css": "^4.1.7",

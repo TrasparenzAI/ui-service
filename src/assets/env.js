@@ -11,7 +11,7 @@
     window["env"]["ruleApiUrl"] = "https://monitorai.ba.cnr.it" + "/rule-service";
     window["env"]["taskSchedulerApiUrl"] = window["env"]["apiUrl"] + "/task-scheduler-service";    
     window["env"]["crawlerApiUrl"] = "http://150.145.95.77:8080/crawl";
-    window["env"]["aiApiUrl"] = "/ai-integration-service"; //window["env"]["apiUrl"] + "/ai-integration-service";
+    window["env"]["aiApiUrl"] = window["env"]["apiUrl"] + "/ai-integration-service";
 
 
     window["env"]["baseHref"] = "/";

@@ -28,10 +28,12 @@ export class ConfigurationService extends CommonService<Configuration> {
   public static readonly SLICE = `slice`;
   public static readonly AI_DEFAULT_MODEL = `spring.ai.ollama.chat.options.model`;
   public static readonly AI_SYSTEM_PROMPT = `ai.systemPrompt`;
+  public static readonly AI_INITIAL_MESSAGE = `ai.initialMessage`;
 
   private cachedStatusColor: any;
   private cachedSliceColor: any;
   private cachedMenuLink: any;
+  private cachedAIInitialMessage: string;
 
   public constructor(protected httpClient: HttpClient,
                      protected apiMessageService: ApiMessageService,
@@ -127,6 +129,25 @@ export class ConfigurationService extends CommonService<Configuration> {
           if (menuLinks && menuLinks.length === 1) {
             this.cachedMenuLink = JSON.parse(menuLinks[0].value);
             return this.cachedMenuLink;
+          }
+        })
+    );
+  }
+
+  public setCachedAIInitialMessage(result: any) {
+    this.cachedAIInitialMessage = result;
+  }
+
+  public getAIInitialMessage(): Observable<string> {
+    if (this.cachedAIInitialMessage) {
+      return observableOf(this.cachedAIInitialMessage);
+    }
+    return this.getAll().pipe(
+        map((configurations: Configuration[]) => {
+          let initialMessage: any = configurations.filter((conf: Configuration) => conf.key === ConfigurationService.AI_INITIAL_MESSAGE);
+          if (initialMessage && initialMessage.length === 1) {
+            this.cachedAIInitialMessage = initialMessage[0].value;
+            return this.cachedAIInitialMessage;
           }
         })
     );

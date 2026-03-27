@@ -64,6 +64,9 @@
       "defaultModel": "Modello di default",
       "systemPrompt": {
         "label": "Prompt di Sistema"
+      },
+      "initialMessage": {
+        "label": "Messaggio iniziale"
       }
     },
     "configuration" : {

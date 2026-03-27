@@ -19,8 +19,11 @@ import { Validators } from '@angular/forms';
 import { ResultService } from '../result/result.service';
 import { validColorValidator } from 'ngx-colors';
 import { AIService } from '../ai/ai.service';
+import { forkJoin } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 import * as parser from 'cron-parser';
+import { catchError, map } from 'rxjs';
 
 @Component({
     selector: 'app-main-conf',
@@ -60,6 +63,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   protected sliceid: number;
   protected aiDefaultModel: number;
   protected aiSystemPrompt: number;
+  protected aiInitialMessage: number;
 
   protected optionsCategoria: Array<SelectControlOption> = [];
   protected optionsRule: Array<SelectControlOption> = [];
@@ -320,13 +324,22 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
 
     this.aiForm = this.formBuilder.group({
       defaultModel: new FormControl(),
+      initialMessage: new FormControl(),
       systemPrompt: new FormControl()
     });
-    this.aiService.getAny(`/v1/models`).subscribe((result:any) => {
-      this.availableModels = result.models.map(m => ({
-        value: m.model,
-        text: m.name.split(':')[0].toUpperCase() + (m.details?.parameter_size ? ` (${m.details.parameter_size})` : ''),
-      }));
+    this.aiService.getAny(`/v1/models`, undefined, false).pipe(
+      map((result: any) => {
+        return result.models.map(m => ({
+          value: m.model,
+          text: m.name.split(':')[0].toUpperCase() + (m.details?.parameter_size ? ` (${m.details.parameter_size})` : ''),
+        }));
+      }),
+      catchError((error) => {
+        console.error(error);
+        return [];
+      })
+    ).subscribe((result: any[]) => {
+      this.availableModels = result;
     });
     this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
       configurations.forEach((conf: Configuration) => {
@@ -367,6 +380,10 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
           if (conf.key === ConfigurationService.AI_DEFAULT_MODEL) {
             this.aiDefaultModel = conf.id;
             this.aiForm.controls.defaultModel.patchValue(conf.value);
+          }
+          if (conf.key === ConfigurationService.AI_INITIAL_MESSAGE) {
+            this.aiInitialMessage = conf.id;
+            this.aiForm.controls.initialMessage.patchValue(conf.value);
           }
           if (conf.key === ConfigurationService.AI_SYSTEM_PROMPT) {
             this.aiSystemPrompt = conf.id;
@@ -693,26 +710,50 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
 
   }
 
+  private buildConf(id: number, application: string, key: string, value: any, profile: string = 'default' ): Configuration {
+    const conf = new Configuration();
+    conf.id = id;
+    conf.application = application;
+    conf.profile = profile;
+    conf.key = key;
+    conf.value = value;
+    return conf;
+  }
+
   confirmAI(): void {
-    let conf: Configuration = new Configuration();
-    conf.id = this.aiDefaultModel;
-    conf.application = `ai-integration-service`;
-    conf.profile = `default`;
-    conf.key = ConfigurationService.AI_DEFAULT_MODEL;
-    conf.value = this.aiForm.controls.defaultModel.value;
-    this.configurationService.save(conf).subscribe((result: any) => {
-      this.aiDefaultModel = result.id;
+    const { defaultModel, systemPrompt, initialMessage } = this.aiForm.controls;
+    const saveDefaultModel$ = this.configurationService.save(
+      this.buildConf(this.aiDefaultModel, 'ai-integration-service', ConfigurationService.AI_DEFAULT_MODEL, defaultModel.value)
+    );
+    const saveSystemPrompt$ = this.configurationService.save(
+      this.buildConf(this.aiSystemPrompt, 'ai-integration-service', ConfigurationService.AI_SYSTEM_PROMPT, systemPrompt.value)
+    );
+    const saveInitialMessage$ = this.configurationService.save(
+      this.buildConf(this.aiInitialMessage, 'ai-integration-service', ConfigurationService.AI_INITIAL_MESSAGE, initialMessage.value)
+    );
 
-      conf.id = this.aiSystemPrompt;
-      conf.key = ConfigurationService.AI_SYSTEM_PROMPT;
-      conf.value = this.aiForm.controls.systemPrompt.value;
-      this.configurationService.save(conf).subscribe((result: any) => {
-        this.aiSystemPrompt = result.id;
-        this.aiService.postObject('actuator/refresh').subscribe((result) => {
-          console.log(result);
-        });      
-      });
-
+    forkJoin([saveDefaultModel$, saveSystemPrompt$, saveInitialMessage$]).pipe(
+      switchMap(([resModel, resPrompt, resMessage]) => {
+        this.aiDefaultModel  = resModel.id;
+        this.aiSystemPrompt  = resPrompt.id;
+        this.aiInitialMessage = resMessage.id;
+        this.configurationService.setCachedAIInitialMessage(undefined);
+        return this.aiService.postObject('actuator/refresh');
+      })
+    ).subscribe({
+      next: () => this.apiMessageService.sendMessage(
+        MessageType.SUCCESS,
+        this.labels?.ai?.saved ?? 'Configurazione AI salvata',
+        NotificationPosition.Top
+      ),
+      error: (err) => {
+        console.error('Errore salvataggio configurazione AI:', err);
+        this.apiMessageService.sendMessage(
+          MessageType.ERROR,
+          this.labels?.ai?.error ?? 'Errore durante il salvataggio',
+          NotificationPosition.Top
+        );
+      }
     });
   }
 

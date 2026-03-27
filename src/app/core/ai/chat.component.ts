@@ -1,11 +1,12 @@
 import { AfterViewInit, Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpHeaders } from '@angular/common/http';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
-
-import 'deep-chat';
+import { ConfigurationService } from '../configuration/configuration.service';
 import { AIService } from './ai.service';
+
+import 'deep-chat-dev';
 
 @Component({
   selector: 'app-chat',
@@ -21,7 +22,6 @@ import { AIService } from './ai.service';
             camera="true"
             [avatars]="avatars"
             [connect]="requestConfig"
-            [stream]="streamConfig"
             [textInput]="textInputConfig"
             [customButtons]="customButtons"
             [auxiliaryStyle]="auxiliaryStyle"
@@ -40,7 +40,6 @@ export class ChatComponent implements OnInit, AfterViewInit {
   /** Modello attualmente selezionato — aggiornato dalla <select> iniettata nel shadow DOM */
   selectedModel = '';
 
-  protected requestConfig: any;
   protected streamConfig = { simulation: false };
   private silenceTimer: any = null;
   private readonly SILENCE_THRESHOLD = 300;
@@ -49,10 +48,10 @@ export class ChatComponent implements OnInit, AfterViewInit {
   @ViewChild('chat') private chat?: ElementRef;
 
   constructor(
-    private oidcSecurityService: OidcSecurityService,
+    private oidcSecurityService: OidcSecurityService,    
     private aiService: AIService, 
     private ngZone: NgZone,
-    private http: HttpClient,
+    private configurationService: ConfigurationService,
   ) {}
 
   avatars = { ai: { src: '/assets/images/ai.png' } };
@@ -111,7 +110,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
 
   customButtons = [
     {
-      position: 'inside-left',
+      position: 'inside-start',
       styles: {
         button: {
           default: {
@@ -125,35 +124,66 @@ export class ChatComponent implements OnInit, AfterViewInit {
       },
       onClick: () => this.newChat(),
     },
+    {
+      position: 'dropup-menu',
+      styles: {
+        button: {          
+          default: {
+            container: { 
+              default: { 
+                border: '1px solid #e2e2e2', 
+                borderRadius: '10px'
+              } 
+            },
+            svg: {
+              content: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M15 1H1V15H15V1ZM3 3V7H5V5H7V11H5V13H11V11H9V5H11V7H13V3H3Z" fill="#000000"></path> </g></svg>`
+            },
+            text: { content: 'Esporta Testo' }
+          }
+        }
+      },
+      onClick: () => this.exportChat('txt'),
+    },
+    {
+      position: 'dropup-menu',
+      styles: {
+        button: {          
+          default: {
+            container: { 
+              default: { 
+                border: '1px solid #e2e2e2', 
+                borderRadius: '10px'
+              } 
+            },
+            svg: {
+              content: `<svg fill="#000000" height="200px" width="200px" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path class="cls-1" d="M14.25,3H1.75A.74027.74027,0,0,0,1,3.73016v8.53968A.74029.74029,0,0,0,1.75,13h12.5a.74029.74029,0,0,0,.75-.73016V3.73016A.74027.74027,0,0,0,14.25,3ZM7.965,10.059H6.97374V7.77311L5.9825,9.34956,4.99125,7.77311V10.059H4V5.934h.91L5.9825,7.51038,7.055,5.934h.91Zm2.45884.0071L8.84766,7.94479H9.94749V5.934h.99124V7.94479H12Z"></path> </g></svg>`
+            },
+            text: { content: 'Esporta Markdown' }
+          }
+        }
+      },
+      onClick: () => this.exportChat('md'),
+    },
   ];
 
   textInputConfig = {
-    placeholder: { text: 'Benvenuto! Sono Chiara, l\'assistente virtuale di TrasparenzAI' },
+    placeholder: { text: 'Come posso aiutarti oggi?' },
     styles: { container: { paddingBottom: '30px' }, text: { padding: '0.5rem 0.7rem' } },
+  };
+
+  protected requestConfig: any = {
+    url: `${environment.aiApiUrl}/v1/chat/stream`,
+    method: 'POST',
+    stream: this.streamConfig,
+    headers: { 'Content-Type': 'application/json' },
   };
 
   async ngOnInit() {
     await this.fetchModels();
 
-    this.requestConfig = {
-      url: `${environment.aiApiUrl}/v1/chat/stream`,
-      method: 'POST',
-      stream: true,
-      headers: { 'Content-Type': 'application/json' },
-    };
-
     setTimeout(() => {
       const el = this.chat?.nativeElement;
       if (!el) return;
-
-      this.injectModelSelect(el);
-
-      // Aspetta che deep-chat abbia finito il rendering
-      el.onComponentRender = () => {
-        this.focusInput();
-        this.injectModelSelect(el); // ← inietta SOLO dopo il render completo
-      };
-
       el.requestInterceptor = async (requestDetails: any) => {
         this.clearSilenceTimer();
         this.removeLoadingMessage();
@@ -228,6 +258,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
         if (responseDetails?.text) {
           this.clearSilenceTimer();
           this.removeLoadingMessage();
+          this.setPlaceholder('Rispondi...');
           this.silenceTimer = setTimeout(() => this.addLoadingMessage(), this.SILENCE_THRESHOLD);
         }
         return responseDetails;
@@ -237,6 +268,15 @@ export class ChatComponent implements OnInit, AfterViewInit {
         if (!isHistory) { this.clearSilenceTimer(); this.removeLoadingMessage(); }
       };
     });
+  }
+
+  private setPlaceholder(text: string): void {
+    const el = this.chat?.nativeElement;
+    if (!el) return;
+    const input = el.shadowRoot?.querySelector('#text-input') as HTMLElement;
+    if (input) {
+      input.setAttribute('deep-chat-placeholder-text', text);
+    }
   }
 
   /**
@@ -327,6 +367,16 @@ export class ChatComponent implements OnInit, AfterViewInit {
       el.onComponentRender = () => {
         this.focusInput();
         this.injectModelSelect(el);
+        // Fallback: prova ad aggiungere il messaggio direttamente dopo un delay
+        setTimeout(() => {
+          this.configurationService.getAIInitialMessage().subscribe((message: string) => {
+            el.addMessage({
+              role: 'ai',
+              text: message,
+              sendUpdate: true
+            });
+          });
+        }, 500);
       };
     }  
   }
@@ -337,6 +387,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
     this.clearSilenceTimer();
     this.removeLoadingMessage();
     el.clearMessages();
+    this.setPlaceholder('Come posso aiutarti oggi?');
     el.onComponentRender = () => this.focusInput();
   }
 
@@ -371,4 +422,56 @@ export class ChatComponent implements OnInit, AfterViewInit {
       else { setTimeout(doFocus, 500); }
     });
   }
+
+  exportChat(format: 'txt' | 'json' | 'md' = 'md'): void {
+    const el = this.chat?.nativeElement;
+    if (!el) return;
+
+    const messages: { role: string; text?: string; html?: string }[] = el.getMessages();
+    if (!messages?.length) return;
+
+    let content: string;
+    let mimeType: string;
+    let filename: string;
+    const timestamp = new Date().toISOString().slice(0, 16).replace('T', '_').replace(':', '-');
+
+    if (format === 'json') {
+      content = JSON.stringify(messages, null, 2);
+      mimeType = 'application/json';
+      filename = `chat_${timestamp}.json`;
+
+    } else if (format === 'txt') {
+      content = messages.map(m => {
+        const role = m.role === 'ai' ? 'Clara' : 'Tu';
+        const text = m.text ?? this.htmlToPlainText(m.html ?? '');
+        return `[${role}]\n${text}`;
+      }).join('\n\n');
+      mimeType = 'text/plain';
+      filename = `chat_${timestamp}.txt`;
+
+    } else {
+      // markdown (default)
+      content = messages.map(m => {
+        const role = m.role === 'ai' ? '🤖 **Clara**' : '👤 **Tu**';
+        const text = m.text ?? this.htmlToPlainText(m.html ?? '');
+        return `${role}\n\n${text}`;
+      }).join('\n\n---\n\n');
+      mimeType = 'text/markdown';
+      filename = `chat_${timestamp}.md`;
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private htmlToPlainText(html: string): string {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent ?? div.innerText ?? '';
+  }  
 }

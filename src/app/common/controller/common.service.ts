@@ -455,7 +455,7 @@ export abstract class CommonService<T extends Base> {
    * @param {HttpParams} params
    * @returns {Observable<any>}
    */
-  public getAny(relativePath: string, params?: HttpParams): Observable<any> {
+  public getAny(relativePath: string, params?: HttpParams, showMessage: boolean = true): Observable<any> {
 
     return this.getApiBase()
       .pipe(
@@ -468,7 +468,7 @@ export abstract class CommonService<T extends Base> {
               }),
               catchError((httpErrorResponse: HttpErrorResponse) => {
                 const springError = new SpringError(httpErrorResponse, this.translateService);
-                this.apiMessageService.sendMessage(MessageType.ERROR,  springError.getRestErrorMessage());
+                if (showMessage) this.apiMessageService.sendMessage(MessageType.ERROR,  springError.getRestErrorMessage());
                 return throwError(() => springError);
               })
             );
