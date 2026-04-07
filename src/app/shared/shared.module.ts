@@ -5,8 +5,12 @@ import { FirstLetterPipe } from './pipes/firstletter.pipe';
 import { SafeHtmlPipe } from './pipes/safehtml.pipe';
 import { DurationFormatPipe } from './pipes/durationFormat.pipe';
 import { HighlightedTextPipe } from './pipes/highlighted-text.pipe';
+import { MarkdownEditorComponent } from './template/markdown-editor.component';
 
 @NgModule({
+  imports: [
+    MarkdownEditorComponent
+  ],
   declarations: [
     // DropdownDirective
     CapitalizeFirstPipe,
@@ -22,7 +26,8 @@ import { HighlightedTextPipe } from './pipes/highlighted-text.pipe';
     FirstLetterPipe,
     SafeHtmlPipe,
     DurationFormatPipe,
-    HighlightedTextPipe
+    HighlightedTextPipe,
+    MarkdownEditorComponent
   ],
   providers: [
   ]

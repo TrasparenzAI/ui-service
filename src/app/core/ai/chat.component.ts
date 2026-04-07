@@ -48,7 +48,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
 
   protected streamConfig = { simulation: false };
   private silenceTimer: any = null;
-  private readonly SILENCE_THRESHOLD = 300;
+  private readonly SILENCE_THRESHOLD = 800;
   private loadingMessageIndex = -1;
 
   @ViewChild('chat') private chat?: ElementRef;
@@ -316,6 +316,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
       const el = this.chat?.nativeElement;
       if (!el) return;
       el.requestInterceptor = async (requestDetails: any) => {
+        this.aiBuffer = '';
         this.clearSilenceTimer();
         this.removeLoadingMessage();
 
@@ -424,6 +425,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
         // TEXT STREAM
         // =============================
         if (responseDetails?.text) {
+          console.log(responseDetails?.text);
           this.thinkingText = '';
           if (!this.isStreaming) {
             this.aiBuffer = '';
@@ -432,7 +434,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
 
           this.clearSilenceTimer();
           this.removeLoadingMessage();
-
+          this.silenceTimer = setTimeout(() => this.addLoadingMessage(), this.SILENCE_THRESHOLD);
           this.aiBuffer += responseDetails.text;
 
           const html = this.renderMarkdown(this.aiBuffer);
@@ -600,19 +602,8 @@ export class ChatComponent implements OnInit, AfterViewInit {
     const el = this.chat?.nativeElement;
     if (el) {
       el.onComponentRender = () => {
-        this.focusInput();
-        this.injectModelSelect(el);
-        // Fallback: prova ad aggiungere il messaggio direttamente dopo un delay
-        setTimeout(() => {
-          this.configurationService.getAIInitialMessage().subscribe((message: string) => {
-            el.addMessage({
-              role: 'ai',
-              text: message,
-              sendUpdate: true
-            });
-          });
-        }, 500);
-      };
+        this.focusAndAddInitialMessage();        
+      }
     }  
   }
 
@@ -623,7 +614,25 @@ export class ChatComponent implements OnInit, AfterViewInit {
     this.removeLoadingMessage();
     el.clearMessages();
     this.setPlaceholder('Come posso aiutarti oggi?');
-    el.onComponentRender = () => this.focusInput();
+    this.focusAndAddInitialMessage();
+  }
+
+  private focusAndAddInitialMessage() {
+    const el = this.chat?.nativeElement;
+    if (el) {
+      this.focusInput();
+      this.injectModelSelect(el);
+      // Fallback: prova ad aggiungere il messaggio direttamente dopo un delay
+      setTimeout(() => {
+        this.configurationService.getAIInitialMessage().subscribe((message: string) => {
+          el.addMessage({
+            role: 'ai',
+            text: message,
+            sendUpdate: true
+          });
+        });
+      }, 500);
+    }
   }
 
   private addLoadingMessage(): void {

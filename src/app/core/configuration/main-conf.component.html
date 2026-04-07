@@ -885,7 +885,7 @@
     </it-accordion>
 
     <it-accordion
-      (showEvent)="showAccordion($event, this)"
+      (showEvent)="showAccordion($event, this); onAiAccordionShow()"
       title="{{ 'it.configuration.ai' | translate }}">
       <form [formGroup]="aiForm">
         <div class="row">
@@ -909,13 +909,15 @@
         </div>
         <div class="row">
           <div class="form-group col-md-12">
-            <it-textarea 
-              [label]="'it.ai.systemPrompt.label' | translate" 
-              [placeholder]="'it.ai.systemPrompt.label' | translate" 
-              [rows]="10"
-              required 
-              formControlName="systemPrompt">
-            </it-textarea>
+              <label class="active">{{'it.ai.systemPrompt.label' | translate }}</label>
+              <div class="flex">
+                <app-markdown-editor
+                  formControlName="systemPrompt"
+                  [placeholder]="'it.ai.systemPrompt.label' | translate" 
+                  [minHeight]="400"
+                  [maxHeight]="600"
+                  [visible]="aiAccordionVisible"/>
+              </div>
           </div>
         </div>
         <div class="row justify-content-md-end">

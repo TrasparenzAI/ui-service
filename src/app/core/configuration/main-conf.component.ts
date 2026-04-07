@@ -87,6 +87,8 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   protected menuForm: FormGroup;
   protected sliceForm: FormGroup;
   protected aiForm: FormGroup;
+  
+  protected aiAccordionVisible = false;
 
   readonly localization: CronLocalization = {
     common: {
@@ -886,4 +888,8 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     }
     return message;
   }
+
+  onAiAccordionShow(): void {
+    this.aiAccordionVisible = true;
+  }  
 }

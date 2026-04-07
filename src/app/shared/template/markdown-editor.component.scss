@@ -1,0 +1,217 @@
+// ── Import EasyMDE + highlight.js nel angular.json (vedi README) ────────────
+// styles: ["node_modules/easymde/dist/easymde.min.css",
+//          "node_modules/highlight.js/styles/github-dark.css"]
+// scripts: ["node_modules/easymde/dist/easymde.min.js",
+//            "node_modules/marked/marked.min.js",
+//            "node_modules/highlight.js/lib/highlight.js"]
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.mde-wrapper {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  // overflow:hidden rimosso: bloccherebbe position:sticky della toolbar
+  position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus-within {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+}
+
+// ── Reset / override stili EasyMDE ──────────────────────────────────────────
+
+::ng-deep {
+  .EasyMDEContainer {
+    border: none;
+
+    // Toolbar sticky
+    .editor-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      border-radius: 8px 8px 0 0;
+      padding: 6px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+
+      button {
+        color: #374151;
+        border-radius: 5px;
+        transition: background 0.15s;
+
+        &:hover,
+        &.active {
+          background: #e0e7ff;
+          color: #4338ca;
+        }
+
+        &::before {
+          // Usa icone EasyMDE già incluse
+        }
+      }
+
+      i.separator {
+        border-left: 1px solid #d1d5db;
+        margin: 0 4px;
+      }
+    }
+
+    // Area editor + preview split — altezza controllata con scroll
+    .CodeMirror-scroll,
+    .editor-preview-side {
+      min-height: v-bind('minHeight + "px"');
+      max-height: v-bind('maxHeight ? maxHeight + "px" : "none"');
+      overflow-y: auto;
+    }
+
+    .CodeMirror {
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #1f2937;
+      background: #fff;
+      border: none;
+      border-radius: 0;
+    }
+
+    // Separatore verticale tra editor e preview
+    .editor-preview-side {
+      border-left: 1px solid #e5e7eb;
+      background: #fff;
+      padding: 16px 20px;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 15px;
+      line-height: 1.8;
+      color: #1f2937;
+
+      // Tipografia markdown nella preview
+      h1, h2, h3, h4, h5, h6 {
+        font-family: system-ui, sans-serif;
+        font-weight: 600;
+        margin: 1.2em 0 0.4em;
+        color: #111827;
+      }
+
+      h1 { font-size: 1.75rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.3em; }
+      h2 { font-size: 1.4rem; border-bottom: 1px solid #f3f4f6; padding-bottom: 0.2em; }
+      h3 { font-size: 1.15rem; }
+
+      p { margin: 0.75em 0; }
+
+      a {
+        color: #6366f1;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      blockquote {
+        border-left: 4px solid #6366f1;
+        margin: 1em 0;
+        padding: 0.5em 1em;
+        background: #f5f3ff;
+        border-radius: 0 6px 6px 0;
+        color: #4b5563;
+        font-style: italic;
+      }
+
+      code {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85em;
+        background: #f3f4f6;
+        padding: 0.15em 0.4em;
+        border-radius: 4px;
+        color: #7c3aed;
+      }
+
+      pre {
+        background: #1e1e2e;
+        border-radius: 8px;
+        padding: 1em 1.2em;
+        overflow-x: auto;
+        margin: 1em 0;
+
+        code {
+          background: transparent;
+          color: #cdd6f4;
+          padding: 0;
+          font-size: 0.875em;
+          line-height: 1.6;
+        }
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1em 0;
+        font-size: 0.9em;
+
+        th {
+          background: #f3f4f6;
+          font-weight: 600;
+          text-align: left;
+          padding: 8px 12px;
+          border: 1px solid #e5e7eb;
+        }
+
+        td {
+          padding: 7px 12px;
+          border: 1px solid #e5e7eb;
+        }
+
+        tr:nth-child(even) td {
+          background: #fafafa;
+        }
+      }
+
+      img {
+        max-width: 100%;
+        border-radius: 6px;
+      }
+
+      ul, ol {
+        padding-left: 1.5em;
+        margin: 0.5em 0;
+
+        li { margin: 0.3em 0; }
+      }
+
+      hr {
+        border: none;
+        border-top: 2px solid #e5e7eb;
+        margin: 1.5em 0;
+      }
+    }
+
+    // Status bar
+    .editor-statusbar {
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 12px;
+      padding: 4px 12px;
+    }
+
+    // Fullscreen: ripristina comportamento nativo EasyMDE
+    &.fullscreen {
+      .editor-toolbar {
+        position: fixed; // sovrascrive sticky in fullscreen
+        border-radius: 0;
+      }
+
+      .CodeMirror,
+      .editor-preview-side {
+        border-radius: 0;
+        max-height: none !important;
+        overflow-y: auto;
+      }
+    }
+  }
+}
