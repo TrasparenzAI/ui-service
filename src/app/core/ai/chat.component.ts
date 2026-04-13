@@ -14,6 +14,9 @@ import * as am5percent from "@amcharts/amcharts5/percent";
 import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 
+/** Regex per estrarre il blocco TOOL_RESULTS dalla risposta del backend */
+const TOOL_RESULTS_RE = /<!--TOOL_RESULTS:([\s\S]*?)-->/;
+
 @Component({
   selector: 'app-chat',
   template: `
@@ -54,14 +57,13 @@ export class ChatComponent implements OnInit, AfterViewInit {
   @ViewChild('chat') private chat?: ElementRef;
 
   constructor(
-    private oidcSecurityService: OidcSecurityService,    
-    private aiService: AIService, 
+    private oidcSecurityService: OidcSecurityService,
+    private aiService: AIService,
     private ngZone: NgZone,
     private configurationService: ConfigurationService,
   ) {}
 
   avatars = { ai: { src: '/assets/images/ai.png' } };
-
 
   auxiliaryStyle = `
     .dc-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #aaa; animation: dc-bounce 1.2s ease-in-out infinite; }
@@ -202,7 +204,6 @@ export class ChatComponent implements OnInit, AfterViewInit {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    /* Aggiungi questo per ammorbidire il cambio */
     .deep-chat-message-text {
       transition: opacity 0.3s ease-in;
     }
@@ -231,7 +232,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
     @keyframes fadeIn {
       from { opacity: 0.4; }
       to { opacity: 1; }
-    }      
+    }
     `;
 
   customButtons = [
@@ -253,13 +254,13 @@ export class ChatComponent implements OnInit, AfterViewInit {
     {
       position: 'dropup-menu',
       styles: {
-        button: {          
+        button: {
           default: {
-            container: { 
-              default: { 
-                border: '1px solid #e2e2e2', 
+            container: {
+              default: {
+                border: '1px solid #e2e2e2',
                 borderRadius: '10px'
-              } 
+              }
             },
             svg: {
               content: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M15 1H1V15H15V1ZM3 3V7H5V5H7V11H5V13H11V11H9V5H11V7H13V3H3Z" fill="#000000"></path> </g></svg>`
@@ -273,13 +274,13 @@ export class ChatComponent implements OnInit, AfterViewInit {
     {
       position: 'dropup-menu',
       styles: {
-        button: {          
+        button: {
           default: {
-            container: { 
-              default: { 
-                border: '1px solid #e2e2e2', 
+            container: {
+              default: {
+                border: '1px solid #e2e2e2',
                 borderRadius: '10px'
-              } 
+              }
             },
             svg: {
               content: `<svg fill="#000000" height="200px" width="200px" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path class="cls-1" d="M14.25,3H1.75A.74027.74027,0,0,0,1,3.73016v8.53968A.74029.74029,0,0,0,1.75,13h12.5a.74029.74029,0,0,0,.75-.73016V3.73016A.74027.74027,0,0,0,14.25,3ZM7.965,10.059H6.97374V7.77311L5.9825,9.34956,4.99125,7.77311V10.059H4V5.934h.91L5.9825,7.51038,7.055,5.934h.91Zm2.45884.0071L8.84766,7.94479H9.94749V5.934h.99124V7.94479H12Z"></path> </g></svg>`
@@ -303,11 +304,14 @@ export class ChatComponent implements OnInit, AfterViewInit {
     stream: this.streamConfig,
     headers: { 'Content-Type': 'application/json' },
   };
-  private thinkingText = '';
 
+  private thinkingText = '';
   private aiBuffer = '';
   private isStreaming = false;
   private chartRoots = new Map();
+  private toolResultsMap = new Map<number, any[]>();
+
+  // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
   async ngOnInit() {
     await this.fetchModels();
@@ -315,222 +319,290 @@ export class ChatComponent implements OnInit, AfterViewInit {
     setTimeout(() => {
       const el = this.chat?.nativeElement;
       if (!el) return;
-      el.requestInterceptor = async (requestDetails: any) => {
-        this.aiBuffer = '';
-        this.clearSilenceTimer();
-        this.removeLoadingMessage();
-
-        const token = await firstValueFrom(this.oidcSecurityService.getAccessToken());
-
-        if (requestDetails.body instanceof FormData) {
-          // ── Con file allegati ─────────────────────────────────────────────
-          // Deep Chat invia FormData con:
-          //   files    → File nativi del browser
-          //   message1 → JSON string '{"role":"user","text":"..."}'
-          //   message2 → ...
-          const formData = requestDetails.body as FormData;
-
-          // 1. Raccogli i messaggi message1, message2, ...
-          const messages: any[] = [];
-          let i = 1;
-          while (formData.has(`message${i}`)) {
-            try { messages.push(JSON.parse(formData.get(`message${i}`) as string)); }
-            catch { /* ignora */ }
-            i++;
-          }
-
-          // 2. Converti i File nativi in base64 data URL
-          const rawFiles = formData.getAll('files') as File[];
-          const convertedFiles = await Promise.all(rawFiles.map(file =>
-            new Promise<any>(resolve => {
-              const reader = new FileReader();
-              reader.onload = e => resolve({
-                name: file.name,
-                type: file.type,
-                data: e.target!.result as string,
-              });
-              reader.readAsDataURL(file);
-            })
-          ));
-
-          // 3. Allega i file all'ultimo messaggio user
-          if (convertedFiles.length > 0 && messages.length > 0) {
-            const idx = [...messages].map(m => m.role).lastIndexOf('user');
-            if (idx >= 0) messages[idx] = { ...messages[idx], files: convertedFiles };
-          }
-
-          // 4. Invia come JSON verso /image/stream
-          this.requestConfig.url = `${environment.aiApiUrl}/v1/chat/image/stream`;
-          requestDetails.body = JSON.stringify({ messages, model: this.selectedModel || undefined });
-          requestDetails.headers = {
-            ...requestDetails.headers,
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          };
-
-        } else {
-          this.requestConfig.url = `${environment.aiApiUrl}/v1/chat/stream`;
-          // ── Solo testo, nessun file ───────────────────────────────────────
-          // body è già un oggetto JS { messages: [...] } — NON serializzare,
-          // Deep Chat lo serializza internamente prima di inviare
-          requestDetails.body = {
-            ...(requestDetails.body ?? {}),
-            model: this.selectedModel || undefined,
-          };
-          requestDetails.headers = {
-            ...requestDetails.headers,
-            'Authorization': `Bearer ${token}`,
-          };
-        }
-
-        return requestDetails;
-      };
-
-      el.responseInterceptor = (responseDetails: any) => {
-
-        // =============================
-        // THINKING STREAM
-        // =============================
-        if (responseDetails?.thinking) {
-          this.aiBuffer = '';
-          this.isStreaming = true;
-          this.thinkingText += responseDetails.thinking;
-          // scroll verso il basso dopo il render — fuori dalla zone per non triggerare CD
-          this.ngZone.runOutsideAngular(() => {
-            requestAnimationFrame(() => {
-              const el = this.chat?.nativeElement;
-              const root = el?.shadowRoot ?? document;
-              const scroller = root.querySelector('.thinking-scroll') as HTMLElement;
-              if (scroller) scroller.scrollTop = scroller.scrollHeight;
-            });
-          });
-          return {
-            html: `
-              <div style="background:transparent!important;padding:0!important;margin:0!important">
-                <div class="thinking-bubble-wrap">
-                  <div class="thinking-row">
-                    <div class="thinking-scroll">🤔 ${this.renderMarkdown(this.thinkingText)}</div>
-                  </div>
-                  <div class="thinking-dots-tail">
-                    <span></span><span></span><span></span>
-                  </div>
-                </div>
-              </div>
-            `,
-            overwrite: true
-          };
-        }
-
-        // =============================
-        // TEXT STREAM
-        // =============================
-        if (responseDetails?.text) {
-          console.log(responseDetails?.text);
-          this.thinkingText = '';
-          if (!this.isStreaming) {
-            this.aiBuffer = '';
-            this.isStreaming = true;
-          }
-
-          this.clearSilenceTimer();
-          this.removeLoadingMessage();
-          this.silenceTimer = setTimeout(() => this.addLoadingMessage(), this.SILENCE_THRESHOLD);
-          this.aiBuffer += responseDetails.text;
-
-          const html = this.renderMarkdown(this.aiBuffer);
-
-          return {
-            html: `<div class="final-text">${html}</div>`,
-            overwrite: true
-          };
-        }
-
-        // =============================
-        // STREAM END
-        // =============================
-        if (responseDetails?.done) {
-          this.resetStreamState();
-        }
-      };
-
-      el.onMessage = ({ message, isHistory }: any) => {
-        if (!isHistory) { this.clearSilenceTimer(); this.removeLoadingMessage(); }
-        if (isHistory) return;
-        if (message.role !== 'ai') return;
-        const html = message.html ?? '';
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-
-        // Deep Chat converte ```chart in <code class="language-chart">
-        const codeEl = doc.querySelector('code.language-chart');
-        if (!codeEl) return;
-
-        let cfg;
-        try {
-          cfg = JSON.parse(codeEl.textContent.trim());
-        } catch (e) {
-          console.error('[chart] JSON non valido:', e);
-          return;
-        }
-        this.ngZone.runOutsideAngular(() => {
-          this.injectChart(cfg);
-        });
-      };
+      this.setupRequestInterceptor(el);
+      this.setupResponseInterceptor(el);
+      this.setupOnMessage(el);
     });
   }
 
-  // ─── Attendi che l'elemento sia nel DOM ──────────────────────
-  private waitForElement(id: string, timeout = 3000) {
-    return new Promise((resolve, reject) => {
-      // già lì? ottimo
-      const el = document.getElementById(id);
-      if (el) { resolve(el); return; }
-
-      const observer = new MutationObserver(() => {
-        const el = document.getElementById(id);
-        if (el) {
-          observer.disconnect();
-          resolve(el);
-        }
-      });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true
-      });
-
-      // safety: non aspettare all'infinito
-      setTimeout(() => {
-        observer.disconnect();
-        reject(new Error(`Elemento #${id} non trovato`));
-      }, timeout);
-    });
-  }
-
-  private setPlaceholder(text: string): void {
+  ngAfterViewInit(): void {
     const el = this.chat?.nativeElement;
-    if (!el) return;
-    const input = el.shadowRoot?.querySelector('#text-input') as HTMLElement;
-    if (input) {
-      input.setAttribute('deep-chat-placeholder-text', text);
+    if (el) {
+      el.onComponentRender = () => this.focusAndAddInitialMessage();
     }
   }
 
-  /**
-   * Inietta una <select> nativa nel pannello input di deep-chat (shadow DOM).
-   * Posizionata in basso a destra nell'area di testo, prima del pulsante invio.
-   */
+  // ─── Interceptors ────────────────────────────────────────────────────────────
+
+  private setupRequestInterceptor(el: any): void {
+    el.requestInterceptor = async (requestDetails: any) => {
+      this.aiBuffer = '';
+      this.clearSilenceTimer();
+      this.removeLoadingMessage();
+
+      const token = await firstValueFrom(this.oidcSecurityService.getAccessToken());
+
+      if (requestDetails.body instanceof FormData) {
+        await this.handleFormDataRequest(requestDetails, token);
+      } else {
+        this.handleJsonRequest(requestDetails, token);
+      }
+
+      return requestDetails;
+    };
+  }
+
+  private async handleFormDataRequest(requestDetails: any, token: string): Promise<void> {
+    const formData = requestDetails.body as FormData;
+
+    // Raccogli i messaggi message1, message2, ...
+    const messages: any[] = [];
+    let i = 1;
+    while (formData.has(`message${i}`)) {
+      try { messages.push(JSON.parse(formData.get(`message${i}`) as string)); }
+      catch { /* ignora */ }
+      i++;
+    }
+
+    // Converti i File nativi in base64 data URL
+    const rawFiles = formData.getAll('files') as File[];
+    const convertedFiles = await Promise.all(rawFiles.map(file =>
+      new Promise<any>(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => resolve({
+          name: file.name,
+          type: file.type,
+          data: e.target!.result as string,
+        });
+        reader.readAsDataURL(file);
+      })
+    ));
+
+    // Allega i file all'ultimo messaggio user
+    if (convertedFiles.length > 0 && messages.length > 0) {
+      const idx = [...messages].map(m => m.role).lastIndexOf('user');
+      if (idx >= 0) messages[idx] = { ...messages[idx], files: convertedFiles };
+    }
+    this.injectToolResultsIntoMessages(messages);
+
+    this.requestConfig.url = `${environment.aiApiUrl}/v1/chat/image/stream`;
+    requestDetails.body = JSON.stringify({ messages, model: this.selectedModel || undefined });
+    requestDetails.headers = {
+      ...requestDetails.headers,
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+  }
+
+  private handleJsonRequest(requestDetails: any, token: string): void {
+    this.requestConfig.url = `${environment.aiApiUrl}/v1/chat/stream`;
+
+    const body = requestDetails.body ?? {};
+    const messages: any[] = [...(body.messages ?? [])];
+    this.injectToolResultsIntoMessages(messages);
+    requestDetails.body = {
+      ...body,
+      messages,
+      model: this.selectedModel || undefined,
+    };
+    requestDetails.headers = {
+      ...requestDetails.headers,
+      'Authorization': `Bearer ${token}`,
+    };
+  }
+
+  private injectToolResultsIntoMessages(messages: any[]): void {
+    if (this.toolResultsMap.size === 0) return;
+
+    for (let i = 0; i < messages.length; i++) {
+      const toolResults = this.toolResultsMap.get(i + 1);
+      if (!toolResults) continue;
+      messages[i] = {
+        ...messages[i],
+        toolResults,
+      };
+    }
+  }
+
+  private setupResponseInterceptor(el: any): void {
+    el.responseInterceptor = (responseDetails: any) => {
+
+      // ── THINKING STREAM ──────────────────────────────────────────────────────
+      if (responseDetails?.thinking) {
+        this.aiBuffer = '';
+        this.isStreaming = true;
+        this.thinkingText += responseDetails.thinking;
+
+        this.ngZone.runOutsideAngular(() => {
+          requestAnimationFrame(() => {
+            const chatEl = this.chat?.nativeElement;
+            const root = chatEl?.shadowRoot ?? document;
+            const scroller = root.querySelector('.thinking-scroll') as HTMLElement;
+            if (scroller) scroller.scrollTop = scroller.scrollHeight;
+          });
+        });
+
+        return {
+          html: `
+            <div style="background:transparent!important;padding:0!important;margin:0!important">
+              <div class="thinking-bubble-wrap">
+                <div class="thinking-row">
+                  <div class="thinking-scroll">🤔 ${this.renderMarkdown(this.thinkingText)}</div>
+                </div>
+                <div class="thinking-dots-tail">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+          `,
+          overwrite: true
+        };
+      }
+
+      // ── TEXT STREAM ──────────────────────────────────────────────────────────
+      if (responseDetails?.text) {
+        this.thinkingText = '';
+        if (!this.isStreaming) {
+          this.aiBuffer = '';
+          this.isStreaming = true;
+        }
+
+        this.clearSilenceTimer();
+        this.removeLoadingMessage();
+        this.silenceTimer = setTimeout(() => this.addLoadingMessage(), this.SILENCE_THRESHOLD);
+
+        this.aiBuffer += responseDetails.text;
+
+        const toolMatch = this.aiBuffer.match(TOOL_RESULTS_RE);
+        if (toolMatch) {
+          try {
+            // Salva nella mappa usando l'indice del messaggio corrente
+            const currentIndex = this.chat?.nativeElement?.getMessages()?.length ?? 0;
+            this.toolResultsMap.set(currentIndex, JSON.parse(toolMatch[1]));
+          } catch (e) {
+            console.warn('[tool-results] JSON non valido:', e);
+          }
+          this.aiBuffer = this.aiBuffer.replace(TOOL_RESULTS_RE, '').trim();
+        }
+
+        return {
+          html: `<div class="final-text">${this.renderMarkdown(this.aiBuffer)}</div>`,
+          overwrite: true
+        };
+      }
+
+      // ── STREAM END ───────────────────────────────────────────────────────────
+      if (responseDetails?.done) {
+        this.resetStreamState();
+      }
+    };
+  }
+
+  private setupOnMessage(el: any): void {
+    el.onMessage = ({ message, isHistory }: any) => {
+      if (!isHistory) { this.clearSilenceTimer(); this.removeLoadingMessage(); }
+      if (isHistory) return;
+      if (message.role !== 'ai') return;
+
+      const html = message.html ?? '';
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Deep Chat converte ```chart in <code class="language-chart">
+      const codeEl = doc.querySelector('code.language-chart');
+      if (!codeEl) return;
+
+      let cfg;
+      try {
+        cfg = JSON.parse(codeEl.textContent!.trim());
+      } catch (e) {
+        console.error('[chart] JSON non valido:', e);
+        return;
+      }
+      this.ngZone.runOutsideAngular(() => this.injectChart(cfg));
+    };
+  }
+
+  // ─── Chat management ─────────────────────────────────────────────────────────
+
+  newChat(): void {
+    const el = this.chat?.nativeElement;
+    if (!el) return;
+    this.toolResultsMap.clear();
+    this.clearSilenceTimer();
+    this.removeLoadingMessage();
+    el.clearMessages();
+    this.setPlaceholder('Come posso aiutarti oggi?');
+    this.focusAndAddInitialMessage();
+  }
+
+  private focusAndAddInitialMessage(): void {
+    const el = this.chat?.nativeElement;
+    if (!el) return;
+    this.focusInput();
+    this.injectModelSelect(el);
+    setTimeout(() => {
+      this.configurationService.getAIInitialMessage().subscribe((message: string) => {
+        el.addMessage({ role: 'ai', text: message, sendUpdate: true });
+      });
+    }, 500);
+  }
+
+  // ─── Loading message ─────────────────────────────────────────────────────────
+
+  private addLoadingMessage(): void {
+    const el = this.chat?.nativeElement;
+    if (!el) return;
+    const messages = el.getMessages();
+    this.loadingMessageIndex = messages.length;
+    el.addMessage({
+      role: 'ai',
+      html: `<div style="display:flex; gap:5px; align-items:center; padding: 2px 0"><span class="dc-dot"></span><span class="dc-dot"></span><span class="dc-dot"></span></div>`,
+      sendUpdate: false
+    });
+  }
+
+  private removeLoadingMessage(): void {
+    const el = this.chat?.nativeElement;
+    if (!el || this.loadingMessageIndex < 0) return;
+    el.updateMessage({ html: '', sendUpdate: false }, this.loadingMessageIndex);
+    this.loadingMessageIndex = -1;
+  }
+
+  private clearSilenceTimer(): void {
+    if (this.silenceTimer) { clearTimeout(this.silenceTimer); this.silenceTimer = null; }
+  }
+
+  // ─── Model select ────────────────────────────────────────────────────────────
+
+  private async fetchModels(): Promise<void> {
+    try {
+      const response: any = await firstValueFrom(this.aiService.getAny(`/v1/models`));
+
+      this.availableModels = response.models.map((m: any) => ({
+        value: m.model,
+        text: m.name.split(':')[0].toUpperCase() + (m.details?.parameter_size ? ` (${m.details.parameter_size})` : ''),
+      }));
+
+      if (this.availableModels.length > 0) {
+        const defaultExists = this.availableModels.some(m => m.value === response.defaultModel);
+        this.selectedModel = defaultExists ? response.defaultModel : this.availableModels[0].value;
+      }
+    } catch (error) {
+      console.error('Errore nel recupero dei modelli:', error);
+    }
+  }
+
   private injectModelSelect(el: any): void {
     const shadow = el.shadowRoot;
     if (!shadow) return;
 
     const inject = () => {
-      if (shadow.querySelector('#model-selector-wrapper')) return; // già presente
+      if (shadow.querySelector('#model-selector-wrapper')) return;
 
       const textInputContainer = shadow.querySelector('#text-input-container');
       if (!textInputContainer) return;
 
-      // Wrapper Bootstrap Italia style
       const wrapper = document.createElement('div');
       wrapper.id = 'model-selector-wrapper';
       wrapper.className = 'bi-select-wrapper';
@@ -552,7 +624,6 @@ export class ChatComponent implements OnInit, AfterViewInit {
         this.selectedModel = (e.target as HTMLSelectElement).value;
       });
 
-      // Freccia SVG Bootstrap Italia
       const arrow = document.createElement('span');
       arrow.className = 'bi-select-arrow';
       arrow.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -567,92 +638,12 @@ export class ChatComponent implements OnInit, AfterViewInit {
       textInputContainer.appendChild(wrapper);
     };
 
-    // Prima iniezione
     inject();
-
-    // Re-inietta ogni volta che deep-chat ricostruisce il DOM
     const observer = new MutationObserver(() => inject());
     observer.observe(shadow, { childList: true, subtree: true });
   }
-  
-  private async fetchModels() {
-    try {
-      const token = await firstValueFrom(this.oidcSecurityService.getAccessToken());
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-      const response: any = await firstValueFrom(
-        this.aiService.getAny(`/v1/models`)
-      );
-
-      this.availableModels = response.models.map((m: any) => ({
-        value: m.model,
-        text: m.name.split(':')[0].toUpperCase() + (m.details?.parameter_size ? ` (${m.details.parameter_size})` : ''),
-      }));
-
-      if (this.availableModels.length > 0) {
-        const defaultExists = this.availableModels.some(m => m.value === response.defaultModel);
-        this.selectedModel = defaultExists ? response.defaultModel : this.availableModels[0].value;
-      }
-    } catch (error) {
-      console.error('Errore nel recupero dei modelli:', error);
-    }
-  }
-
-  ngAfterViewInit(): void {
-    const el = this.chat?.nativeElement;
-    if (el) {
-      el.onComponentRender = () => {
-        this.focusAndAddInitialMessage();        
-      }
-    }  
-  }
-
-  newChat() {
-    const el = this.chat?.nativeElement;
-    if (!el) return;
-    this.clearSilenceTimer();
-    this.removeLoadingMessage();
-    el.clearMessages();
-    this.setPlaceholder('Come posso aiutarti oggi?');
-    this.focusAndAddInitialMessage();
-  }
-
-  private focusAndAddInitialMessage() {
-    const el = this.chat?.nativeElement;
-    if (el) {
-      this.focusInput();
-      this.injectModelSelect(el);
-      // Fallback: prova ad aggiungere il messaggio direttamente dopo un delay
-      setTimeout(() => {
-        this.configurationService.getAIInitialMessage().subscribe((message: string) => {
-          el.addMessage({
-            role: 'ai',
-            text: message,
-            sendUpdate: true
-          });
-        });
-      }, 500);
-    }
-  }
-
-  private addLoadingMessage(): void {
-    const el = this.chat?.nativeElement;
-    if (!el) return;
-    const messages = el.getMessages();
-    this.loadingMessageIndex = messages.length;
-    el.addMessage({ role: 'ai', html: `<div style="display:flex; gap:5px; align-items:center; padding: 2px 0"><span class="dc-dot"></span><span class="dc-dot"></span><span class="dc-dot"></span></div>`, sendUpdate: false });
-  }
-
-  private removeLoadingMessage(): void {
-    const el = this.chat?.nativeElement;
-    if (!el || this.loadingMessageIndex < 0) return;
-    el.updateMessage({ html: '', sendUpdate: false }, this.loadingMessageIndex);
-    this.loadingMessageIndex = -1;
-  }
-
-  private clearSilenceTimer(): void {
-    if (this.silenceTimer) { clearTimeout(this.silenceTimer); this.silenceTimer = null; }
-  }
+  // ─── Focus ───────────────────────────────────────────────────────────────────
 
   private focusInput(): void {
     const el = this.chat?.nativeElement;
@@ -666,6 +657,15 @@ export class ChatComponent implements OnInit, AfterViewInit {
       else { setTimeout(doFocus, 500); }
     });
   }
+
+  private setPlaceholder(text: string): void {
+    const el = this.chat?.nativeElement;
+    if (!el) return;
+    const input = el.shadowRoot?.querySelector('#text-input') as HTMLElement;
+    if (input) input.setAttribute('deep-chat-placeholder-text', text);
+  }
+
+  // ─── Export ──────────────────────────────────────────────────────────────────
 
   exportChat(format: 'txt' | 'json' | 'md' = 'md'): void {
     const el = this.chat?.nativeElement;
@@ -694,7 +694,6 @@ export class ChatComponent implements OnInit, AfterViewInit {
       filename = `chat_${timestamp}.txt`;
 
     } else {
-      // markdown (default)
       content = messages.map(m => {
         const role = m.role === 'ai' ? '🤖 **Clara**' : '👤 **Tu**';
         const text = m.text ?? this.htmlToPlainText(m.html ?? '');
@@ -713,6 +712,8 @@ export class ChatComponent implements OnInit, AfterViewInit {
     URL.revokeObjectURL(url);
   }
 
+  // ─── Utils ───────────────────────────────────────────────────────────────────
+
   private htmlToPlainText(html: string): string {
     const div = document.createElement('div');
     div.innerHTML = html;
@@ -720,22 +721,34 @@ export class ChatComponent implements OnInit, AfterViewInit {
   }
 
   private renderMarkdown(md: string): string {
-    const raw = marked.parse(md, {
-      gfm: true,
-      breaks: true
-    }) as string;
+    const raw = marked.parse(md, { gfm: true, breaks: true }) as string;
     return DOMPurify.sanitize(raw);
-  }  
+  }
 
   private resetStreamState(): void {
     this.aiBuffer = '';
     this.thinkingText = '';
     this.isStreaming = false;
-  }  
+  }
 
-  // ─── Creazione Grafico e Iniezione nel DOM ───────────────────────────────────────
-  // passa l'elemento direttamente — nessun lookup per id
-  async injectChart(cfg: any) {
+  private waitForElement(id: string, timeout = 3000): Promise<Element> {
+    return new Promise((resolve, reject) => {
+      const el = document.getElementById(id);
+      if (el) { resolve(el); return; }
+
+      const observer = new MutationObserver(() => {
+        const el = document.getElementById(id);
+        if (el) { observer.disconnect(); resolve(el); }
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+      setTimeout(() => { observer.disconnect(); reject(new Error(`Elemento #${id} non trovato`)); }, timeout);
+    });
+  }
+
+  // ─── Chart ───────────────────────────────────────────────────────────────────
+
+  async injectChart(cfg: any): Promise<void> {
     const chat = this.chat?.nativeElement;
     if (!chat) return;
 
@@ -744,31 +757,23 @@ export class ChatComponent implements OnInit, AfterViewInit {
     if (!bubbles.length) return;
     const last = bubbles[bubbles.length - 1];
 
-    // rimuovi il blocco <pre> dal DOM
-    last.querySelector('code.language-chart')
-      ?.closest('pre')?.remove();
+    last.querySelector('code.language-chart')?.closest('pre')?.remove();
 
-    // wrapper esterno (titolo + grafico)
     const outer = document.createElement('div');
     outer.style.cssText = 'width:100%;margin-bottom:12px';
 
-    // titolo dal campo cfg.title
     if (cfg.title) {
       const titleEl = document.createElement('div');
       titleEl.textContent = cfg.title;
-      titleEl.style.cssText =
-        'font-size:0.9rem;font-weight:600;color:#17324d;' +
-        'margin-bottom:6px;padding-left:4px';
+      titleEl.style.cssText = 'font-size:0.9rem;font-weight:600;color:#17324d;margin-bottom:6px;padding-left:4px';
       outer.appendChild(titleEl);
     }
 
-    // container am5
     const wrap = document.createElement('div');
     wrap.style.cssText = 'width:100%;height:280px;border-radius:8px;overflow:hidden';
     outer.appendChild(wrap);
     last.prepend(outer);
 
-    // renderizza
     try {
       this.renderChart(wrap, cfg);
     } catch (e) {
@@ -776,9 +781,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // ─── Pulizia testo ───────────────────────────────────────────
-  cleanChartBlock(bubble: any) {
-    // Deep Chat può avere il testo in vari nodi:
+  cleanChartBlock(bubble: any): void {
     const selectors = [
       '.deep-chat-message-text',
       '.deep-chat-ai-message-text',
@@ -789,8 +792,6 @@ export class ChatComponent implements OnInit, AfterViewInit {
     for (const sel of selectors) {
       const node = bubble.querySelector(sel);
       if (!node) continue;
-
-      // innerHTML: rimuovi il blocco con eventuale wrapper <code>
       node.innerHTML = node.innerHTML
         .replace(/```chart[\s\S]*?```/g, '')
         .replace(/<code[^>]*>[\s\S]*?chart[\s\S]*?<\/code>/g, '')
@@ -799,8 +800,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // ─── Render am5charts ────────────────────────────────────────
-  renderChart(wrap: HTMLElement, cfg: any) {
+  renderChart(wrap: HTMLElement, cfg: any): void {
     const root = am5.Root.new(wrap);
     root.setThemes([am5themes_Animated.new(root)]);
     this.chartRoots.set(wrap, root);
@@ -809,7 +809,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
       : this.makeXY(root, cfg);
   }
 
-  makeXY(root: any, cfg: any) {
+  makeXY(root: any, cfg: any): void {
     const chart = root.container.children.push(
       am5xy.XYChart.new(root, {
         panX: false, panY: false,
@@ -821,9 +821,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
     const xAxis = chart.xAxes.push(
       am5xy.CategoryAxis.new(root, {
         categoryField: 'category',
-        renderer: am5xy.AxisRendererX.new(root, {
-          minGridDistance: 30
-        })
+        renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30 })
       })
     );
     const yAxis = chart.yAxes.push(
@@ -832,13 +830,10 @@ export class ChatComponent implements OnInit, AfterViewInit {
       })
     );
 
-    const seriesList = cfg.series
-      ?? [{ name: cfg.title, data: cfg.data }];
+    const seriesList = cfg.series ?? [{ name: cfg.title, data: cfg.data }];
 
     seriesList.forEach((s: any) => {
-      const SC = cfg.type === 'line'
-        ? am5xy.LineSeries
-        : am5xy.ColumnSeries;
+      const SC = cfg.type === 'line' ? am5xy.LineSeries : am5xy.ColumnSeries;
 
       const series = chart.series.push(
         SC.new(root, {
@@ -846,9 +841,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
           xAxis, yAxis,
           valueYField: 'value',
           categoryXField: 'category',
-          tooltip: am5.Tooltip.new(root, {
-            labelText: '{categoryX}: {valueY}'
-          })
+          tooltip: am5.Tooltip.new(root, { labelText: '{categoryX}: {valueY}' })
         })
       );
 
@@ -856,10 +849,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
         series.strokes.template.setAll({ strokeWidth: 2 });
         series.bullets.push(() =>
           am5.Bullet.new(root, {
-            sprite: am5.Circle.new(root, {
-              radius: 4,
-              fill: series.get('fill')
-            })
+            sprite: am5.Circle.new(root, { radius: 4, fill: series.get('fill') })
           })
         );
       } else {
@@ -877,10 +867,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
 
     if (seriesList.length > 1) {
       const legend = chart.children.push(
-        am5.Legend.new(root, {
-          centerX: am5.percent(50),
-          x: am5.percent(50)
-        })
+        am5.Legend.new(root, { centerX: am5.percent(50), x: am5.percent(50) })
       );
       legend.data.setAll(chart.series.values);
     }
@@ -888,11 +875,10 @@ export class ChatComponent implements OnInit, AfterViewInit {
     chart.appear(1000, 100);
   }
 
-  makePie(root: any, cfg: any) {
+  makePie(root: any, cfg: any): void {
     const chart = root.container.children.push(
       am5percent.PieChart.new(root, {
-        innerRadius: cfg.type === 'donut'
-          ? am5.percent(60) : 0
+        innerRadius: cfg.type === 'donut' ? am5.percent(60) : 0
       })
     );
     const series = chart.series.push(
@@ -905,13 +891,9 @@ export class ChatComponent implements OnInit, AfterViewInit {
     series.data.setAll(cfg.data);
 
     const legend = chart.children.push(
-      am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        x: am5.percent(50)
-      })
+      am5.Legend.new(root, { centerX: am5.percent(50), x: am5.percent(50) })
     );
     legend.data.setAll(series.dataItems);
     series.appear(1000, 100);
   }
-
 }
