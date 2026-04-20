@@ -163,7 +163,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
       this.statusColor = color;
     });
     Object.keys(CodiceCategoria).forEach((key) => {
-      this.optionsCategoria.push({ value: key, text: CodiceCategoria[key]});
+      this.optionsCategoria.push({ value: key, text: `${key} - ${CodiceCategoria[key]}`});
     });    
     this.authGuard.hasRole([RoleEnum.ADMIN, RoleEnum.SUPERUSER]).subscribe((hasRole: boolean) => {
       this.isSuperuser = hasRole;

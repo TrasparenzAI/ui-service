@@ -139,7 +139,7 @@ export class MarkdownEditorComponent
           'unordered-list', 'ordered-list', '|',
           'code', 'link', 'image', '|',
           'quote', 'horizontal-rule', '|',
-          'preview', 'side-by-side', 'fullscreen', '|',
+          'preview', 'side-by-side', '|',
           'guide',
         ],
       });

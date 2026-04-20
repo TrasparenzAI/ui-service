@@ -71,7 +71,7 @@ export class CompanySearchComponent implements OnInit, OnDestroy{
       this.options.push({ value: 'createdAt,desc', text: labels?.order?.createdAt?.desc });
     });
     Object.keys(CodiceCategoria).forEach((key) => {
-      this.optionsCategoria.push({ value: key, text: CodiceCategoria[key]});
+      this.optionsCategoria.push({ value: key, text: `${key} - ${CodiceCategoria[key]}`});
     });
     Object.keys(Regione).forEach((key) => {
       this.optionsRegione.push({ value: Regione[key], text: Regione[key]});

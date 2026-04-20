@@ -252,7 +252,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     });
 
     Object.keys(CodiceCategoria).forEach((key) => {
-      this.optionsCategoria.push({ value: key, text: CodiceCategoria[key]});
+      this.optionsCategoria.push({ value: key, text: `${key} - ${CodiceCategoria[key]}`});
     });
     this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
       workflows.forEach((workflow: Workflow) => {

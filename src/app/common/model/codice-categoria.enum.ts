@@ -60,4 +60,8 @@ export class CodiceCategoriaConverter extends EnumKeyConverter<CodiceCategoria> 
       super(CodiceCategoria);
   }
 
+  deserialize(data: any): CodiceCategoria {
+    const result = super.deserialize(data);
+    return <CodiceCategoria>(`${data} - ${result}` as any);
+  }
 }

@@ -63,6 +63,8 @@ export class ServiceInfoComponent implements OnInit {
         }
       }
     });
+    urls.add(this.normalizeServiceUrl(`${environment.aiApiUrl}`));
+    urls.add(this.normalizeServiceUrl(`${environment.mcpApiUrl}`));
     return Array.from(urls).filter((url) => !!url);
   }
 

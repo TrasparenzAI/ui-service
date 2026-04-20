@@ -10,6 +10,7 @@ export const environment = {
   taskSchedulerApiUrl: window["env"]["taskSchedulerApiUrl"],
   crawlerApiUrl: window["env"]["crawlerApiUrl"],
   aiApiUrl: window["env"]["aiApiUrl"],
+  mcpApiUrl: window["env"]["mcpApiUrl"],
   debug: window["env"]["debug"] || false,
   baseHref: window["env"]["baseHref"] || "/",
   devBypassAdminAuth: window["env"]["devBypassAdminAuth"] === true || window["env"]["devBypassAdminAuth"] === 'true',

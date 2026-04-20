@@ -158,7 +158,7 @@ export class ResultRuleListComponent extends CommonListComponent<Result> impleme
   
   public beforeOnInit(): Observable<any> {
     Object.keys(CodiceCategoria).forEach((key) => {
-      this.optionsCategoria.push({ value: key, text: CodiceCategoria[key]});
+      this.optionsCategoria.push({ value: key, text: `${key} - ${CodiceCategoria[key]}`});
     });    
     return this.route.queryParams.pipe(switchMap((queryParams) => {
       let workflowId = queryParams.workflowId;

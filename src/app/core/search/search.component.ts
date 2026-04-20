@@ -70,7 +70,7 @@ export class SearchComponent implements OnInit {
       this.optionsCategoria.push({ value: '', text: '*', selected: true});
     });
     Object.keys(CodiceCategoria).forEach((key) => {
-      this.optionsCategoria.push({ value: key, text: CodiceCategoria[key]});
+      this.optionsCategoria.push({ value: key, text: `${key} - ${CodiceCategoria[key]}`});
     });
     this.authGuard.hasRole([RoleEnum.ADMIN, RoleEnum.SUPERUSER]).subscribe((hasRole: boolean) => {
       this.isCSVVisible = hasRole;
