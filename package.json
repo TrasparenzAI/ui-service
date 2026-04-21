@@ -1,7 +1,7 @@
 {
   "name": "trasparenzai",
-  "version": "2.5.1",
-  "buildDate": "2026-03-26T10:45:32.984Z",
+  "version": "2.5.2",
+  "buildDate": "2026-04-20T10:19:48.635Z",
   "license": "GNU Affero General Public License v3.0",
   "scripts": {
     "android": "tns run android",
@@ -100,7 +100,7 @@
     "picomatch": "^4.0.4",
     "path-to-regexp": "^0.1.13",
     "serialize-javascript": "^7.0.5",
-    "vite": "^7.3.2",    
+    "vite": "^7.3.2",
     "@sbzen/ng-cron": {
       "@angular/common": "^21.2.1",
       "@angular/core": "^21.2.1"
