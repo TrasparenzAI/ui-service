@@ -387,7 +387,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
           }
           if (conf.key === ConfigurationService.AI_TEXT_TO_SPEECH) {
             this.aiTextToSpeech = conf.id;
-            this.aiForm.controls.textToSpeech.patchValue(conf.value);
+            this.aiForm.controls.textToSpeech.patchValue(conf.value === "true");
           }
           if (conf.key === ConfigurationService.AI_INITIAL_MESSAGE) {
             this.aiInitialMessage = conf.id;

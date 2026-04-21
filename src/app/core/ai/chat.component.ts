@@ -591,7 +591,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
     audioDiv.className = 'ai-audio-player';
     audioDiv.innerHTML = `
       <audio controls autoplay style="width:100%;max-width:380px;height:36px;border-radius:8px;">
-        <source src="data:audio/wav;base64,${audioBase64}" type="audio/wav">
+        <source src="data:audio/mp3;base64,${audioBase64}" type="audio/mp3">
       </audio>
     `;
     last.appendChild(audioDiv);
