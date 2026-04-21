@@ -1,5 +1,20 @@
+/*
+ * Copyright (C) 2025 Consiglio Nazionale delle Ricerche
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU Affero General Public License as
+ *     published by the Free Software Foundation, either version 3 of the
+ *     License, or (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU Affero General Public License for more details.
+ *
+ *     You should have received a copy of the GNU Affero General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { AfterViewInit, Component, ElementRef, NgZone, OnInit, ViewChild } from '@angular/core';
-import { HttpHeaders } from '@angular/common/http';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
@@ -233,6 +248,17 @@ export class ChatComponent implements OnInit, AfterViewInit {
       from { opacity: 0.4; }
       to { opacity: 1; }
     }
+
+    /* player audio iniettato post-stream */
+    .ai-audio-player {
+      margin-top: 10px;
+    }
+    .ai-audio-player audio {
+      width: 100%;
+      max-width: 380px;
+      height: 36px;
+      border-radius: 8px;
+    }
     `;
 
   customButtons = [
@@ -256,12 +282,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
       styles: {
         button: {
           default: {
-            container: {
-              default: {
-                border: '1px solid #e2e2e2',
-                borderRadius: '10px'
-              }
-            },
+            container: { default: { border: '1px solid #e2e2e2', borderRadius: '10px' } },
             svg: {
               content: `<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M15 1H1V15H15V1ZM3 3V7H5V5H7V11H5V13H11V11H9V5H11V7H13V3H3Z" fill="#000000"></path> </g></svg>`
             },
@@ -276,12 +297,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
       styles: {
         button: {
           default: {
-            container: {
-              default: {
-                border: '1px solid #e2e2e2',
-                borderRadius: '10px'
-              }
-            },
+            container: { default: { border: '1px solid #e2e2e2', borderRadius: '10px' } },
             svg: {
               content: `<svg fill="#000000" height="200px" width="200px" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path class="cls-1" d="M14.25,3H1.75A.74027.74027,0,0,0,1,3.73016v8.53968A.74029.74029,0,0,0,1.75,13h12.5a.74029.74029,0,0,0,.75-.73016V3.73016A.74027.74027,0,0,0,14.25,3ZM7.965,10.059H6.97374V7.77311L5.9825,9.34956,4.99125,7.77311V10.059H4V5.934h.91L5.9825,7.51038,7.055,5.934h.91Zm2.45884.0071L8.84766,7.94479H9.94749V5.934h.99124V7.94479H12Z"></path> </g></svg>`
             },
@@ -305,11 +321,19 @@ export class ChatComponent implements OnInit, AfterViewInit {
     headers: { 'Content-Type': 'application/json' },
   };
 
+  // ─── Stream state ─────────────────────────────────────────────────────────────
   private thinkingText = '';
   private aiBuffer = '';
   private isStreaming = false;
   private chartRoots = new Map();
   private toolResultsMap = new Map<number, any[]>();
+
+  /**
+   * Audio base64 ricevuto dall'evento SSE "audio" durante lo stream.
+   * Non viene iniettato subito — viene tenuto qui e iniettato nel DOM
+   * solo dopo l'evento "done", quando il bubble è finalizzato da Deep Chat.
+   */
+  private pendingAudio: string | null = null;
 
   // ─── Lifecycle ───────────────────────────────────────────────────────────────
 
@@ -337,6 +361,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
   private setupRequestInterceptor(el: any): void {
     el.requestInterceptor = async (requestDetails: any) => {
       this.aiBuffer = '';
+      this.pendingAudio = null;
       this.clearSilenceTimer();
       this.removeLoadingMessage();
 
@@ -417,16 +442,14 @@ export class ChatComponent implements OnInit, AfterViewInit {
     for (let i = 0; i < messages.length; i++) {
       const toolResults = this.toolResultsMap.get(i + 1);
       if (!toolResults) continue;
-      messages[i] = {
-        ...messages[i],
-        toolResults,
-      };
+      messages[i] = { ...messages[i], toolResults };
     }
   }
 
   private setupResponseInterceptor(el: any): void {
     el.responseInterceptor = (responseDetails: any) => {
-
+      console.log('[interceptor] responseDetails keys:', Object.keys(responseDetails ?? {}));
+      console.log('[interceptor] responseDetails:', JSON.stringify(responseDetails));
       // ── THINKING STREAM ──────────────────────────────────────────────────────
       if (responseDetails?.thinking) {
         this.aiBuffer = '';
@@ -476,7 +499,6 @@ export class ChatComponent implements OnInit, AfterViewInit {
         const toolMatch = this.aiBuffer.match(TOOL_RESULTS_RE);
         if (toolMatch) {
           try {
-            // Salva nella mappa usando l'indice del messaggio corrente
             const currentIndex = this.chat?.nativeElement?.getMessages()?.length ?? 0;
             this.toolResultsMap.set(currentIndex, JSON.parse(toolMatch[1]));
           } catch (e) {
@@ -491,9 +513,29 @@ export class ChatComponent implements OnInit, AfterViewInit {
         };
       }
 
+      // ── AUDIO — salva in attesa del done ─────────────────────────────────────
+      // L'audio non viene iniettato subito perché Deep Chat potrebbe sovrascrivere
+      // il bubble con un ultimo flush. Viene tenuto in pendingAudio e iniettato
+      // nel DOM solo dopo che l'evento "done" ha finalizzato il messaggio.
+      if (responseDetails?.audio) {
+        this.pendingAudio = responseDetails.audio;
+        return; // non restituisce nulla a Deep Chat
+      }
+
       // ── STREAM END ───────────────────────────────────────────────────────────
-      if (responseDetails?.done) {
+      // Deep Chat emette un oggetto vuoto {} come segnale di fine stream
+      const isDone = responseDetails?.done ||
+                    (responseDetails && Object.keys(responseDetails).length === 0);
+      if (isDone) {
         this.resetStreamState();
+
+        if (this.pendingAudio) {
+          const audio = this.pendingAudio;
+          this.pendingAudio = null;
+          this.ngZone.runOutsideAngular(() => {
+            requestAnimationFrame(() => this.injectAudioIntoLastMessage(audio));
+          });
+        }
       }
     };
   }
@@ -523,12 +565,45 @@ export class ChatComponent implements OnInit, AfterViewInit {
     };
   }
 
+  // ─── Audio ───────────────────────────────────────────────────────────────────
+
+  /**
+   * Inietta il player audio HTML5 nell'ultimo messaggio AI già renderizzato.
+   * Viene chiamato dopo l'evento "done" tramite requestAnimationFrame,
+   * quando il bubble è stabile e non verrà più sovrascritto da Deep Chat.
+   */
+  private injectAudioIntoLastMessage(audioBase64: string): void {
+    const el = this.chat?.nativeElement;
+    if (!el) return;
+
+    // Invece di updateMessage (che usa indici instabili),
+    // inietta direttamente nel DOM del shadow root
+    const root = el.shadowRoot ?? document;
+    const bubbles = root.querySelectorAll('.final-text');
+    if (!bubbles.length) return;
+
+    const last = bubbles[bubbles.length - 1] as HTMLElement;
+
+    // Evita doppia iniezione
+    if (last.querySelector('.ai-audio-player')) return;
+
+    const audioDiv = document.createElement('div');
+    audioDiv.className = 'ai-audio-player';
+    audioDiv.innerHTML = `
+      <audio controls autoplay style="width:100%;max-width:380px;height:36px;border-radius:8px;">
+        <source src="data:audio/wav;base64,${audioBase64}" type="audio/wav">
+      </audio>
+    `;
+    last.appendChild(audioDiv);
+  }
+
   // ─── Chat management ─────────────────────────────────────────────────────────
 
   newChat(): void {
     const el = this.chat?.nativeElement;
     if (!el) return;
     this.toolResultsMap.clear();
+    this.pendingAudio = null;
     this.clearSilenceTimer();
     this.removeLoadingMessage();
     el.clearMessages();
@@ -729,6 +804,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
     this.aiBuffer = '';
     this.thinkingText = '';
     this.isStreaming = false;
+    // pendingAudio NON viene resettato qui — serve ancora nel done handler
   }
 
   private waitForElement(id: string, timeout = 3000): Promise<Element> {

@@ -62,6 +62,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   protected menuid: number;
   protected sliceid: number;
   protected aiDefaultModel: number;
+  protected aiTextToSpeech: number;
   protected aiSystemPrompt: number;
   protected aiInitialMessage: number;
 
@@ -327,6 +328,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     this.aiForm = this.formBuilder.group({
       defaultModel: new FormControl(),
       initialMessage: new FormControl(),
+      textToSpeech: new FormControl(),
       systemPrompt: new FormControl()
     });
     this.aiService.getAny(`/v1/models`, undefined, false).pipe(
@@ -382,6 +384,10 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
           if (conf.key === ConfigurationService.AI_DEFAULT_MODEL) {
             this.aiDefaultModel = conf.id;
             this.aiForm.controls.defaultModel.patchValue(conf.value);
+          }
+          if (conf.key === ConfigurationService.AI_TEXT_TO_SPEECH) {
+            this.aiTextToSpeech = conf.id;
+            this.aiForm.controls.textToSpeech.patchValue(conf.value);
           }
           if (conf.key === ConfigurationService.AI_INITIAL_MESSAGE) {
             this.aiInitialMessage = conf.id;
@@ -723,9 +729,12 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   }
 
   confirmAI(): void {
-    const { defaultModel, systemPrompt, initialMessage } = this.aiForm.controls;
+    const { defaultModel, systemPrompt, initialMessage, textToSpeech } = this.aiForm.controls;
     const saveDefaultModel$ = this.configurationService.save(
       this.buildConf(this.aiDefaultModel, 'ai-integration-service', ConfigurationService.AI_DEFAULT_MODEL, defaultModel.value)
+    );
+    const saveTextToSpeech$ = this.configurationService.save(
+      this.buildConf(this.aiTextToSpeech, 'ai-integration-service', ConfigurationService.AI_TEXT_TO_SPEECH, textToSpeech.value)
     );
     const saveSystemPrompt$ = this.configurationService.save(
       this.buildConf(this.aiSystemPrompt, 'ai-integration-service', ConfigurationService.AI_SYSTEM_PROMPT, systemPrompt.value)
@@ -734,11 +743,12 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
       this.buildConf(this.aiInitialMessage, 'ai-integration-service', ConfigurationService.AI_INITIAL_MESSAGE, initialMessage.value)
     );
 
-    forkJoin([saveDefaultModel$, saveSystemPrompt$, saveInitialMessage$]).pipe(
-      switchMap(([resModel, resPrompt, resMessage]) => {
+    forkJoin([saveDefaultModel$, saveSystemPrompt$, saveInitialMessage$, saveTextToSpeech$]).pipe(
+      switchMap(([resModel, resPrompt, resMessage, resTeextToSpeech]) => {
         this.aiDefaultModel  = resModel.id;
         this.aiSystemPrompt  = resPrompt.id;
         this.aiInitialMessage = resMessage.id;
+        this.aiTextToSpeech = resTeextToSpeech.id;
         this.configurationService.setCachedAIInitialMessage(undefined);
         return this.aiService.postObject('actuator/refresh');
       })

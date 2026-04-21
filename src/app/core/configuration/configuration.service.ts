@@ -29,6 +29,7 @@ export class ConfigurationService extends CommonService<Configuration> {
   public static readonly AI_DEFAULT_MODEL = `spring.ai.ollama.chat.options.model`;
   public static readonly AI_SYSTEM_PROMPT = `ai.systemPrompt`;
   public static readonly AI_INITIAL_MESSAGE = `ai.initialMessage`;
+  public static readonly AI_TEXT_TO_SPEECH = `ai.text-to-speech.enable`;
 
   private cachedStatusColor: any;
   private cachedSliceColor: any;

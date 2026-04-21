@@ -898,7 +898,16 @@
                 [label]="'it.ai.defaultModel' | translate">
               </it-select>
           </div>
-          <div class="form-group col-md-8">
+          <div class="form-group col-md-4">
+              <it-checkbox
+                formControlName="textToSpeech"
+                [label]="'it.ai.text_to_speech' | translate"
+                toggle="true"
+              ></it-checkbox>
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-md-12">
             <it-input 
               [label]="'it.ai.initialMessage.label' | translate" 
               required 
