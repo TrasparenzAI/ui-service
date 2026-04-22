@@ -62,7 +62,7 @@
     },
     "ai": {
       "defaultModel": "Modello di default",
-      "text_to_speech": "Trasforma risposta da testo ad audio",
+      "text_to_speech": "Abilita sintesi vocale",
       "systemPrompt": {
         "label": "Prompt di Sistema"
       },

@@ -354,8 +354,31 @@ export class ChatComponent implements OnInit, AfterViewInit {
     if (el) {
       el.onComponentRender = () => this.focusAndAddInitialMessage();
     }
+    setTimeout(() => this.setupKeyBindings(), 500);
   }
 
+  private setupKeyBindings() {
+    const el = this.chat?.nativeElement;
+    if (!el) return;
+    const textarea = el.shadowRoot?.querySelector('textarea');
+    if (!textarea) return;
+
+    textarea.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+
+      if (e.ctrlKey) {
+        // CTRL+ENTER → newline
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        const pos = textarea.selectionStart;
+        const val = textarea.value;
+        textarea.value = val.slice(0, pos) + '\n' + val.slice(pos);
+        textarea.selectionStart = textarea.selectionEnd = pos + 1;
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      // ENTER senza Ctrl: lascia fare a deep-chat (invia)
+    }, true);
+  }
   // ─── Interceptors ────────────────────────────────────────────────────────────
 
   private setupRequestInterceptor(el: any): void {
