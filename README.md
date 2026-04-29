@@ -45,6 +45,8 @@ Integra e mostra i dati presenti nei vari servizi fornendo la possibilità, aven
 | TASK_SCHEDULER_API_URL     | $API_URL/task-scheduler-service    | URL del servizio [task-scheduler-service](https://github.com/TrasparenzAI/task-scheduler-service)      |
 | RULE_API_URL               | $API_URL/rule-service              | URL del servizio [rule-service](https://github.com/TrasparenzAI/rule-service)                          |
 | CRAWLER_API_URL            | $API_URL/crawl                     | URL del servizio [crawler-service](https://github.com/TrasparenzAI/crawler-service)                    |
+| AI_API_URL                 | $API_URL/ai-integration-service    | URL del servizio [ai-integration-service](https://github.com/TrasparenzAI/ai-integration-service)      |
+| MCP_API_URL                | $API_URL/mcp-server                | URL del servizio [mcp-server](https://github.com/TrasparenzAI/mcp-server)                              |
 | OIDC_ENABLE                | false                              | Parametro che indica se è attiva l'autenticazione tramite protocollo basato su OAuth 2.0               |
 | OIDC_FORCE                 | false                              | Parametro che indica se l'autenticazione viene forzata su tutte le pagine                              |
 | OIDC_AUTHORITY             |                                    | URL del servizio authority di norma è nella forma ```.../.well-known/openid-configuration```           |
