@@ -1,12 +1,12 @@
 @if (isWorkflowLoaded) {
   @if (filterFormSearch) {
-    <form class="clearfix my-3 px-2 shadow" [formGroup]="filterFormSearch" >
+    <form class="clearfix my-3 px-2 shadow" [formGroup]="filterFormSearch">
       <div class="row col-md-12">
-        @if(optionsWorkflow && optionsWorkflow.length != 0) {
+        @if (optionsWorkflow && optionsWorkflow.length != 0) {
           <div class="form-group mb-1 col-md-6">
-            <ng-select [clearable]="false" formControlName="workflowId" [placeholder]="'it.workflow.id'| translate">
+            <ng-select [clearable]="false" formControlName="workflowId" [placeholder]="'it.workflow.id' | translate">
               @for (workflow of optionsWorkflow; track workflow.value) {
-                <ng-option [value]="workflow.value">{{workflow.text}}</ng-option>
+                <ng-option [value]="workflow.value">{{ workflow.text }}</ng-option>
               }
             </ng-select>
           </div>
@@ -18,6 +18,9 @@
     </form>
   }
 }
-<div #chartdiv class="h-100" [style]="chartDivStyle">
-</div>
 
+<div class="h-100" [style]="chartDivStyle"
+  echarts
+  [options]="chartOptions"
+  (chartClick)="onChartClick($event)">
+</div>

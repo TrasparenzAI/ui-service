@@ -17,13 +17,17 @@
 }
 <div>
   <h1 class="font-monospace text-center" translate>it.navigation.grafici-mappe.grafico-statistiche-regola</h1>
-  <div #chartdiv class="h-100" [style]="chartDivStyle">
     @if (loadingChart()) {
-      <div class="h-100">
+      <div class="h-100" [style]="chartDivStyle">
           <div class="d-flex justify-content-center">
               <it-spinner double="true"></it-spinner>
           </div>
       </div>
+    } @else {
+      <div [style]="chartDivStyle"
+        echarts
+        [options]="chartOptions"
+        (chartClick)="onChartClick($event)">
+      </div>
     }
-  </div>
 </div>

@@ -89,7 +89,7 @@ export class Rule implements Base {
         return result;
     }
 
-    public getCharts(rule: Rule, key: string, array: RuleChart[]): RuleChart[] {
+    public getCharts(rule: Rule|undefined, key: string, array: RuleChart[]): RuleChart[] {
         let result = array || [];        
         let childs : Map<String, Rule> = rule ? rule.childs : this.childs;
         if (childs) {

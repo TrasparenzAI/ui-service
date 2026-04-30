@@ -62,7 +62,7 @@ import { ResultRuleListComponent } from './result/result-rule-list.component';
 import { ResultPieRuleComponent } from './result/result-pie-rule.component';
 import { ServiceInfoComponent } from './info/service-info.component';
 import { ChatModule } from './ai/chat.module';
-
+import { NgxEchartsModule } from 'ngx-echarts';
 /**
  * Nel core module inserisco tutti i components necessari all'avvio dell'applicazione.
  * Esempio Pagina Iniziale ed Header.
@@ -118,7 +118,8 @@ import { ChatModule } from './ai/chat.module';
         NgSelectModule,
         Bs5UnixCronModule,
         NgxColorsModule,
-        ChatModule
+        ChatModule,
+        NgxEchartsModule.forRoot({ echarts: () => import('echarts') })
     ],
     exports: [
         AuthModule,

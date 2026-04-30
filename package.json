@@ -22,9 +22,6 @@
   },
   "private": true,
   "dependencies": {
-    "@amcharts/amcharts5": "^5.12.1",
-    "@amcharts/amcharts5-fonts": "^5.0.1",
-    "@amcharts/amcharts5-geodata": "^5.1.4",
     "@angular/animations": "^21.2.1",
     "@angular/cdk": "^21.0.0",
     "@angular/common": "^21.2.1",
@@ -62,6 +59,7 @@
     "leaflet.markercluster": "^1.5.3",
     "marked": "^17.0.6",
     "ngx-colors": "^3.6.0",
+    "ngx-echarts": "^21.0.0",
     "ngx-infinite-scroll": "^21.0.0",
     "popper.js": "^1.16.1",
     "reflect-metadata": "^0.2.2",

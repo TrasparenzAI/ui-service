@@ -23,11 +23,7 @@ import { AIService } from './ai.service';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import 'deep-chat-dev';
-
-import * as am5 from '@amcharts/amcharts5';
-import * as am5percent from "@amcharts/amcharts5/percent";
-import * as am5xy from "@amcharts/amcharts5/xy";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
+import * as echarts from 'echarts';
 
 /** Regex per estrarre il blocco TOOL_RESULTS dalla risposta del backend */
 const TOOL_RESULTS_RE = /<!--TOOL_RESULTS:([\s\S]*?)-->/;
@@ -325,7 +321,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
   private thinkingText = '';
   private aiBuffer = '';
   private isStreaming = false;
-  private chartRoots = new Map();
+  private chartInstances = new Map<HTMLElement, echarts.ECharts>();
   private toolResultsMap = new Map<number, any[]>();
 
   /**
@@ -900,99 +896,89 @@ export class ChatComponent implements OnInit, AfterViewInit {
   }
 
   renderChart(wrap: HTMLElement, cfg: any): void {
-    const root = am5.Root.new(wrap);
-    root.setThemes([am5themes_Animated.new(root)]);
-    this.chartRoots.set(wrap, root);
-    cfg.type === 'pie' || cfg.type === 'donut'
-      ? this.makePie(root, cfg)
-      : this.makeXY(root, cfg);
+    // Dispose previous instance on same element if any
+    const existing = this.chartInstances.get(wrap);
+    if (existing) { existing.dispose(); }
+
+    const instance = echarts.init(wrap);
+    this.chartInstances.set(wrap, instance);
+
+    const option = cfg.type === 'pie' || cfg.type === 'donut'
+      ? this.buildPieOption(cfg)
+      : this.buildXYOption(cfg);
+
+    instance.setOption(option);
   }
 
-  makeXY(root: any, cfg: any): void {
-    const chart = root.container.children.push(
-      am5xy.XYChart.new(root, {
-        panX: false, panY: false,
-        wheelX: 'none', wheelY: 'none',
-        paddingRight: 20
-      })
-    );
-
-    const xAxis = chart.xAxes.push(
-      am5xy.CategoryAxis.new(root, {
-        categoryField: 'category',
-        renderer: am5xy.AxisRendererX.new(root, { minGridDistance: 30 })
-      })
-    );
-    const yAxis = chart.yAxes.push(
-      am5xy.ValueAxis.new(root, {
-        renderer: am5xy.AxisRendererY.new(root, {})
-      })
-    );
-
+  private buildXYOption(cfg: any): echarts.EChartsOption {
     const seriesList = cfg.series ?? [{ name: cfg.title, data: cfg.data }];
+    const categories = (cfg.data ?? cfg.series[0].data).map((d: any) => d.category);
 
-    seriesList.forEach((s: any) => {
-      const SC = cfg.type === 'line' ? am5xy.LineSeries : am5xy.ColumnSeries;
-
-      const series = chart.series.push(
-        SC.new(root, {
-          name: s.name,
-          xAxis, yAxis,
-          valueYField: 'value',
-          categoryXField: 'category',
-          tooltip: am5.Tooltip.new(root, { labelText: '{categoryX}: {valueY}' })
-        })
-      );
-
-      if (cfg.type === 'line') {
-        series.strokes.template.setAll({ strokeWidth: 2 });
-        series.bullets.push(() =>
-          am5.Bullet.new(root, {
-            sprite: am5.Circle.new(root, { radius: 4, fill: series.get('fill') })
-          })
-        );
-      } else {
-        series.columns.template.setAll({
-          cornerRadiusTL: 4, cornerRadiusTR: 4,
-          width: am5.percent(70)
-        });
-      }
-
-      series.data.setAll(s.data);
-      series.appear(1000);
+    const series: any[] = seriesList.map((s: any) => {
+      const isLine = cfg.type === 'line';
+      return {
+        name: s.name,
+        type: isLine ? 'line' : 'bar',
+        data: s.data.map((d: any) => d.value),
+        ...(isLine ? {
+          symbol: 'circle',
+          symbolSize: 8,
+          lineStyle: { width: 2 }
+        } : {
+          barMaxWidth: '70%',
+          itemStyle: { borderRadius: [4, 4, 0, 0] }
+        }),
+        animationDuration: 1000
+      };
     });
 
-    xAxis.data.setAll(cfg.data ?? cfg.series[0].data);
-
-    if (seriesList.length > 1) {
-      const legend = chart.children.push(
-        am5.Legend.new(root, { centerX: am5.percent(50), x: am5.percent(50) })
-      );
-      legend.data.setAll(chart.series.values);
-    }
-
-    chart.appear(1000, 100);
+    return {
+      toolbox: {
+        feature: {
+          saveAsImage: {
+            title: 'Salva immagine',
+            name: 'grafico'
+          }
+        }
+      },
+      tooltip: { trigger: 'axis' },
+      legend: seriesList.length > 1 ? { bottom: 0 } : { show: false },
+      grid: { left: '3%', right: '4%', bottom: seriesList.length > 1 ? '15%' : '5%', containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: categories,
+        axisLabel: { rotate: categories.length > 6 ? 30 : 0 }
+      },
+      yAxis: { type: 'value' },
+      series
+    };
   }
 
-  makePie(root: any, cfg: any): void {
-    const chart = root.container.children.push(
-      am5percent.PieChart.new(root, {
-        innerRadius: cfg.type === 'donut' ? am5.percent(60) : 0
-      })
-    );
-    const series = chart.series.push(
-      am5percent.PieSeries.new(root, {
-        valueField: 'value',
-        categoryField: 'category',
-        tooltipText: '{category}: {value}'
-      })
-    );
-    series.data.setAll(cfg.data);
-
-    const legend = chart.children.push(
-      am5.Legend.new(root, { centerX: am5.percent(50), x: am5.percent(50) })
-    );
-    legend.data.setAll(series.dataItems);
-    series.appear(1000, 100);
+  private buildPieOption(cfg: any): echarts.EChartsOption {
+    return {
+      toolbox: {
+        feature: {
+          saveAsImage: {
+            title: 'Salva immagine',
+            name: 'grafico'
+          }
+        }
+      },
+      tooltip: {
+        trigger: 'item',
+        formatter: '{b}: {c} ({d}%)'
+      },
+      legend: { orient: 'vertical', right: '5%', top: 'middle' },
+      series: [
+        {
+          type: 'pie',
+          radius: cfg.type === 'donut' ? ['40%', '70%'] : '65%',
+          center: ['40%', '50%'],
+          data: cfg.data.map((d: any) => ({ name: d.category, value: d.value })),
+          label: { formatter: '{b}: {d}%' },
+          animationDuration: 1000
+        }
+      ]
+    };
   }
 }

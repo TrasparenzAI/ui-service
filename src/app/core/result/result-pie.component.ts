@@ -1,5 +1,4 @@
-import { Component, OnInit, HostListener, ViewChild, ElementRef, ViewEncapsulation } from '@angular/core';
-import { ConductorService } from '../conductor/conductor.service';
+import { Component, OnInit, OnDestroy, HostListener, ViewEncapsulation } from '@angular/core';
 import { Workflow } from '../conductor/workflow.model';
 import { ResultService } from './result.service';
 import { Rule, SelectRule } from '../rule/rule.model';
@@ -12,30 +11,20 @@ import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RuleService } from '../rule/rule.service';
-import { StatusColor } from '../../common/model/status-color.enum';
-
-import * as am5 from '@amcharts/amcharts5';
-import * as am5percent from "@amcharts/amcharts5/percent";
-import am5locales_it_IT from "@amcharts/amcharts5/locales/it_IT";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
+import { EChartsOption } from 'echarts';
 import { ConfigurationService } from '../configuration/configuration.service';
 
 @Component({
-    selector: 'app-result-pie',
-    templateUrl: './result-pie.component.html',
-    encapsulation: ViewEncapsulation.None,
-    providers: [DatePipe, DurationFormatPipe],
-    styles: ``,
-    standalone: false
+  selector: 'app-result-pie',
+  templateUrl: './result-pie.component.html',
+  encapsulation: ViewEncapsulation.None,
+  providers: [DatePipe, DurationFormatPipe],
+  styles: ``,
+  standalone: false
 })
-export class ResultPieComponent implements OnInit {
+export class ResultPieComponent implements OnInit, OnDestroy {
 
-  // options
   isWorkflowLoaded: boolean = false;
-
-  series: any;
-  series2: any;
-  root;
   chartDivStyle: string = 'height:75vh !important';
   protected isPieLoaded = false;
   protected ruleName: string;
@@ -50,27 +39,33 @@ export class ResultPieComponent implements OnInit {
   protected workflowId: string;
   protected statusColor: any;
 
-  @ViewChild('chartdiv', {static: true}) chartdiv: ElementRef;
-  @ViewChild('columnchartdiv', {static: true}) columnchartdiv: ElementRef;
+  // ECharts options (one per chart slot, or combined)
+  protected chartOptions: EChartsOption = {};
+
+  // Click handlers bound to chart via echarts events
+  protected onChartEventParent: (params: any) => void;
+  protected onChartEventChild: (params: any) => void;
+
+  // Internal state for double-pie navigation
+  private _parentKey: string | undefined;
 
   constructor(
     protected httpClient: HttpClient,
     private route: ActivatedRoute,
     private formBuilder: FormBuilder,
     private ruleService: RuleService,
-    private conductorService: ConductorService,
     private translateService: TranslateService,
     private responsive: BreakpointObserver,
     private router: Router,
     private datepipe: DatePipe,
     private durationFormatPipe: DurationFormatPipe,
     private configurationService: ConfigurationService,
-    private resultService: ResultService) {
-  }
+    private resultService: ResultService
+  ) {}
 
-  @HostListener("window:resize", []) 
+  @HostListener('window:resize', [])
   pieChartLabels() {
-    this.responsive.observe([Breakpoints.Small, Breakpoints.XSmall]).subscribe(result => {      
+    this.responsive.observe([Breakpoints.Small, Breakpoints.XSmall]).subscribe(result => {
       this.small = result?.matches;
       this.chartDivStyle = `height:${result?.matches ? '40' : '75'}vh !important`;
     });
@@ -78,15 +73,19 @@ export class ResultPieComponent implements OnInit {
 
   ngOnInit(): void {
     this.pieChartLabels();
+
     this.configurationService.getStatusColor().subscribe((color: any) => {
       this.statusColor = color;
-    }); 
+    });
+
     this.route.queryParams.subscribe((queryParams) => {
-      this.ruleName = queryParams.ruleName || Rule.AMMINISTRAZIONE_TRASPARENTE;
-      this.workflowId = queryParams.workflowId;
-      this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {        
+      this.ruleName = queryParams['ruleName'] || Rule.AMMINISTRAZIONE_TRASPARENTE;
+      this.workflowId = queryParams['workflowId'];
+
+      this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
         this.isWorkflowLoaded = true;
-        let lastWorkflowId;
+        let lastWorkflowId!: string;
+
         workflows.forEach((workflow: Workflow) => {
           if (workflow.isCompleted) {
             if (!lastWorkflowId) {
@@ -102,26 +101,36 @@ export class ResultPieComponent implements OnInit {
             });
           }
         });
+
         this.filterFormSearch = this.formBuilder.group({
-          workflowId: new FormControl(queryParams.workflowId || lastWorkflowId)
+          workflowId: new FormControl(queryParams['workflowId'] || lastWorkflowId)
         });
-        this.filterFormSearch.valueChanges.pipe(
-          debounceTime(500)
-        ).subscribe((valueChanges: any) => {
+
+        this.filterFormSearch.valueChanges.pipe(debounceTime(500)).subscribe((valueChanges: any) => {
           this.workflowId = valueChanges.workflowId;
           this.loadRules(this.workflowId || lastWorkflowId);
         });
-        this.root = am5.Root.new(this.chartdiv.nativeElement);
-        this.root.locale = am5locales_it_IT;
       });
     });
   }
 
-  loadRules(workflowId: string) {
+  ngOnDestroy(): void {}
+
+  /** Dispatches ECharts click events to the correct handler based on series index */
+  onChartClick(params: any): void {
+    if (params.seriesIndex === 0 && this.onChartEventParent) {
+      this.onChartEventParent(params);
+    } else if (params.seriesIndex === 1 && this.onChartEventChild) {
+      this.onChartEventChild(params);
+    }
+  }
+
+  loadRules(workflowId: string): void {
     this.ruleService.getRules().subscribe((resultRules: Map<String, Rule>) => {
       this.optionsRule = [];
-      let rule = resultRules.get(this.workflowRuleName(workflowId));
-      let rules: SelectRule[] = rule.getKeys(undefined, undefined, Rule.AMMINISTRAZIONE_TRASPARENTE, [], -1);
+      const rule = resultRules.get(this.workflowRuleName(workflowId));
+      const rules: SelectRule[] = rule.getKeys(undefined, undefined, Rule.AMMINISTRAZIONE_TRASPARENTE, [], -1);
+
       Object.keys(rules).forEach((index) => {
         this.optionsRule.push({
           value: rules[index].key,
@@ -137,259 +146,231 @@ export class ResultPieComponent implements OnInit {
 
   workflowRuleName(workflowId: string): string {
     if (this.optionsWorkflow) {
-      let workflows: any[] = this.optionsWorkflow.filter((value: any) => {
-        if (value.value == workflowId) {
-          return value;
-        }
-      });
-      if (workflows.length == 1) {
-        return workflows[0].ruleName;  
+      const workflows: any[] = this.optionsWorkflow.filter((value: any) => value.value == workflowId);
+      if (workflows.length === 1) {
+        return workflows[0].ruleName;
       }
     }
     return Rule.AMMINISTRAZIONE_TRASPARENTE;
-  }  
-  
-  loadResult() : void {
+  }
+
+  loadResult(): void {
     this.isPieLoaded = false;
-    let wokflowId = this.filterFormSearch.value.workflowId;
-    let parentKey = this.rules.filter((rule: SelectRule) => {
-      return rule.key === this.filterFormSearch.value.ruleName
-    })[0].parentKey;
-    let title = this.rules.filter((rule: SelectRule) => {
-      return rule.key === this.filterFormSearch.value.ruleName
-    })[0].text;
-    
-    this.resultService.getWorkflowMap(this.filterFormSearch.value.ruleName, [wokflowId]).subscribe((result: any) => {
-      if (!result[wokflowId]) {
+
+    const workflowId = this.filterFormSearch.value.workflowId;
+    const selectedRuleName = this.filterFormSearch.value.ruleName;
+
+    const matchedRule = this.rules.find((rule: SelectRule) => rule.key === selectedRuleName);
+    const parentKey = matchedRule?.parentKey;
+    const title = matchedRule?.text;
+
+    this.resultService.getWorkflowMap(selectedRuleName, [workflowId]).subscribe((result: any) => {
+      if (!result[workflowId]) {
         this.router.navigate(['error/not-found']);
+        return;
       }
-      let chart = result[wokflowId];
+
+      const chart = result[workflowId];
+
       if (parentKey) {
         if (this.small) {
           this.chartDivStyle = `height:75vh !important`;
         }
-        let titleParent = this.rules.filter((rule: SelectRule) => {
-          return rule.key === parentKey
-        })[0].text;
-        this.resultService.getWorkflowMap(parentKey, [wokflowId]).subscribe((result: any) => {
-          let total = Number(result[wokflowId][200]||0) + Number(result[wokflowId][202]||0); 
-          chart[501] = total - Number(Object.values(chart).reduce((a: number, b: number) => a + b, 0)); 
-          this.loadChart(result[wokflowId], true, chart, titleParent, title, parentKey);
+        const titleParent = this.rules.find((rule: SelectRule) => rule.key === parentKey)?.text;
+
+        this.resultService.getWorkflowMap(parentKey, [workflowId]).subscribe((result2: any) => {
+          const total = Number(result2[workflowId][200] || 0) + Number(result2[workflowId][202] || 0);
+          chart[501] = total - Number(Object.values(chart).reduce((a: number, b: number) => a + b, 0));
+          this.loadChart(result2[workflowId], true, chart, titleParent, title, parentKey);
         });
-      } else {        
+      } else {
         this.loadChart(chart, false);
       }
-    }); 
+    });
   }
-  
-  loadChart(result: any, double: boolean, result2?: any, titleParent?: string, title?: string, parentKey?: string) {
+
+  loadChart(result: any, double: boolean, result2?: any, titleParent?: string, title?: string, parentKey?: string): void {
     this.isPieLoaded = true;
-    if (this.chartdiv) {
-      this.root.setThemes([
-        am5themes_Animated.new(this.root)
-      ]);
-      this.root.container.children.clear();
+    this._parentKey = parentKey;
 
-      this.root.container.set("layout", this.root.verticalLayout);
-
-      // Create container to hold charts
-      let chartContainer = this.root.container.children.push(am5.Container.new(this.root, {
-        layout: this.small ? this.root.verticalLayout : this.root.horizontalLayout,
-        width: am5.p100,
-        height: am5.p100
+    const buildSeriesData = (dataMap: any) =>
+      Object.keys(dataMap).map((key) => ({
+        name: this.translateService.instant(`it.rule.status.${key}.ruletitle`),
+        value: dataMap[key],
+        itemStyle: {
+          color: this.statusColor[`status_${key}`],
+          borderColor: this.statusColor[`status_${key}`],
+          borderWidth: 2
+        },
+        extra: { key }
       }));
 
-      let chart = chartContainer.children.push(
-        am5percent.PieChart.new(this.root, {
-          endAngle: 180,
-          paddingTop: this.small ? 80 : 0
-        })
-      );
-      let series = chart.series.push(
-        am5percent.PieSeries.new(this.root, {
-          valueField: "value",
-          categoryField: "name"
-        })
-      );
-      
-      series.states.create("hidden", {
-        endAngle: -90
-      });
+    const labelFontSize = this.small ? 12 : 20;
+    const labelFontWeight = this.small ? 'normal' : 'bold';
 
-      series.labels.template.setAll({
-        fontSize: this.small ? 12 : 24,
-        fontWeight: this.small ? 'normal': 'bold',
-        text: "{valuePercentTotal.formatNumber('0.00')}%",
-      });
+    const basePieSeries = (name: string, data: any[], radius: string, center: [string, string]): any => ({
+      name,
+      type: 'pie',
+      radius,
+      center,
+      label: {
+        show: true,
+        formatter: (params: any) => `${params.percent?.toFixed(2)}%`,
+        fontSize: labelFontSize,
+        fontWeight: labelFontWeight,
+        color: '#000000',
+      },
+      emphasis: {
+        label: { show: true }
+      },
+      data,
+      animationDuration: 1000,
+      animationDelay: 100
+    });
 
-      series.ticks.template.setAll({
-        strokeWidth: 2,
-        fill: am5.color('#000000'),
-        strokeOpacity: 1
-      })
+    if (double) {
+      // Two half-pie charts side by side (or stacked on small screens)
+      const parentData = buildSeriesData(result);
+      const childData = buildSeriesData(result2);
 
-      series.slices.template.setAll({
-        templateField: "sliceSettings"
-      });
+      const [parentCenter, childCenter]: [[string, string], [string, string]] = this.small
+        ? [['50%', '25%'], ['50%', '75%']]
+        : [['25%', '60%'], ['75%', '60%']];
 
-      series.slices.template.setAll({
-        strokeWidth: 2,
-        tooltipText:
-          "{category}: {value.formatNumber(',000')}"
-      });
-      
-      if (double) {
+      const totalParent = parentData.reduce((sum, item) => sum + item.value, 0);
+      const totalChild = childData.reduce((sum, item) => sum + item.value, 0);
 
-        chart.children.push(am5.Label.new(this.root, {
-          centerX: am5.percent(50),
-          x: am5.percent(50),
-          y: am5.percent(this.small? -30 : 0),
-          fontWeight: 'bold',
-          maxChars: 40,
-          text: titleParent,
-          populateText: true,
-          fontSize: this.small? "1em": "1.5em"
-        }));
-
-        series.children.push(am5.Label.new(this.root, {
-          centerX: am5.percent(50),
-          y: am5.percent(this.small? -65 : -45),
-          fontWeight: 'bold',
-          text: "{valueSum}",
-          populateText: true,
-          fontSize: this.small? "1em": "1.5em"
-        }));
-
-
-        let chart2 = chartContainer.children.push(
-          am5percent.PieChart.new(this.root, {
-            radius: am5.percent(70),
-            endAngle: 180
-          })
-        );
-        let series2 = chart2.series.push(
-          am5percent.PieSeries.new(this.root, {
-            valueField: "value",
-            categoryField: "name"
-          })
-        );
-        series2.states.create("hidden", {
-          endAngle: -90
-        });
-  
-        series2.labels.template.setAll({
-          fontSize: this.small ? 12 : 24,
-          fontWeight: this.small ? 'normal': 'bold',
-          text: "{valuePercentTotal.formatNumber('0.00')}%",
-        });
-        series2.ticks.template.setAll({
-          strokeWidth: 2,
-          fill: am5.color('#000000'),
-          strokeOpacity: 1
-        })
-  
-        series2.slices.template.setAll({
-          templateField: "sliceSettings"
-        });
-  
-        series2.slices.template.setAll({
-          strokeWidth: 2,
-          tooltipText:
-            "{category}: {value.formatNumber(',000')}"
-        });
-
-        chart2.children.push(am5.Label.new(this.root, {
-          centerX: am5.percent(50),
-          x: am5.percent(50),
-          y: am5.percent(this.small? -10 : 0),
-          fontWeight: 'bold',
-          maxChars: 40,
-          text: title,
-          populateText: true,
-          fontSize: this.small? "1em": "1.5em"
-        }));
-
-        series2.children.push(am5.Label.new(this.root, {
-          centerX: am5.percent(50),
-          y: am5.percent(this.small? -50 : -45),
-          fontWeight: 'bold',
-          text: "{valueSum}",
-          populateText: true,
-          fontSize: this.small? "1em": "1.5em"
-        }));
-
-
-        let single = [];
-        Object.keys(result2).forEach((key) => {
-          single.push({
-            name: this.translateService.instant(`it.rule.status.${key}.ruletitle`),
-            value: result2[key],
-            sliceSettings: {
-              fill: am5.color(this.statusColor[`status_${key}`]),
-              stroke: am5.color(this.statusColor[`status_${key}`])
-            },
-            extra: {
-              key: key  
+      this.chartOptions = {
+        toolbox: {
+          feature: {
+            saveAsImage: {
+              title: 'Salva immagine',
+              name: 'sezioni_confronto'
             }
-          });
-        });
-        
-        series2.slices.template.events.on("click", function(ev) {
-          var status = ev.target.dataItem.dataContext.extra.key;
-          if (status != 501) {
-            this.router.navigate(['/search'],  { queryParams: {
-              workflowId: this.filterFormSearch.value.workflowId,
-              ruleName: this.filterFormSearch.value.ruleName,
-              status: status 
-            }});  
-          } else {
-            this.router.navigate(['/search'],  { queryParams: {
+          }
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: (params: any) =>
+            `${params.name}: ${Number(params.value).toLocaleString('it-IT')}`
+        },
+        title: [
+          {
+            text: titleParent,
+            subtext: `${Number(totalParent).toLocaleString('it-IT')}`,
+            left: this.small ? '50%' : '25%',
+            top: this.small ? '0%' : '10%',
+            textAlign: 'center',
+            textStyle: { fontSize: this.small ? 14 : 20, fontWeight: 'bold' },
+            subtextStyle: { fontSize: this.small ? 14 : 20, fontWeight: 'bold', color: '#000' },
+          },
+          {
+            text: title,
+            subtext: `${Number(totalChild).toLocaleString('it-IT')}`,
+            left: this.small ? '50%' : '75%',
+            top: this.small ? '50%' : '10%',
+            textAlign: 'center',
+            textStyle: { fontSize: this.small ? 14 : 20, fontWeight: 'bold' },
+            subtextStyle: { fontSize: this.small ? 14 : 20, fontWeight: 'bold', color: '#000' },
+          }
+        ],
+        series: [
+          basePieSeries('parent', parentData, this.small ? '50%': '75%', parentCenter),
+          basePieSeries('child', childData, this.small ? '50%': '75%', childCenter)
+        ]
+      };
+
+      // Click handlers: series index 0 = parent, 1 = child
+      this.onChartEventParent = (params: any) => {
+        const key = params?.data?.extra?.key;
+        if (!key) return;
+        if (key != 501) {
+          this.router.navigate(['/search'], {
+            queryParams: {
               workflowId: this.filterFormSearch.value.workflowId,
               ruleName: parentKey || this.filterFormSearch.value.ruleName,
-              child: true 
-            }});
-          }
-        }, this);
-  
-        series2.data.setAll(single);
-        series2.appear(1000, 100);
-        this.series2 = series2;
-      }
-
-      series.slices.template.events.on("click", function(ev) {
-        var status = ev.target.dataItem.dataContext.extra.key;
-        if (status != 501) {
-          this.router.navigate(['/search'],  { queryParams: {
-            workflowId: this.filterFormSearch.value.workflowId,
-            ruleName: parentKey || this.filterFormSearch.value.ruleName,
-            status: status 
-          }});  
+              status: key
+            }
+          });
         } else {
-          this.router.navigate(['/search'],  { queryParams: {
-            workflowId: this.filterFormSearch.value.workflowId,
-            ruleName: parentKey || this.filterFormSearch.value.ruleName,
-            child: true 
-          }});
+          this.router.navigate(['/search'], {
+            queryParams: {
+              workflowId: this.filterFormSearch.value.workflowId,
+              ruleName: parentKey || this.filterFormSearch.value.ruleName,
+              child: true
+            }
+          });
         }
-      }, this);
+      };
 
-      let single = [];
-      Object.keys(result).forEach((key) => {
-        single.push({
-          name: this.translateService.instant(`it.rule.status.${key}.ruletitle`),
-          value: result[key],
-          sliceSettings: {
-            fill: am5.color(this.statusColor[`status_${key}`]),
-            stroke: am5.color(this.statusColor[`status_${key}`])
-          },
-          extra: {
-            key: key  
+      this.onChartEventChild = (params: any) => {
+        const key = params?.data?.extra?.key;
+        if (!key) return;
+        if (key != 501) {
+          this.router.navigate(['/search'], {
+            queryParams: {
+              workflowId: this.filterFormSearch.value.workflowId,
+              ruleName: this.filterFormSearch.value.ruleName,
+              status: key
+            }
+          });
+        } else {
+          this.router.navigate(['/search'], {
+            queryParams: {
+              workflowId: this.filterFormSearch.value.workflowId,
+              ruleName: parentKey || this.filterFormSearch.value.ruleName,
+              child: true
+            }
+          });
+        }
+      };
+
+    } else {
+      // Single half-pie chart
+      const singleData = buildSeriesData(result);
+
+      this.chartOptions = {
+        toolbox: {
+          feature: {
+            saveAsImage: {
+              title: 'Salva immagine',
+              name: 'sezioni'
+            }
           }
-        });
-      });
-      series.data.setAll(single);
-      series.appear(1000, 100);
-      this.series = series;
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: (params: any) =>
+            `${params.name}: ${Number(params.value).toLocaleString('it-IT')}`
+        },
+        series: [
+          basePieSeries('main', singleData, '90%', ['50%', '50%'])
+        ]
+      };
+
+      this.onChartEventParent = (params: any) => {
+        const key = params?.data?.extra?.key;
+        if (!key) return;
+        if (key != 501) {
+          this.router.navigate(['/search'], {
+            queryParams: {
+              workflowId: this.filterFormSearch.value.workflowId,
+              ruleName: this.filterFormSearch.value.ruleName,
+              status: key
+            }
+          });
+        } else {
+          this.router.navigate(['/search'], {
+            queryParams: {
+              workflowId: this.filterFormSearch.value.workflowId,
+              ruleName: this.filterFormSearch.value.ruleName,
+              child: true
+            }
+          });
+        }
+      };
+
+      this.onChartEventChild = null;
     }
   }
 }

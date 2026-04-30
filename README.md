@@ -25,12 +25,12 @@ Integra e mostra i dati presenti nei vari servizi fornendo la possibilità, aven
 ## Dipendenze principali
 | Nome                                                              | Versione |
 |-------------------------------------------------------------------|----------|
-| [Angular](https://angular.dev/)                                   | 20.0.4   |
-| [Amcharts5](https://www.amcharts.com/)                            | 5.12.1   |
+| [Angular](https://angular.dev/)                                   | 21.2.1   |
+| [Apache ECharts](https://echarts.apache.org/)                     | 21.0.0   |
 | [Leaflet](https://leafletjs.com/)                                 | 1.9.4    |
 | [d3-org-chart](https://github.com/bumbeishvili/org-chart)         | 3.1.1    |
-| [bootstrap-italia](https://italia.github.io/bootstrap-italia/)    | 2.16.0   |
-| [Design Angular Kit](https://italia.github.io/design-angular-kit) | 2.0.0    |
+| [bootstrap-italia](https://italia.github.io/bootstrap-italia/)    | 2.17.4   |
+| [Design Angular Kit](https://italia.github.io/design-angular-kit) | 21.2.0   |
 
 ## Variabili di Ambiente
 
