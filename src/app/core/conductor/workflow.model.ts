@@ -21,7 +21,7 @@ export class PropertyStatusConverter extends EnumConverter<Status> {
 @JsonObject("Task")
 export class Task {
     @JsonProperty('referenceTaskName')
-    public referenceTaskName: string;
+    public referenceTaskName!: string;
     @JsonProperty('outputData')
     public outputData: any;
 }
@@ -29,29 +29,29 @@ export class Task {
 @JsonObject("Workflow")
 export class Workflow implements Base {
     @JsonProperty('workflowId')
-    public workflowId: string;
+    public workflowId!: string;
     @JsonProperty('correlationId')
-    public correlationId: string;
+    public correlationId!: string;
     @JsonProperty('workflowName')
-    public workflowName: string;    
+    public workflowName!: string;    
     @JsonProperty('version')
-    public version: number;   
+    public version!: number;   
     @JsonProperty('startTime', DateTimeConverter)
-    public startTime: Date;
+    public startTime!: Date;
     @JsonProperty('updateTime', DateTimeConverter)
-    public updateTime: Date;
+    public updateTime!: Date;
     @JsonProperty('endTime', DateTimeConverter)
-    public endTime: Date;    
+    public endTime!: Date;    
     @JsonProperty('status', PropertyStatusConverter, true)
-    public status: Status;
+    public status!: Status;
     @JsonProperty('tasks')
-    public tasks: Task[];
+    public tasks!: Task[];
     @JsonProperty('input')
     public input: any;    
     @JsonProperty('rootRule')
-    public rootRule: string;
+    public rootRule!: string;
     @JsonProperty('codiceIpa')
-    public codiceIpa: string;
+    public codiceIpa!: string;
 
     public get root_rule() {
         return this.rootRule || this.input?.root_rule;
@@ -65,7 +65,7 @@ export class Workflow implements Base {
     } 
 
     private result_count: any;
-    public totalResult: number;
+    public totalResult!: number|undefined;
     public isLoadingCsv: boolean = false;
 
     constructor() {

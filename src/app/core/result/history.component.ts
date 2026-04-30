@@ -8,9 +8,10 @@ import { Result } from './result.model';
 import { ResultGroupingService } from './result-grouping.service';
 import { ConfigurationService } from '../configuration/configuration.service';
 import { Company } from '../company/company.model';
-import { ConductorService } from '../conductor/conductor.service';
 import { Workflow } from '../conductor/workflow.model';
 import { EChartsOption } from 'echarts';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-history',
@@ -21,27 +22,33 @@ import { EChartsOption } from 'echarts';
 })
 export class HistoryComponent implements OnInit {
 
-  protected filterFormSearch: FormGroup;
+  protected filterFormSearch!: FormGroup;
   protected collapse: boolean = false;
   protected isLoadingCsv: boolean = false;
-  protected ruleName: string;
-  protected company: Company;
+  protected ruleName!: string;
+  protected company!: Company;
 
   loadingChart = signal(false);
   protected chartOptions: EChartsOption = {};
+  protected small: boolean = false;
 
   constructor(
     private formBuilder: FormBuilder,
     private resultService: ResultService,
     private resultGroupingService: ResultGroupingService,
     private configurationService: ConfigurationService,
-    private conductorService: ConductorService,
+    public translateService: TranslateService,
+    private responsive: BreakpointObserver,
     private route: ActivatedRoute,
     private datepipe: DatePipe,
     protected router: Router
   ) {}
 
   ngOnInit(): void {
+    this.responsive.observe([Breakpoints.Small, Breakpoints.XSmall]).subscribe(result => {
+      this.small = result?.matches;
+    });
+
     this.route.queryParams.subscribe((queryParams) => {
       this.ruleName = queryParams['ruleName'] == '' ? '' : queryParams['ruleName'] || Rule.AMMINISTRAZIONE_TRASPARENTE;
       this.filterFormSearch = this.formBuilder.group({
@@ -58,7 +65,7 @@ export class HistoryComponent implements OnInit {
           ipaWorkflows.concat(workflows)
             .sort((a, b) => (a.startTime < b.startTime) ? 1 : -1)
             .forEach((workflow: Workflow) => {
-              workflowsMap[workflow.workflowId] = this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy');
+              workflowsMap[workflow.workflowId] = this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy')!;
             });
 
           this.resultService.getAll({
@@ -101,11 +108,24 @@ export class HistoryComponent implements OnInit {
 
   private loadChart(chartData: { date: string; count: number; color: string }[]): void {
     this.chartOptions = {
+      title: {
+        text: this.company?.denominazioneEnte,
+        subtext: this.translateService.instant(`it.company.history-description`), 
+        left: 'center',
+        textStyle: {
+          fontSize: this.small? 14: 28,
+          fontWeight: 'bold',
+          fontFamily: 'monospace',
+          overflow: 'truncate',
+          width: window.innerWidth * 0.7
+        },
+        padding: [0, 0, 0, 0]
+      },
       toolbox: {
         feature: {
           saveAsImage: {
             title: 'Salva immagine',
-            name: 'storico_sezioni'
+            name: `storico_sezioni_${this.company?.codiceIpa}`
           }
         }
       },

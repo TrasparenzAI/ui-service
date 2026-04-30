@@ -74,23 +74,22 @@ export class HomeComponent implements OnInit {
     this.onResize();
     this.configurationService.getStatusColor().subscribe((color: any) => {
       this.statusColor = color;
-    });
-
-    this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
-      this.resultService.getWorkflowMap(Rule.AMMINISTRAZIONE_TRASPARENTE, workflows.map(a => a.workflowId)).subscribe((result: any) => {
-        this.workflows = workflows;
-        workflows.forEach((workflow, i) => {
-          if (workflow.isCompleted) {
-            if (!this.currentWorkflow) {
-              this.currentWorkflow = workflow;
+      this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
+        this.resultService.getWorkflowMap(Rule.AMMINISTRAZIONE_TRASPARENTE, workflows.map(a => a.workflowId)).subscribe((result: any) => {
+          this.workflows = workflows;
+          workflows.forEach((workflow, i) => {
+            if (workflow.isCompleted) {
+              if (!this.currentWorkflow) {
+                this.currentWorkflow = workflow;
+              }
             }
+            workflow.resultCount = result[workflow.workflowId] || {};
+          });
+          this.isWorkflowLoaded = true;
+          if (this.currentWorkflow) {
+            this.loadChart(this.currentWorkflow.resultCount, this.currentWorkflow.workflowId);
           }
-          workflow.resultCount = result[workflow.workflowId] || {};
         });
-        this.isWorkflowLoaded = true;
-        if (this.currentWorkflow) {
-          this.loadChart(this.currentWorkflow.resultCount, this.currentWorkflow.workflowId);
-        }
       });
     });
   }

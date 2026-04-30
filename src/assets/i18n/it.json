@@ -204,7 +204,7 @@
       "map": "Mappa",      
       "search": "Cerca Amministrazioni",
       "history": "Storico",
-      "history-description": "Storico sezioni AT rilevate del {{denominazioneEnte}}",
+      "history-description": "Storico sezioni AT rilevate",
       "visibile": "Visibile",
       "message-invisibile": "Sei sicuro di volere rendere NON VISIBILE l'amministrazione {{denominazioneEnte}}?",
       "message-visibile": "Sei sicuro di volere rendere nuovamente VISIBILE l'amministrazione {{denominazioneEnte}}?"
