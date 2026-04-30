@@ -1,7 +1,7 @@
 {
   "name": "trasparenzai",
-  "version": "2.5.2",
-  "buildDate": "2026-04-20T10:19:48.635Z",
+  "version": "2.6.0",
+  "buildDate": "2026-04-30T07:11:02.891Z",
   "license": "GNU Affero General Public License v3.0",
   "scripts": {
     "android": "tns run android",
