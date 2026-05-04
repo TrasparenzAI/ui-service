@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ViewChild, ElementRef, ViewEncapsulation, OnDestroy } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Workflow } from '../conductor/workflow.model';
 import { ResultService } from '../result/result.service';
 import { Rule } from '../rule/rule.model';
@@ -20,19 +20,19 @@ import { Router } from '@angular/router';
     encapsulation: ViewEncapsulation.None,
     providers: [DatePipe, DurationFormatPipe],
     styles: `
-  .home-main {
-    background: #d1e7ff left center no-repeat;
-  }
-  .callout-inner {
-    padding: 1rem!important;
-    margin-bottom: 0px!important;
-  }
-  .callout-title {
-    top: -2rem!important;
-  }
-  .legend {
-    margin: -24px;
-  }
+    .home-main {
+      background: #d1e7ff left center no-repeat;
+    }
+    .callout-inner {
+      padding: 1rem!important;
+      margin-bottom: 0px!important;
+    }
+    .callout-title {
+      top: -2rem!important;
+    }
+    .legend {
+      margin: -24px;
+    }
   `,
     standalone: false
 })
@@ -57,6 +57,7 @@ export class HomeComponent implements OnInit {
     protected httpClient: HttpClient,
     private router: Router,
     private translateService: TranslateService,
+    private datepipe: DatePipe,
     private configurationService: ConfigurationService,
     private responsive: BreakpointObserver,
     private resultService: ResultService) {
@@ -87,7 +88,11 @@ export class HomeComponent implements OnInit {
           });
           this.isWorkflowLoaded = true;
           if (this.currentWorkflow) {
-            this.loadChart(this.currentWorkflow.resultCount, this.currentWorkflow.workflowId);
+            this.loadChart(
+              this.currentWorkflow.resultCount, 
+              this.currentWorkflow.workflowId, 
+              this.datepipe.transform(this.currentWorkflow.startTime, 'dd/MM/yyyy')
+            );
           }
         });
       });
@@ -98,7 +103,7 @@ export class HomeComponent implements OnInit {
     this.onChartEvent(params);
   }
 
-  loadChart(result: any, workflowId: string) {
+  loadChart(result: any, workflowId: string, startTime: any) {
     let single: any[] = [];
     if (result) {
       Object.keys(result).forEach((key) => {
@@ -139,14 +144,16 @@ export class HomeComponent implements OnInit {
       animationDelay: 100
     });
     this.chartOptions = undefined as any;
+    const title = `${this.translateService.instant(`it.navigation.grafici-mappe.grafico-statistiche-regola`)} del ${startTime}`;
 
     setTimeout(() => {
+      const title = `${this.translateService.instant(`it.workflow.date`, {startTime: startTime})}`;
       this.chartOptions = {
         toolbox: {
           feature: {
             saveAsImage: {
               title: 'Salva immagine',
-              name: `analisi_completa`
+              name: `${title}`
             }
           }
         },

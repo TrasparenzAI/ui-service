@@ -1,5 +1,4 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewEncapsulation, signal } from '@angular/core';
-import { ConductorService } from '../conductor/conductor.service';
 import { Workflow } from '../conductor/workflow.model';
 import { ResultService } from './result.service';
 import { Rule, SelectRule } from '../rule/rule.model';
@@ -29,14 +28,14 @@ export class ResultPieRuleComponent implements OnInit, OnDestroy {
   chartDivStyle: string = 'height:50vh !important';
   protected isPieLoaded = false;
 
-  protected filterFormSearch: FormGroup;
+  protected filterFormSearch!: FormGroup;
 
   protected optionsWorkflow: Array<any> = [];
-  protected optionsRule: Array<any>;
-  protected rules: SelectRule[];
+  protected optionsRule!: Array<any>;
+  protected rules!: SelectRule[];
 
   protected small: boolean = false;
-  protected workflowId: string;
+  protected workflowId!: string;
   protected statusColor: any;
 
   loadingChart = signal(false);
@@ -51,7 +50,6 @@ export class ResultPieRuleComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private formBuilder: FormBuilder,
-    private conductorService: ConductorService,
     private translateService: TranslateService,
     private responsive: BreakpointObserver,
     private datepipe: DatePipe,
@@ -77,7 +75,7 @@ export class ResultPieRuleComponent implements OnInit, OnDestroy {
       this.workflowId = queryParams['workflowId'];
       this.resultService.listWorkflows().subscribe((workflows: Workflow[]) => {
         this.isWorkflowLoaded = true;
-        let lastWorkflowId: string;
+        let lastWorkflowId!: string;
         workflows.forEach((workflow: Workflow) => {
           if (workflow.isCompleted) {
             if (!lastWorkflowId) {
@@ -85,6 +83,7 @@ export class ResultPieRuleComponent implements OnInit, OnDestroy {
             }
             this.optionsWorkflow.push({
               value: workflow.workflowId,
+              startTime: this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy'),
               text: this.translateService.instant('it.workflow.textfull', {
                 startTime: this.datepipe.transform(workflow.startTime, 'dd/MM/yyyy'),
                 duration: this.durationFormatPipe.transform(workflow.executionTime)
@@ -112,7 +111,11 @@ export class ResultPieRuleComponent implements OnInit, OnDestroy {
     this.isPieLoaded = false;
 
     const workflowId = this.filterFormSearch.value.workflowId;
-
+    let startTime = this.optionsWorkflow.filter((value: any) => {
+      if (value.value == workflowId) {
+        return value;
+      }
+    })[0].startTime;
     this.resultService.getWorkflowMap(Rule.AMMINISTRAZIONE_TRASPARENTE, [workflowId], false).subscribe((resultAll: any) => {
       const others: any = {};
       Object.keys(resultAll[workflowId])
@@ -120,13 +123,13 @@ export class ResultPieRuleComponent implements OnInit, OnDestroy {
         .forEach(key => { others[key] = resultAll[workflowId][key]; });
 
       this.resultService.countResultsAndGroupByCategoriesWidthWorkflowIdAndStatus(workflowId).subscribe((result: any) => {
-        this.loadChart(result, others);
+        this.loadChart(result, others, startTime);
         this.loadingChart.set(false);
       });
     });
   }
 
-  loadChart(result: any, resultAll: any): void {
+  loadChart(result: any, resultAll: any, startTime: string): void {
     this.isPieLoaded = true;
 
     // Build unified series data array (same order used for click resolution)
@@ -175,13 +178,25 @@ export class ResultPieRuleComponent implements OnInit, OnDestroy {
     const formattedTotal = total.toLocaleString('it-IT');
 
     const labelFontSize = this.small ? 12 : 20;
-
+    const title = `${this.translateService.instant(`it.navigation.grafici-mappe.grafico-statistiche-regola`)} del ${startTime}`;
     this.chartOptions = {
+      title: {
+        text: `${title}`, 
+        left: 'center',
+        textStyle: {
+          fontSize: this.small? 14: 28,
+          fontWeight: 'bold',
+          fontFamily: 'monospace',
+          overflow: 'truncate',
+          width: window.innerWidth * 0.7
+        },
+        padding: [0, 0, 0, 0]
+      },
       toolbox: {
         feature: {
           saveAsImage: {
             title: 'Salva immagine',
-            name: 'compliance_per_classi'
+            name: `${title}`
           }
         }
       },
@@ -232,6 +247,7 @@ export class ResultPieRuleComponent implements OnInit, OnDestroy {
       series: [
         {
           type: 'pie',
+          top: this.small ? 35 : 75,
           radius: ['0%', '90%'],
           center: ['50%', '50%'],
           label: {
