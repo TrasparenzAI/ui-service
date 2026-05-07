@@ -58,26 +58,26 @@ app.get('/badge/:codiceIpa.png', async (req, res) => {
       height,
       time: new Date().toISOString()
     });
-
-    // 1. Recupera root_rule dalla configurazione
-    const rootRule = await getRootRule();
     
-    const url = `${RESULT_API_URL}/v1/results/codiceipa?codiceIpa=${codiceIpa}&size=500&noCache=true`;
+    const url = `${RESULT_API_URL}/v1/results/codiceipa?codiceIpa=${codiceIpa}&size=500`;
 
     const response = await fetch(url);
-    if (!response.ok) return res.status(404).end();
+
     const data = await response.json();
     const resultsArray = data.content || []; 
+    
+    if (resultsArray.length == 0) return res.status(404).end();
 
     // 2. Filtra sull'array identificato
     const rulesOK = resultsArray.filter(r => r.status == 200 || r.status == 202).length;
 
+    const rootRule = await getRootRule();
     const totalRules = await getTotalRules(rootRule); 
 
     const gaugeData = {
       rulesOK: rulesOK,
       total: totalRules,
-      denominazioneEnte: resultsArray[0].company.denominazioneEnte,
+      denominazioneEnte: resultsArray[0]?.company?.denominazioneEnte,
       codiceIpa
     };
 
