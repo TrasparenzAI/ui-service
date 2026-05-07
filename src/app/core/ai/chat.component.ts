@@ -255,6 +255,15 @@ export class ChatComponent implements OnInit, AfterViewInit {
       height: 36px;
       border-radius: 8px;
     }
+    /* Rimuove il bubble grigio per i messaggi di errore */
+    .deep-chat-message-ai-outer:has(.ai-error-bubble),
+    .deep-chat-message-ai:has(.ai-error-bubble),
+    .message-bubble:has(.ai-error-bubble) {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
     `;
 
   customButtons = [
@@ -469,6 +478,33 @@ export class ChatComponent implements OnInit, AfterViewInit {
     el.responseInterceptor = (responseDetails: any) => {
       console.log('[interceptor] responseDetails keys:', Object.keys(responseDetails ?? {}));
       console.log('[interceptor] responseDetails:', JSON.stringify(responseDetails));
+      // ── ERROR ────────────────────────────────────────────────────────────────
+      if (responseDetails?.error) {
+        this.resetStreamState();
+        this.removeLoadingMessage();
+        const errMsg = responseDetails.error as string;
+        const friendlyMsg = errMsg.includes('does not support tools')
+          ? `Il modello selezionato non supporta i tool. Seleziona un modello compatibile.`
+          : errMsg;
+        return {
+          html: `
+            <div class="ai-error-bubble" style="
+              display:flex; align-items:flex-start; gap:10px;
+              background:#fff3f3; border:1.5px solid #e53935;
+              border-radius:10px; padding:12px 16px;
+              font-family: Titillium Web, system-ui, sans-serif;
+              color:#b71c1c; font-size:0.92rem; line-height:1.5;
+              max-width:100%; box-sizing:border-box;
+            ">
+              <span style="font-size:1.3rem; flex-shrink:0;">⚠️</span>
+              <div>
+                <strong style="display:block; margin-bottom:2px;">Errore</strong>
+                <span>${friendlyMsg}</span>
+              </div>
+            </div>`,
+          overwrite: true
+        };
+      }
       // ── THINKING STREAM ──────────────────────────────────────────────────────
       if (responseDetails?.thinking) {
         this.aiBuffer = '';

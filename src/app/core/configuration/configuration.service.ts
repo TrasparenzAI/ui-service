@@ -30,11 +30,12 @@ export class ConfigurationService extends CommonService<Configuration> {
   public static readonly AI_SYSTEM_PROMPT = `ai.systemPrompt`;
   public static readonly AI_INITIAL_MESSAGE = `ai.initialMessage`;
   public static readonly AI_TEXT_TO_SPEECH = `ai.text-to-speech.enable`;
+  public static readonly AI_NUM_CTX = `spring.ai.ollama.chat.options.num_ctx`;
 
   private cachedStatusColor: any;
   private cachedSliceColor: any;
   private cachedMenuLink: any;
-  private cachedAIInitialMessage: string;
+  private cachedAIInitialMessage!: string;
 
   public constructor(protected httpClient: HttpClient,
                      protected apiMessageService: ApiMessageService,

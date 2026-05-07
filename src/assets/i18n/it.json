@@ -63,6 +63,7 @@
     "ai": {
       "defaultModel": "Modello di default",
       "text_to_speech": "Abilita sintesi vocale",
+      "num_ctx": "Contesto (num_ctx): {{num_ctx}}",
       "systemPrompt": {
         "label": "Prompt di Sistema"
       },

@@ -63,6 +63,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   protected sliceid: number;
   protected aiDefaultModel: number;
   protected aiTextToSpeech: number;
+  protected aiNumCtx: number;
   protected aiSystemPrompt: number;
   protected aiInitialMessage: number;
 
@@ -209,6 +210,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
       }
     }
   };
+  readonly numCtxValues = Array.from({ length: 10 }, (_, i) => 1 << (11 + i));
 
   constructor(
     private formBuilder: FormBuilder,
@@ -222,6 +224,11 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     private datepipe: DatePipe,
     private elementRef: ElementRef                  
   ) {}
+
+  get numCtx(): number {
+    const idx = this.aiForm.get('num_ctx_index')?.value ?? 4;
+    return this.numCtxValues[idx];
+  }
 
   private colorChanges(form: FormGroup, input: string, inputColor: string) {
     form.controls[input].valueChanges.subscribe((color) => {
@@ -329,6 +336,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
       defaultModel: new FormControl(),
       initialMessage: new FormControl(),
       textToSpeech: new FormControl(),
+      num_ctx_index: new FormControl(6),
       systemPrompt: new FormControl()
     });
     this.aiService.getAny(`/v1/models`, undefined, false).pipe(
@@ -388,6 +396,10 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
           if (conf.key === ConfigurationService.AI_TEXT_TO_SPEECH) {
             this.aiTextToSpeech = conf.id;
             this.aiForm.controls.textToSpeech.patchValue(conf.value === "true");
+          }
+          if (conf.key === ConfigurationService.AI_NUM_CTX) {
+            this.aiNumCtx = conf.id;
+            this.aiForm.controls.num_ctx_index.patchValue(this.numCtxValues.indexOf(Number(conf.value)));
           }
           if (conf.key === ConfigurationService.AI_INITIAL_MESSAGE) {
             this.aiInitialMessage = conf.id;
@@ -729,12 +741,15 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   }
 
   confirmAI(): void {
-    const { defaultModel, systemPrompt, initialMessage, textToSpeech } = this.aiForm.controls;
+    const { defaultModel, systemPrompt, initialMessage, textToSpeech, num_ctx_index } = this.aiForm.controls;
     const saveDefaultModel$ = this.configurationService.save(
       this.buildConf(this.aiDefaultModel, 'ai-integration-service', ConfigurationService.AI_DEFAULT_MODEL, defaultModel.value)
     );
     const saveTextToSpeech$ = this.configurationService.save(
       this.buildConf(this.aiTextToSpeech, 'ai-integration-service', ConfigurationService.AI_TEXT_TO_SPEECH, textToSpeech.value)
+    );
+    const saveTextToNumCtx$ = this.configurationService.save(
+      this.buildConf(this.aiNumCtx, 'ai-integration-service', ConfigurationService.AI_NUM_CTX, this.numCtxValues[num_ctx_index.value])
     );
     const saveSystemPrompt$ = this.configurationService.save(
       this.buildConf(this.aiSystemPrompt, 'ai-integration-service', ConfigurationService.AI_SYSTEM_PROMPT, systemPrompt.value)
@@ -743,21 +758,17 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
       this.buildConf(this.aiInitialMessage, 'ai-integration-service', ConfigurationService.AI_INITIAL_MESSAGE, initialMessage.value)
     );
 
-    forkJoin([saveDefaultModel$, saveSystemPrompt$, saveInitialMessage$, saveTextToSpeech$]).pipe(
-      switchMap(([resModel, resPrompt, resMessage, resTeextToSpeech]) => {
+    forkJoin([saveDefaultModel$, saveSystemPrompt$, saveInitialMessage$, saveTextToSpeech$, saveTextToNumCtx$]).pipe(
+      switchMap(([resModel, resPrompt, resMessage, resTeextToSpeech, resNumCtx]) => {
         this.aiDefaultModel  = resModel.id;
         this.aiSystemPrompt  = resPrompt.id;
         this.aiInitialMessage = resMessage.id;
         this.aiTextToSpeech = resTeextToSpeech.id;
+        this.aiNumCtx = resNumCtx.id;
         this.configurationService.setCachedAIInitialMessage(undefined);
         return this.aiService.postObject('actuator/refresh');
       })
     ).subscribe({
-      next: () => this.apiMessageService.sendMessage(
-        MessageType.SUCCESS,
-        this.labels?.ai?.saved ?? 'Configurazione AI salvata',
-        NotificationPosition.Top
-      ),
       error: (err) => {
         console.error('Errore salvataggio configurazione AI:', err);
         this.apiMessageService.sendMessage(

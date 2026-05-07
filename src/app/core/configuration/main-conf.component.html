@@ -889,7 +889,7 @@
       title="{{ 'it.configuration.ai' | translate }}">
       <form [formGroup]="aiForm">
         <div class="row">
-          <div class="form-group col-md-4">
+          <div class="form-group col-md-3">
               <it-select
                 class="w-100"
                 required
@@ -898,12 +898,20 @@
                 [label]="'it.ai.defaultModel' | translate">
               </it-select>
           </div>
+          <div class="col-md-3 px-2">
+            <it-range
+              [min]="0"
+              [max]="numCtxValues.length - 1"
+              [step]="1"
+              formControlName="num_ctx_index">
+              {{ "it.ai.num_ctx" | translate : {num_ctx: numCtx | number} }}
+            </it-range>
+          </div>
           <div class="form-check col-md-6 col-xl-3 px-2">
               <it-checkbox
                 formControlName="textToSpeech"
                 [label]="'it.ai.text_to_speech' | translate"
-                toggle="true"
-              ></it-checkbox>
+                toggle="true"></it-checkbox>
           </div>
         </div>
         <div class="row">
