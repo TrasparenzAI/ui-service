@@ -1,35 +1,52 @@
-### STAGE 1: Build ###
-
-# We label our stage as 'builder'
-FROM node:alpine as builder
+FROM node:alpine AS builder
 
 COPY package.json package-lock.json ./
 
 RUN npm set progress=false && npm config set depth 0 && npm cache clean --force
 
-## Storing node modules on a separate layer will prevent unnecessary npm installs at each build
 RUN npm i --legacy-peer-deps && mkdir /ng-app && cp -R ./node_modules ./ng-app
 
 WORKDIR /ng-app
 
 COPY . .
 
-## Build the angular app in production mode and store the artifacts in dist folder
 RUN node_modules/.bin/ng build --configuration production --aot --output-hashing=all --base-href /
 
 
-### STAGE 2: Setup ###
+### STAGE 2: Build Badge Service ###
+FROM node:20-bookworm AS badge-builder
 
-FROM nginx:alpine
+WORKDIR /badge
 
-## Copy our default nginx config
-COPY nginx/default.conf /etc/nginx/conf.d/
+COPY badge-service/package*.json ./
+RUN npm install
 
-## Remove default nginx website
+COPY badge-service/index.js .
+COPY badge-service/tsconfig.json .
+COPY shared/gauge-options.ts .
+
+
+### STAGE 3: Final ###
+FROM node:alpine
+LABEL maintainer="Marco Spasiano <marco.spasiano@cnr.it>"
+RUN apk add --no-cache \
+    nginx supervisor \
+    vips \
+    gettext ttf-dejavu
+
+# ts-node globale
+RUN npm install -g ts-node typescript
+
+# nginx
 RUN rm -rf /usr/share/nginx/html/*
-
-## From 'builder' stage copy over the artifacts in dist folder to default nginx public folder
+COPY nginx/default.conf /etc/nginx/http.d/default.conf
 COPY --from=builder /ng-app/dist/browser /usr/share/nginx/html
+
+# badge service
+COPY --from=badge-builder /badge /app/badge
+
+# supervisord
+COPY supervisord.conf /etc/supervisord.conf
 
 ENV THEME=
 ENV API_URL=https://dica33.ba.cnr.it
@@ -42,9 +59,7 @@ ENV RULE_API_URL=$API_URL/rule-service
 ENV CRAWLER_API_URL=$API_URL/crawl
 ENV AI_API_URL=$API_URL/ai-integration-service
 ENV MCP_API_URL=$API_URL/mcp-server
-
 ENV DEV_BYPASS_ADMIN_AUTH=false
-
 ENV BASE_HREF=/
 ENV OIDC_ENABLE=false
 ENV OIDC_FORCE=false
@@ -52,13 +67,13 @@ ENV OIDC_AUTHORITY=
 ENV OIDC_REDIRECTURL=http://localhost/auth/signin
 ENV OIDC_CLIENTID=angular-public
 ENV OIDC_POSTLOGOUTREDIRECTURL=
-
 ENV MATOMO_ENABLE=false
 ENV MATOMO_TRACKER_USER_ENABLE=true
 ENV MATOMO_TRAKER_URL=
 ENV MATOMO_SITE_ID=
 
-# When the container starts, replace the env.js with values from environment variables
+EXPOSE 80
+
 CMD ["/bin/sh", "-c", "\
   HASH=$(date +%s) && \
   envsubst < /usr/share/nginx/html/assets/env.template.js > /usr/share/nginx/html/assets/env.${HASH}.js && \
@@ -67,5 +82,4 @@ CMD ["/bin/sh", "-c", "\
     -e 's;<base href=\"/\">;<base href=\"'$BASE_HREF'\">;' \
     -e 's;assets/env\\.js;assets/env.'${HASH}'.js;g' \
     /usr/share/nginx/html/index.html && \
-  exec nginx -g 'daemon off;'"]
- 
+  exec /usr/bin/supervisord -c /etc/supervisord.conf"]

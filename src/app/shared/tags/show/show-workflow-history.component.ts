@@ -35,7 +35,7 @@ import saveAs from 'file-saver';
         </ng-container>
         <it-list>
           @for (workflow of workflows; track workflow) {
-            <it-list-item>
+            <li itListItem>
               <div class="d-flex justify-content-between align-items-start py-3">
                 <div class="flex-grow-1 me-3">
                   <span class="text-monospace">
@@ -98,7 +98,7 @@ import saveAs from 'file-saver';
                   }
                 </div>
               </div>
-            </it-list-item>
+            </li>
           }
         </it-list>
         @if (isAbleToStartWorkflow) {

@@ -1,0 +1,12 @@
+{
+  "name": "badge-service",
+  "version": "1.0.0",
+  "dependencies": {
+    "echarts": "^5.5.0",
+    "express": "^4.19.0",
+    "sharp": "^0.34.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0",
+    "node-addon-api": "^7.0.0"
+  }
+}

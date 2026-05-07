@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Input, ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation, SimpleChanges, OnChanges, OnDestroy, HostListener } from '@angular/core';
+import { Input, ChangeDetectionStrategy, Component, OnInit, ViewEncapsulation, SimpleChanges, OnChanges, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, catchError, map, of, switchMap } from 'rxjs';
+import { Observable, catchError, map, switchMap } from 'rxjs';
 import { ApiMessageService, MessageType } from '../api-message.service';
 import { Workflow } from '../conductor/workflow.model';
 import { Configuration } from '../configuration/configuration.model';
@@ -12,6 +12,7 @@ import { Rule } from '../rule/rule.model';
 import { RuleService } from '../rule/rule.service';
 import { Company } from './company.model';
 import { EChartsOption } from 'echarts';
+import { buildGaugeOption, GaugeData, toPercent } from '../../../../shared/gauge-options';
 
 @Component({
   selector: 'company-rule',
@@ -21,9 +22,10 @@ import { EChartsOption } from 'echarts';
   providers: [DatePipe],
   standalone: false
 })
-export class CompanyRuleComponent implements OnInit, OnChanges, OnDestroy {
+export class CompanyRuleComponent implements OnInit, OnChanges, OnDestroy,AfterViewInit {
 
   @Input() isAuthenticated: boolean = false;
+  @Input() showGaugeTitle: boolean = false;
   @Input() company!: Company;
   @Input() workflowId!: string;
 
@@ -35,8 +37,12 @@ export class CompanyRuleComponent implements OnInit, OnChanges, OnDestroy {
   protected rulesOK!: number;
 
   @Input() chartDivStyle: string = 'width: 100% !important; height: 100% !important; aspect-ratio: 12/9;';
+  @ViewChild("gaugeContainer", {static: false}) gaugeContainer!: ElementRef;
 
-  protected chartOptions: EChartsOption = {};
+  protected chartOptions: any = {};
+  
+  private viewInitialized = false;
+  private pendingChartData: { data: any[]|undefined, rulesOK: number, company?: Company } | null = null;
 
   constructor(
     protected apiMessageService: ApiMessageService,
@@ -49,6 +55,17 @@ export class CompanyRuleComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit(): void {}
 
   ngOnDestroy(): void {}
+  
+  ngAfterViewInit(): void {
+    this.viewInitialized = true;
+    // Se loadChart era stato chiamato prima che la view fosse pronta, eseguilo ora
+    if (this.pendingChartData) {
+      const { data, rulesOK, company } = this.pendingChartData;
+      this.pendingChartData = null;
+      this.loadChart(data, rulesOK, company);
+    }
+  }
+
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['workflowId']) {
@@ -98,127 +115,39 @@ export class CompanyRuleComponent implements OnInit, OnChanges, OnDestroy {
       this.apiMessageService.sendMessage(MessageType.WARNING, `Risultati non presenti per la PA: ${this.company?.denominazioneEnte}!`);
     }
     this.rulesOK = results.filter(r => r.status == 200 || r.status == 202).length;
+    let company = this.company || results[0]?.company;
     if (this.rules) {
       const rule = this.rules.get(ruleName);
       this.data = rule?.getCharts(undefined, ruleName, []);
-      this.loadChart(this.data, this.rulesOK);
+      this.loadChart(this.data, this.rulesOK, company);
     } else {
       this.ruleService.getRules().subscribe((rules: Map<String, Rule>) => {
         const rule = rules.get(ruleName);
         this.data = rule?.getCharts(undefined, ruleName, []);
-        this.loadChart(this.data, this.rulesOK);
+        this.loadChart(this.data, this.rulesOK, company);
       });
     }
   }
 
-  loadChart(data: any[]|undefined, rulesOK: number) {
-    const max = data?.length ?? 0;
-
-    // Mirror the 6 bands from the original am5 component
-    const bands = [
-      { color: '#ee1f25', min: 0,                         max: max / 6.3 },
-      { color: '#f04922', min: max / 6.3,                 max: max / (6.3 / 2) },
-      { color: '#fdae19', min: max / (6.3 / 2),           max: max / (6.3 / 3) },
-      { color: '#b0d136', min: max / (6.3 / 3),           max: max / (6.3 / 4) },
-      { color: '#54b947', min: max / (6.3 / 4),           max: max / (6.3 / 5) },
-      { color: '#0f9747', min: max / (6.3 / 5),           max: max }
-    ];
-
-    // ECharts gauge uses 0-100 scale internally; map our value accordingly
-    const toPercent = (v: number) => max > 0 ? (v / max) * 100 : 0;
-
-    const axisLineSegments = bands.map(b => [toPercent(b.max) / 100, b.color]);
-
-    this.chartOptions = {
-      toolbox: {
-        feature: {
-          saveAsImage: {
-            title: 'Salva immagine',
-            name: `indicatori`
-          }
-        }
-      },
-      series: [
-        {
-          type: 'gauge',
-          startAngle: 200,   // mirrors am5 startAngle: 160 (ECharts uses clockwise from 3 o'clock)
-          endAngle: -20,     // mirrors am5 endAngle: 380
-          min: 0,
-          max: 100,          // internal percentage scale
-          splitNumber: 6,
-          radius: '120%',
-          center: ['50%', '65%'],
-          axisLine: {
-            lineStyle: {
-              width: 40,
-              color: axisLineSegments as any
-            }
-          },
-          pointer: {
-            length: '70%',
-            width: 12,
-            itemStyle: {
-              color: 'auto'
-            }
-          },
-          axisTick: {
-            distance: 8,
-            length: 8,
-            lineStyle: {
-              color: '#fff',
-              width: 2
-            }
-          },
-          splitLine: {
-            distance: 8,
-            length: 14,
-            lineStyle: {
-              color: '#fff',
-              width: 3
-            }
-          },
-          axisLabel: {
-            color: '#000',
-            fontSize: 18,
-            distance: 50,
-            formatter: (value: number) => {
-              const real = Math.round((value / 100) * max);
-              // Show only every other band boundary to avoid crowding
-              return String(real);
-            }
-          },
-          anchor: {
-            show: true,
-            showAbove: true,
-            size: 25,
-            itemStyle: {
-              color: '#4e6fce',
-              borderColor: '#fff',
-              borderWidth: 3
-            }
-          },
-          title: {
-            show: false
-          },
-          detail: {
-            valueAnimation: true,
-            color: 'auto',
-            fontSize: 38,
-            fontWeight: 'bold',
-            // Centered inside the gauge arc, above the anchor
-            offsetCenter: [0, '-20%'],
-            formatter: (value: number) => String(Math.round((value / 100) * max))
-          },
-          data: [
-            {
-              value: toPercent(rulesOK),
-              name: ''
-            }
-          ],
-          animationDuration: 1500,
-          animationEasing: 'cubicInOut'
-        }
-      ]
-    };
+  private get containerWidth(): number {
+    return this.gaugeContainer?.nativeElement?.offsetWidth || 350;
   }
+
+  loadChart(data: any[] | undefined, rulesOK: number, company?: Company) {
+    setTimeout(() => {
+      const gaugeData: GaugeData = {
+        rulesOK,
+        total: data?.length ?? 0,
+        denominazioneEnte: company?.denominazioneEnte ?? '',
+        codiceIpa: company?.codiceIpa ?? ''
+      };
+
+      this.chartOptions = buildGaugeOption(gaugeData, {
+        showTitle: this.showGaugeTitle,
+        containerWidth: this.containerWidth,
+        showToolbox: true
+      });
+    });
+  }
+
 }

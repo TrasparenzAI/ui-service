@@ -19,6 +19,7 @@ Integra e mostra i dati presenti nei vari servizi fornendo la possibilità, aven
 - [Autorizzazioni](#autorizzazioni)
 - [Come installare](#come-installare)
 - [Docker](#docker)
+- [Badge Service](#badge-service)
 - [Come contribuire](#come-contribuire)
 - [Licenza](#licenza)
 
@@ -165,6 +166,89 @@ Per avviare il servizio tramite docker, impostando correttamente le [variabili d
 ```bash
 docker run -p 80:80 -e OIDC_ENABLE=true ghcr.io/trasparenzai/ui-service:latest
 ```
+
+# 🏅 Badge Service
+
+Il Badge Service è un microservizio Node.js integrato all'interno del container Docker del UI Service. Viene avviato automaticamente da `supervisord` insieme a nginx ed è raggiungibile **esclusivamente tramite nginx** sulla porta 80 — non è esposto direttamente all'esterno.
+
+## Funzionamento
+
+Dato il `codiceIpa` di un'amministrazione pubblica, il servizio:
+
+1. Recupera la `root_rule` attiva dal `config-service` (chiave `workflow.cron.body`)
+2. Interroga il `rule-service` per calcolare il **numero totale di regole** definite nell'albero gerarchico
+3. Interroga il `result-service` per ottenere i risultati di verifica dell'ente (`/v1/results/codiceipa?codiceIpa=...`)
+4. Conta le regole con esito positivo (status `200` o `202`)
+5. Genera un **gauge chart** tramite Apache ECharts in modalità SSR (server-side rendering, senza browser)
+6. Converte il grafico SVG in **PNG** tramite [sharp](https://sharp.pixelplumbing.com/)
+7. Restituisce l'immagine con header di cache HTTP (1 giorno)
+
+## Endpoint
+
+```
+GET /badge/{codiceIpa}.png
+```
+
+| Parametro    | Tipo    | Obbligatorio | Default | Descrizione                        |
+|--------------|---------|--------------|---------|------------------------------------|
+| `codiceIpa`  | path    | ✅           | —       | Codice IPA dell'ente               |
+| `width`      | query   | ❌           | `400`   | Larghezza dell'immagine in pixel   |
+| `height`     | query   | ❌           | `300`   | Altezza dell'immagine in pixel     |
+
+### Esempi
+
+```
+# Badge con dimensioni di default
+GET /badge/cnr.png
+
+# Badge con dimensioni personalizzate
+GET /badge/cnr.png?width=600&height=450
+```
+
+### Risposta
+
+| Campo            | Valore                             |
+|------------------|------------------------------------|
+| Content-Type     | `image/png`                        |
+| Cache-Control    | `public, max-age=86400` (1 giorno) |
+| ETag             | `{codiceIpa}-{width}-{height}`     |
+
+In caso di ente non trovato viene restituito `404`. In caso di errore sui servizi upstream viene restituito `500` con il dettaglio dell'errore in JSON.
+
+## Dipendenze principali
+
+| Libreria                                         | Versione  | Scopo                                                |
+|--------------------------------------------------|-----------|------------------------------------------------------|
+| [express](https://expressjs.com/)                | ^4.19.0   | Server HTTP                                          |
+| [echarts](https://echarts.apache.org/)           | ^5.5.0    | Generazione gauge chart in modalità SSR              |
+| [sharp](https://sharp.pixelplumbing.com/)        | ^0.34.5   | Conversione SVG → PNG                                |
+| [ts-node](https://typestrong.org/ts-node/)       | ^10.9.2   | Esecuzione TypeScript condiviso (`gauge-options.ts`) |
+
+## Architettura interna
+
+Il routing nginx instrада le richieste verso il badge service tramite la seguente configurazione in `nginx/default.conf`:
+
+```nginx
+location ^~ /badge/ {
+    proxy_pass http://127.0.0.1:3001/badge/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_cache_valid 200 1d;
+    add_header Cache-Control "public, max-age=86400";
+}
+```
+
+Il codice sorgente si trova in [`badge-service/index.js`](badge-service/index.js). La logica di costruzione del gauge è condivisa con il frontend Angular tramite il file [`shared/gauge-options.ts`](shared/gauge-options.ts), che definisce le bande di colore, il calcolo delle percentuali e le opzioni ECharts.
+
+## Variabili di ambiente utilizzate
+
+| Nome             | Descrizione                                                     |
+|------------------|-----------------------------------------------------------------|
+| `API_URL`        | URL base dei servizi, usato per raggiungere il `config-service` |
+| `RESULT_API_URL` | URL del `result-service` da cui recuperare i risultati per ente |
+| `RULE_API_URL`   | URL del `rule-service` da cui recuperare l'albero delle regole  |
+
 ## 👏 Come Contribuire 
 
 E' possibile contribuire a questo progetto utilizzando le modalità standard della comunità opensource 
