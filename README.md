@@ -175,13 +175,12 @@ Il Badge Service è un microservizio Node.js integrato all'interno del container
 
 Dato il `codiceIpa` di un'amministrazione pubblica, il servizio:
 
-1. Recupera la `root_rule` attiva dal `config-service` (chiave `workflow.cron.body`)
-2. Interroga il `rule-service` per calcolare il **numero totale di regole** definite nell'albero gerarchico
-3. Interroga il `result-service` per ottenere i risultati di verifica dell'ente (`/v1/results/codiceipa?codiceIpa=...`)
-4. Conta le regole con esito positivo (status `200` o `202`)
-5. Genera un **gauge chart** tramite Apache ECharts in modalità SSR (server-side rendering, senza browser)
-6. Converte il grafico SVG in **PNG** tramite [sharp](https://sharp.pixelplumbing.com/)
-7. Restituisce l'immagine con header di cache HTTP (1 giorno)
+1. Interroga il `public-sites-service` per ottenere la descrizione dell'ente (`/v1/companies?codiceIpa=...`)
+2. Interroga il `result-service` per ottenere il totale dei risultati di verifica dell'ente (`/v1/results/codiceipa/count?codiceIpa=...`)
+3. Interroga il `rule-service` per calcolare il **numero totale di regole** definite nell'albero gerarchico ottenuto in precedenza
+4. Genera un **gauge chart** tramite Apache ECharts in modalità SSR (server-side rendering, senza browser)
+5. Converte il grafico SVG in **PNG** tramite [sharp](https://sharp.pixelplumbing.com/)
+6. Restituisce l'immagine con header di cache HTTP (1 giorno)
 
 ## Endpoint
 
