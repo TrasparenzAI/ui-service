@@ -164,7 +164,6 @@ export class SearchComponent implements OnInit {
         value: rules[index].key,
         text: rules[index].text,
         level: rules[index].level,
-        name: name,
         class: `ps-${rules[index].level} fs-${rules[index].level + 3}`
       });
     });
