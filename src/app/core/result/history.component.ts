@@ -102,7 +102,7 @@ export class HistoryComponent implements OnInit {
   }
 
   getColorForCount(count: number, colors: any[], defaultColor: string): string {
-    const colorRange = colors.find((c: any) => count >= c.min && count <= c.max);
+    const colorRange = colors?.find((c: any) => count >= c.min && count <= c.max);
     return colorRange?.color || defaultColor;
   }
 
