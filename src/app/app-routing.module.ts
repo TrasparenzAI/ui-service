@@ -49,13 +49,13 @@ const appRoutes: Routes = [
         path: 'result-pie-rule',
         component: ResultPieRuleComponent,
         canActivate: [...oidcGuard, AuthGuard],
-        data: { role: RoleEnum.ADMIN }
+        data: { role: [RoleEnum.ADMIN, RoleEnum.SUPERUSER] }
       },
       {
         path: 'result-rule',
         component: ResultRuleListComponent,
         canActivate: [...oidcGuard, AuthGuard],
-        data: { role: RoleEnum.ADMIN }
+        data: { role: [RoleEnum.ADMIN, RoleEnum.SUPERUSER] }
       },
       {
         path: 'configuration',

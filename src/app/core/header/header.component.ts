@@ -99,9 +99,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   companylabel: string = 'header.company.title';
 
   authenticated = false;
-  isAdmin: boolean;
+  isAdmin: boolean = false;
+  isSuperUser: boolean = false;
+
   userData: any;
-  menuLinks: any[];
+  menuLinks!: any[];
 
   constructor(private apiMessageService: ApiMessageService,
               private translateService: TranslateService,
@@ -155,6 +157,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
             this.oidcSecurityService.userData$.subscribe(({ userData }) => {
               this.userData = userData;
               this.isAdmin = this.authGuard.hasRolesFromUserData([RoleEnum.ADMIN], userData);
+              this.isSuperUser = this.authGuard.hasRolesFromUserData([RoleEnum.SUPERUSER], userData);
             });
         });
       } else {
@@ -163,6 +166,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
           this.oidcSecurityService.userData$.subscribe(({ userData }) => {
             this.userData = userData;
             this.isAdmin = this.authGuard.hasRolesFromUserData([RoleEnum.ADMIN], userData);
+            this.isSuperUser = this.authGuard.hasRolesFromUserData([RoleEnum.SUPERUSER], userData);
           });    
         });
       }    
