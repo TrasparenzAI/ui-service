@@ -16,7 +16,7 @@ export class ServiceInfo {
     @JsonProperty('status', String, true)
     public status?: string;
 
-    constructor(artifact: string, name: string, time: Date, version: string, group: string, status?: string) {
+    constructor(artifact: string, name: string, time: Date|undefined, version: string|undefined, group: string|undefined, status?: string) {
         this.artifact = artifact;
         this.name = name;
         this.time = time;

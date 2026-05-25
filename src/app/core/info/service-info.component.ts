@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { ConfigurationService } from '../configuration/configuration.service';
 import { Configuration } from '../configuration/configuration.model';
 import { environment } from '../../../environments/environment';
@@ -6,6 +6,7 @@ import { Build, ServiceInfo } from './service-info.model';
 import { HttpClient } from '@angular/common/http';
 import { catchError, forkJoin, map, of } from 'rxjs';
 import packageJson from '../../../../package.json';
+import { ItModalComponent } from 'design-angular-kit';
 
 @Component({
     selector: 'service-info',
@@ -16,7 +17,11 @@ import packageJson from '../../../../package.json';
 })
 export class ServiceInfoComponent implements OnInit {
   protected services: ServiceInfo[] = [];
-
+  // Stato modale
+  @ViewChild("lockModal") lockModal!: ItModalComponent;
+  protected lockStatus: boolean | null = null;
+  protected lastUpdate: Date | null = null;
+  
   constructor(
     private httpClient: HttpClient,
     private configurationService: ConfigurationService,
@@ -40,6 +45,40 @@ export class ServiceInfoComponent implements OnInit {
       forkJoin(serviceUrls.map((url) => this.fetchServiceInfo(url))).subscribe((infos: ServiceInfo[]) => {
         this.services = [uiService, ...infos];
       });
+    });
+  }
+
+  openDetails(service: ServiceInfo): void {
+    this.httpClient.get<boolean>(`${environment.companyApiUrl}/v1/admin/lockStatus`).pipe(
+      catchError(() => {
+        return of(null);
+      })
+    ).subscribe((locked) => {
+      if (locked !== null) {
+        this.lockStatus = locked;
+      }
+      this.httpClient.get<Date>(`${environment.companyApiUrl}/v1/admin/lastUpdate`).pipe(
+        catchError(() => {
+          return of(null);
+        })
+      ).subscribe((data) => {
+        this.lastUpdate = data;
+      });
+    });
+    this.lockModal.toggle();
+  }
+
+
+  onToggleLock(newValue: boolean): void {
+    const endpoint = newValue ? 'lock' : 'unlock';
+    this.httpClient.post(`${environment.companyApiUrl}/v1/admin/${endpoint}`, null).pipe(
+      catchError(() => {
+        return of(null);
+      })
+    ).subscribe((res) => {
+      if (res !== null) {
+        this.lockStatus = newValue;
+      }
     });
   }
 

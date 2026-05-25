@@ -177,6 +177,7 @@
       "start-now": "Avvia Ora",
       "chat-ai": "Chat AI",
       "credits": "Crediti",
+      "details": "Dettagli",
       "grafici-mappe": {
         "title": "Statistiche",
         "grafico-regola": "Compliance sezioni",
@@ -189,6 +190,7 @@
       "title": "Filtra la tua ricerca"
     },
     "company" : {
+      "service-title":"Public Sites Service",
       "denominazioneEnte": "Denominazione Ente",
       "codiceIpa": "Codice IPA",
       "codiceFiscaleEnte": "Codice Fiscale",
@@ -208,7 +210,9 @@
       "history-description": "Storico sezioni AT rilevate",
       "visibile": "Visibile",
       "message-invisibile": "Sei sicuro di volere rendere NON VISIBILE l'amministrazione {{denominazioneEnte}}?",
-      "message-visibile": "Sei sicuro di volere rendere nuovamente VISIBILE l'amministrazione {{denominazioneEnte}}?"
+      "message-visibile": "Sei sicuro di volere rendere nuovamente VISIBILE l'amministrazione {{denominazioneEnte}}?",
+      "lock-status": "Lock degli aggiornamenti attivo",
+      "last-update":"La data di ultimo aggiornamento delle PA è il {{lastUpdate}}"
     },
     "result": {
       "destinationUrl": "URL della Regola",
