@@ -518,6 +518,24 @@ export abstract class CommonService<T extends Base> {
       );
   }
 
+  public actuatorInfo(): Observable<any> {
+    return this.getApiBase()
+      .pipe(
+        switchMap((apiBase) => {
+          return this.httpClient.get( apiBase + `/actuator/info`,{}).pipe(
+              map((result) => {
+                return result;
+              }),
+              catchError( (httpErrorResponse: HttpErrorResponse) => {
+                const springError = new SpringError(httpErrorResponse, this.translateService);
+                this.apiMessageService.sendMessage(MessageType.ERROR,  springError.getRestErrorMessage());
+                return throwError(() => springError);
+              })
+            );
+        })
+      );
+  }
+
   /**
    * Aggiunge i campi presenti in obj in httpParams.
    *

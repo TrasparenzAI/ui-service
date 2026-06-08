@@ -6,7 +6,6 @@ import { Rule } from '../rule/rule.model';
 import { ResultService } from './result.service';
 import { Result } from './result.model';
 import { ResultGroupingService } from './result-grouping.service';
-import { ConfigurationService } from '../configuration/configuration.service';
 import { Company } from '../company/company.model';
 import { Workflow } from '../conductor/workflow.model';
 import { EChartsOption } from 'echarts';
@@ -36,7 +35,6 @@ export class HistoryComponent implements OnInit {
     private formBuilder: FormBuilder,
     private resultService: ResultService,
     private resultGroupingService: ResultGroupingService,
-    private configurationService: ConfigurationService,
     public translateService: TranslateService,
     private responsive: BreakpointObserver,
     private route: ActivatedRoute,
@@ -73,27 +71,24 @@ export class HistoryComponent implements OnInit {
             size: 5000
           }).subscribe((results: Result[]) => {
             if (!this.company) this.company = results[0]?.company;
+            this.resultService.actuatorInfo().subscribe((infos: any) => {                
+              const resultGrouped = this.resultGroupingService.groupByWorkflowOnly(results);
 
-            this.configurationService.getStatusColor().subscribe((statusColor: any) => {
-              this.configurationService.getSliceColor().subscribe((colors: any) => {
-                const resultGrouped = this.resultGroupingService.groupByWorkflowOnly(results);
+              const chartData = Array.from(resultGrouped.entries())
+                .map(([workflowId, count]) => ({
+                  date: workflowsMap[workflowId],
+                  count: count,
+                  color: this.getColorForCount(count, infos.rules, '#0c08f0')
+                }))
+                .filter(item => item.date != null)
+                .sort((a, b) => {
+                  const [dayA, monthA, yearA] = a.date.split('/').map(Number);
+                  const [dayB, monthB, yearB] = b.date.split('/').map(Number);
+                  return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
+                });
 
-                const chartData = Array.from(resultGrouped.entries())
-                  .map(([workflowId, count]) => ({
-                    date: workflowsMap[workflowId],
-                    count: count,
-                    color: this.getColorForCount(count, colors.dettagli, statusColor['status_404'])
-                  }))
-                  .filter(item => item.date != null)
-                  .sort((a, b) => {
-                    const [dayA, monthA, yearA] = a.date.split('/').map(Number);
-                    const [dayB, monthB, yearB] = b.date.split('/').map(Number);
-                    return new Date(yearA, monthA - 1, dayA).getTime() - new Date(yearB, monthB - 1, dayB).getTime();
-                  });
-
-                this.loadChart(chartData);
-                this.loadingChart.set(false);
-              });
+              this.loadChart(chartData);
+              this.loadingChart.set(false);
             });
           });
         });
