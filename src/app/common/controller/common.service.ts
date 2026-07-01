@@ -393,7 +393,7 @@ export abstract class CommonService<T extends Base> {
    * @param {HttpParams} params
    * @returns {Observable<any>}
    */
-  public getArray(relativePath: string, params: HttpParams, customRequestMapping?: string): Observable<T[]> {
+  public getArray(relativePath: string, params?: HttpParams, customRequestMapping?: string): Observable<T[]> {
 
     const requestMapping = customRequestMapping ? customRequestMapping :  this.getRequestMapping();
     return this.getApiBase()

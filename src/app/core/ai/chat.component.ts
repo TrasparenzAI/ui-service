@@ -221,9 +221,10 @@ export class ChatComponent implements OnInit, AfterViewInit {
     .final-text {
       white-space: normal;
       line-height: 1.55;
+    }
+    .final-text.done {
       animation: fadeIn 0.2s ease;
     }
-
     .final-text pre {
       background: #0f172a;
       color: #e5e7eb;

@@ -47,19 +47,65 @@
 </div>
 
 <!-- Modale dettagli servizio -->
-<it-modal #lockModal="itModal" size="md" footerShadow="true" closeButton="true">
+<it-modal #lockModal="itModal" size="lg" footerShadow="true" closeButton="true">
   <ng-container modalTitle><span translate>it.company.service-title</span></ng-container>
-    <div class="form-check form-switch mb-0">
-      <it-checkbox 
-        [label]="'it.company.lock-status'| translate" 
-        [checked]="lockStatus"
-        (change)="onToggleLock($any($event.target).checked)" 
-        toggle="true">
-      </it-checkbox>                
+  <div class="form-check form-switch mb-0 d-flex">
+    <it-checkbox 
+      [label]="'it.company.lock-status'| translate" 
+      [checked]="lockStatus"
+      (change)="onToggleLock($any($event.target).checked)" 
+      toggle="true">
+    </it-checkbox>
+  </div>
+  <hr>
+  <h4 class="font-monospace" translate>it.service-info.indice-pa-history.title</h4>
+  @if (indicePaHistoryLoading) {
+    <p class="text-muted" translate>it.service-info.indice-pa-history.loading</p>
+  } @else if (!indicePaHistory.length) {
+    <p class="text-muted" translate>it.service-info.indice-pa-history.empty</p>
+  } @else {
+    <div class="table-responsive shadow mb-3">
+      <it-table headColor="primary" captionTop="true" hover="true">
+        <ng-container thead>
+          <tr>
+            <th scope="col" translate>it.service-info.indice-pa-history.cols.date</th>
+            <th scope="col" translate>it.service-info.indice-pa-history.cols.updatedFrom</th>
+            <th scope="col" translate>it.service-info.indice-pa-history.cols.total</th>
+            <th scope="col" translate>it.service-info.indice-pa-history.cols.processed</th>
+            <th scope="col" translate>it.service-info.indice-pa-history.cols.active</th>
+            <th scope="col" translate>it.service-info.indice-pa-history.cols.visible</th>
+            <th scope="col" translate>it.service-info.indice-pa-history.cols.inserted</th>
+            <th scope="col" translate>it.service-info.indice-pa-history.cols.modified</th>
+            <th scope="col" translate>it.service-info.indice-pa-history.cols.deleted</th>
+          </tr>
+        </ng-container>
+        <ng-container tbody>
+          @for (record of indicePaHistory; track record.id) {
+            <tr>
+              <td>{{record.updateDate | date: 'dd/MM/yyyy HH:mm:ss'}}</td>
+              <td>{{record.updatedFrom}}</td>
+              <td class="text-end">{{record.totalIndicePaCompanies |number}}</td>
+              <td class="text-end">{{record.processedCompanies |number}}</td>
+              <td class="text-end">{{record.totalActiveCompanies |number}}</td>
+              <td class="text-end">{{record.totalVisibleCompanies |number}}</td>
+              <td class="text-success text-end">{{record.insertedCompanies |number}}</td>
+              <td class="text-warning text-end">{{record.modifiedCompanies |number}}</td>
+              <td class="text-danger text-end">{{record.deletedCompanies |number}}</td>
+            </tr>
+          }
+        </ng-container>
+      </it-table>
     </div>
-    @if(lastUpdate) {
-      <h6 class="text-info font-monospace ps-4">{{'it.company.last-update' | translate: {lastUpdate: lastUpdate| date: 'dd/MM/yyyy \'alle\' HH:mm:ss'} }}</h6>
+    @if (historyTotalPages > 1) {
+      <it-pagination
+        [currentPage]="historyCurrentPage"
+        [pageNumbers]="historyTotalPages"
+        [currentChanger]="historyPageSize"
+        (pageEvent)="onHistoryPageChange($event)"
+        (changerEvent)="onHistoryPageSizeChange($event)">
+      </it-pagination>
     }
+  }
   <ng-container footer>
     <button itButton="outline-secondary" size="sm" type="button" data-bs-dismiss="modal" translate>button.cancel</button>
   </ng-container>

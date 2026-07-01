@@ -1,4 +1,4 @@
-import { ErrorHandler, NgModule, provideAppInitializer, inject } from '@angular/core';
+import { ErrorHandler, NgModule, provideAppInitializer, inject, LOCALE_ID } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
@@ -26,6 +26,7 @@ import localeIt from '@angular/common/locales/it';
 
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { MatomoRouteTrackerService } from './shared/service/matomo.service';
+
 
 @NgModule({ declarations: [
         AppComponent
@@ -65,6 +66,7 @@ import { MatomoRouteTrackerService } from './shared/service/matomo.service';
         AppRoutingEndModule,
       ], 
       providers: [
+        { provide: LOCALE_ID, useValue: 'it-IT' },
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
         { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true },
         { provide: APP_BASE_HREF, useValue: environment.baseHref },

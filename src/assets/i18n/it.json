@@ -58,7 +58,21 @@
         "UNREACHABLE": "Non raggiungibile",
         "unknown": "Sconosciuto"
       },
-      "unavailable": "N/D"
+      "unavailable": "N/D",
+      "indice-pa-history": {
+        "title": "Storico degli aggiornamenti da IndicePA",
+        "cols": {
+          "date": "Data e ora di completamento dell'aggiornamento",
+          "updatedFrom": "Eventuale filtro `updatedFrom` usato per processare solo gli enti aggiornati dopo una certa data",
+          "total": "Totale di amministrazioni lette da IndicePA",
+          "processed": "Amministrazioni processate",
+          "active": "Amministrazioni attive nel sistema dopo l'aggiornamento, limitato alla sorgente IndicePA",
+          "visible": "Amministrazioni attive e visibili nel sistema dopo l'aggiornamento, limitato alla sorgente IndicePA",
+          "inserted": "Amministrazioni inserite nel sistema",
+          "modified": "Amministrazioni modificate nel sistema",
+          "deleted": "Amministrazioni non più presenti in IndicePA e cancellate logicamente nel sistema"
+        }
+      }
     },
     "ai": {
       "defaultModel": "Modello di default",
@@ -154,6 +168,9 @@
           "error": "La regola che si sta tentando di inserire già esiste!"
         }        
       }
+    },
+    "core": {
+      "page": "pagina"
     },
     "navigation" : {
       "full-login": "Area riservata",

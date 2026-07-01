@@ -31,3 +31,27 @@ export class Build {
     @JsonProperty('build', ServiceInfo)
     public build: ServiceInfo;
 }
+
+@JsonObject("IndicePaUpdateRecord")
+export class IndicePaUpdateRecord {
+    @JsonProperty('id')
+    public id!: number;
+    @JsonProperty('updateDate', ISODateTimeConverter)
+    public updateDate!: Date;
+    @JsonProperty('updatedFrom')
+    public updatedFrom!: string;
+    @JsonProperty('totalIndicePaCompanies')
+    public totalIndicePaCompanies!: number;
+    @JsonProperty('processedCompanies')
+    public processedCompanies!: number;
+    @JsonProperty('totalActiveCompanies')
+    public totalActiveCompanies!: number;
+    @JsonProperty('totalVisibleCompanies')
+    public totalVisibleCompanies!: number;
+    @JsonProperty('insertedCompanies')
+    public insertedCompanies!: number;
+    @JsonProperty('modifiedCompanies')
+    public modifiedCompanies!: number;
+    @JsonProperty('deletedCompanies')
+    public deletedCompanies!: number;
+}
