@@ -260,8 +260,17 @@ export class CompanyMapComponent implements OnInit {
           let result = geo.features || geo;
           result.forEach((element: any) => {
             let coordinates = element.geometry.coordinates;
-            let lat = coordinates[1];
-            let lng = coordinates[0];
+            var lat = coordinates?.latitude;
+            var lng = coordinates?.longitude;
+
+            if (lat === undefined || lng === undefined || isNaN(lat) || isNaN(lng)) {
+              lat = coordinates[1];
+              lng = coordinates[0];
+              if (lat === undefined || lng === undefined || isNaN(lat) || isNaN(lng)) {
+                console.warn(`Coordinate non valide per l'elemento con ID: ${element.id}`);
+                return;
+              }
+            }
             element.properties.companies.forEach((company: any) => {
               let status = this.workflowId ? company?.validazioni?.[this.ruleName] || 500 : undefined;
               let iconColor = this.workflowId ? ((status == 200 || status == 202) ? `success`: `danger` ) : `primary`;

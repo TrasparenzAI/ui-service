@@ -265,6 +265,47 @@ export class ChatComponent implements OnInit, AfterViewInit {
       box-shadow: none !important;
       padding: 0 !important;
     }
+
+    /* Pulsante "copia" su ogni bubble (domanda utente e risposta AI) */
+    .message-bubble {
+      position: relative;
+    }
+    .copy-msg-btn {
+      position: absolute;
+      bottom: -22px;
+      right: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: #8a95a1;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease, color 0.15s ease;
+      z-index: 2;
+    }
+    .message-bubble:hover .copy-msg-btn {
+      opacity: 1;
+      visibility: visible;
+    }
+    .copy-msg-btn:hover {
+      color: #0073e6;
+    }
+    .copy-msg-btn.copied {
+      color: #1e8e3e;
+      opacity: 1;
+      visibility: visible;
+    }
+    .copy-msg-btn svg {
+      width: 14px;
+      height: 14px;
+      pointer-events: none;
+    }
     `;
 
   customButtons = [
@@ -352,6 +393,7 @@ export class ChatComponent implements OnInit, AfterViewInit {
       this.setupRequestInterceptor(el);
       this.setupResponseInterceptor(el);
       this.setupOnMessage(el);
+      this.setupCopyButtons(el);
     });
   }
 
@@ -619,6 +661,74 @@ export class ChatComponent implements OnInit, AfterViewInit {
       }
       this.ngZone.runOutsideAngular(() => this.injectChart(cfg));
     };
+  }
+
+  // ─── Copia messaggio ─────────────────────────────────────────────────────────
+
+  /** SVG icona "copia" (clipboard) */
+  private readonly COPY_ICON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+
+  /** SVG icona "copiato" (spunta) */
+  private readonly COPIED_ICON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+  /**
+   * Osserva lo shadow DOM di Deep Chat e inietta un pulsante "copia"
+   * su ogni bubble di messaggio (sia domanda utente che risposta AI).
+   * Necessario perché lo streaming riscrive continuamente l'innerHTML
+   * del bubble AI (overwrite: true), rimuovendo eventuali pulsanti già
+   * iniettati: il MutationObserver li re-inietta ad ogni variazione.
+   */
+  private setupCopyButtons(el: any): void {
+    const shadow = el.shadowRoot;
+    if (!shadow) return;
+
+    const injectAll = () => {
+      const bubbles = shadow.querySelectorAll('.message-bubble');
+      bubbles.forEach((bubble: HTMLElement) => this.injectCopyButton(bubble));
+    };
+
+    const observer = new MutationObserver(() => {
+      this.ngZone.runOutsideAngular(() => injectAll());
+    });
+    observer.observe(shadow, { childList: true, subtree: true, characterData: true });
+
+    injectAll();
+  }
+
+  private injectCopyButton(bubble: HTMLElement): void {
+    // Evita doppie iniezioni
+    if (bubble.querySelector(':scope > .copy-msg-btn')) return;
+
+    // Salta i bubble "tecnici": loading dots e nuvoletta di thinking
+    if (bubble.querySelector('.dc-dot') || bubble.querySelector('.thinking-bubble-wrap')) return;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-msg-btn';
+    btn.title = 'Copia';
+    btn.innerHTML = this.COPY_ICON_SVG;
+
+    btn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+
+      // Copia il testo del bubble escludendo il player audio e il pulsante stesso
+      const clone = bubble.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('.copy-msg-btn, .ai-audio-player').forEach(n => n.remove());
+      const textToCopy = (clone.innerText ?? clone.textContent ?? '').trim();
+      if (!textToCopy) return;
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        btn.innerHTML = this.COPIED_ICON_SVG;
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = this.COPY_ICON_SVG;
+          btn.classList.remove('copied');
+        }, 1200);
+      }).catch(err => console.error('[copy] clipboard non disponibile:', err));
+    });
+
+    bubble.appendChild(btn);
   }
 
   // ─── Audio ───────────────────────────────────────────────────────────────────
