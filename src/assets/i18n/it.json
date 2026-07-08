@@ -64,10 +64,10 @@
         "cols": {
           "date": "Data e ora di completamento dell'aggiornamento",
           "updatedFrom": "Eventuale filtro `updatedFrom` usato per processare solo gli enti aggiornati dopo una certa data",
-          "total": "Totale di amministrazioni lette da IndicePA",
+          "total": "Totale delle Amministrazioni lette da IndicePA",
           "processed": "Amministrazioni processate",
-          "active": "Amministrazioni attive nel sistema dopo l'aggiornamento, limitato alla sorgente IndicePA",
-          "visible": "Amministrazioni attive e visibili nel sistema dopo l'aggiornamento, limitato alla sorgente IndicePA",
+          "active": "Amministrazioni presenti nel sistema",
+          "visible": "Amministrazioni visibili nel sistema",
           "inserted": "Amministrazioni inserite nel sistema",
           "modified": "Amministrazioni modificate nel sistema",
           "deleted": "Amministrazioni non più presenti in IndicePA e cancellate logicamente nel sistema"
