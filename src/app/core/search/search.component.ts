@@ -9,6 +9,7 @@ import { Status } from '../rule/status.enum';
 import { RuleService } from '../rule/rule.service';
 import { Rule, SelectRule } from '../rule/rule.model';
 import { HttpParams } from '@angular/common/http';
+import { debounceTime } from 'rxjs/operators';
 import { ResultService } from '../result/result.service';
 import { CodiceCategoria } from '../../common/model/codice-categoria.enum';
 import { AuthGuard } from '../../auth/auth-guard';
@@ -103,21 +104,20 @@ export class SearchComponent implements OnInit {
           });
         });
         if (this.filterFormSearch) {
-          this.filterFormSearch.controls['workflowId'].patchValue(workflowId);
-          this.filterFormSearch.controls['ruleName'].patchValue(this.ruleName);
-          this.filterFormSearch.controls['child'].patchValue(queryParams.child);
-          this.filterFormSearch.controls['codiceIpa'].patchValue(queryParams.codiceIpa);
-          this.filterFormSearch.controls['status'].patchValue(queryParams.status||'');
-          this.filterFormSearch.controls['sort'].patchValue(queryParams.sort);
+          this.filterFormSearch.controls['workflowId'].patchValue(workflowId, { emitEvent: false });
+          this.filterFormSearch.controls['child'].patchValue(queryParams.child, { emitEvent: false });
+          this.filterFormSearch.controls['codiceIpa'].patchValue(queryParams.codiceIpa, { emitEvent: false });
+          this.filterFormSearch.controls['status'].patchValue(queryParams.status||'', { emitEvent: false });
+          this.filterFormSearch.controls['sort'].patchValue(queryParams.sort, { emitEvent: false });
         } else {
           this.filterFormSearch = this.formBuilder.group({
             workflowId: new FormControl(workflowId),
             child: new FormControl(queryParams.child),
             status: new FormControl(queryParams.status||''),
-            denominazioneEnte: new FormControl(),
-            codiceFiscaleEnte: new FormControl(),
+            denominazioneEnte: new FormControl(queryParams.denominazioneEnte),
+            codiceFiscaleEnte: new FormControl(queryParams.codiceFiscaleEnte),
             codiceIpa: new FormControl(queryParams.codiceIpa),
-            codiceCategoria: new FormControl(),
+            codiceCategoria: new FormControl(queryParams.codiceCategoria),
             sort: new FormControl(queryParams.sort),
           });
         }
@@ -127,13 +127,28 @@ export class SearchComponent implements OnInit {
           this.filterFormSearch.controls['workflowId'].patchValue(workflowId);
         }
         this.loadRules(workflowId);
-        this.filterFormSearch.valueChanges.subscribe((value: any) => {
-          if (this.filterFormSearch.controls.ruleName.touched) {
+        this.filterFormSearch.valueChanges.pipe(debounceTime(300)).subscribe((value: any) => {
+          if (this.filterFormSearch.controls.ruleName?.touched) {
             this.manageOptionStatus(value.ruleName);
           }
           this.loadRules(value.workflowId);
+          this.updateQueryParams(value);
         });
       });
+    });
+  }
+
+  private updateQueryParams(value: any): void {
+    const queryParams: any = {};
+    Object.keys(value).forEach((key) => {
+      if (value[key] !== null && value[key] !== undefined && value[key] !== '') {
+        queryParams[key] = value[key];
+      }
+    });
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      replaceUrl: true
     });
   }
 

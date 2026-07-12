@@ -9,6 +9,7 @@ import { LoginResponse, OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../../../environments/environment';
 import { RoleEnum } from '../../auth/role.enum';
 import { AuthGuard } from '../../auth/auth-guard';
+import { debounceTime } from 'rxjs';
 
 @Component({
     selector: 'company-search',
@@ -27,12 +28,12 @@ import { AuthGuard } from '../../auth/auth-guard';
 })
 export class CompanySearchComponent implements OnInit, OnDestroy{
   
-  public filterFormSearch: FormGroup;
+  public filterFormSearch!: FormGroup;
   public collapse: boolean = false;
   options: Array<SelectControlOption> = [];
   optionsCategoria: Array<SelectControlOption> = [{ value: '', text: '*', selected: true }];
   optionsRegione: Array<SelectControlOption> = [{ value: '', text: '*', selected: true }];
-  isAdmin: boolean;
+  isAdmin: boolean = false;
 
   constructor(private formBuilder: FormBuilder,
               private route: ActivatedRoute,
@@ -78,18 +79,49 @@ export class CompanySearchComponent implements OnInit, OnDestroy{
     });
 
     this.route.queryParams.subscribe((queryParams) => {
-      this.filterFormSearch = this.formBuilder.group({
-        denominazioneEnte: new FormControl(''),
-        codiceFiscaleEnte: new FormControl(),
-        codiceIpa: new FormControl(queryParams['codiceIpa']),
-        codiceCategoria: new FormControl(queryParams['codiceCategoria']),
-        indirizzo: new FormControl(''),
-        regione: new FormControl(''),
-        provincia: new FormControl(''),
-        comune: new FormControl(''),
-        sort: new FormControl('denominazioneEnte'),
-        visibile: new FormControl(true)
-      });
+      if (this.filterFormSearch) {
+        this.filterFormSearch.patchValue({
+          denominazioneEnte: queryParams.denominazioneEnte,
+          codiceFiscaleEnte: queryParams.codiceFiscaleEnte,
+          codiceIpa: queryParams.codiceIpa,
+          codiceCategoria: queryParams.codiceCategoria,
+          indirizzo: queryParams.indirizzo,
+          regione: queryParams.regione,
+          provincia: queryParams.provincia,
+          comune: queryParams.comune,
+          sort: queryParams.sort || 'denominazioneEnte'
+        }, { emitEvent: false });
+      } else {
+        this.filterFormSearch = this.formBuilder.group({
+          denominazioneEnte: new FormControl(queryParams.denominazioneEnte),
+          codiceFiscaleEnte: new FormControl(queryParams.codiceFiscaleEnte),
+          codiceIpa: new FormControl(queryParams.codiceIpa),
+          codiceCategoria: new FormControl(queryParams.codiceCategoria),
+          indirizzo: new FormControl(queryParams.indirizzo),
+          regione: new FormControl(queryParams.regione),
+          provincia: new FormControl(queryParams.provincia),
+          comune: new FormControl(queryParams.comune),
+          sort: new FormControl(queryParams.sort || 'denominazioneEnte'),
+          visibile: new FormControl(true)
+        });
+        this.filterFormSearch.valueChanges.pipe(debounceTime(300)).subscribe((value: any) => {
+          this.updateQueryParams(value);
+        });
+      }
+    });
+  }
+
+  private updateQueryParams(value: any): void {
+    const queryParams: any = {};
+    Object.keys(value).forEach((key) => {
+      if (value[key] !== null && value[key] !== undefined && value[key] !== '') {
+        queryParams[key] = value[key];
+      }
+    });
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      replaceUrl: true
     });
   }
 
