@@ -314,6 +314,10 @@
           "title": "Non Trovato",
           "ruletitle": "Non Trovato"
         },
+        "405" : {
+          "title": "Mancata corrispondenza del metodo",
+          "ruletitle": "Mancata corrispondenza del metodo"
+        },
         "500" : {
           "title": "Sito PA non dichiarato",
           "ruletitle": "Non Presente",
