@@ -52,7 +52,7 @@
       </it-dropdown>
     </div>
   </div>
-  @if (filterFormSearch) {
+  @if (filterFormSearch && userData) {
     <form [formGroup]="filterFormSearch">
       @if (company) {
         @if (userData) {
