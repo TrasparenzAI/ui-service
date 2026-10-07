@@ -33,6 +33,9 @@
               <td>
                 @if (row.lastScanDate) {
                   {{ row.lastScanDate | date:'dd/MM/yyyy HH:mm' }}
+                  @if (row.origin) {
+                    <br><small class="text-muted">{{ row.origin === 'globale' ? 'Globale' : 'Dedicata' }}</small>
+                  }
                 } @else {
                   <span class="text-muted">—</span>
                 }
@@ -47,6 +50,8 @@
               <td class="text-center">
                 @if (row.loading) {
                   <it-progress-spinner [small]="true"></it-progress-spinner>
+                } @else if (row.sezioniOk === null) {
+                  <span class="text-muted">—</span>
                 } @else {
                   <span class="badge bg-success">{{ row.sezioniOk }}</span>
                 }
@@ -54,6 +59,8 @@
               <td class="text-center">
                 @if (row.loading) {
                   <it-progress-spinner [small]="true"></it-progress-spinner>
+                } @else if (row.sezioniNonRegolari === null) {
+                  <span class="text-muted">—</span>
                 } @else {
                   <span [class]="row.sezioniNonRegolari > 0 ? 'badge bg-danger' : 'badge bg-success'">
                     {{ row.sezioniNonRegolari }}

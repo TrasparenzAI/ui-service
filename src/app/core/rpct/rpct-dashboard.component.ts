@@ -4,11 +4,11 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, filter, switchMap, take } from 'rxjs/operators';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { CompanyService } from '../company/company.service';
-import { ResultService } from '../result/result.service';
 import { Company } from '../company/company.model';
 import { Workflow, Status } from '../conductor/workflow.model';
 import { environment } from '../../../environments/environment';
 import { AuthGuard } from '../../auth/auth-guard';
+import { RpctCountsService, RpctScan, RpctScanOrigin } from './rpct-counts.service';
 
 interface RpctTableRow {
   codiceIpa: string;
@@ -16,15 +16,18 @@ interface RpctTableRow {
   lastScanDate: Date | null;
   status: Status | null;
   badge: string;
-  sezioniOk: number;
-  sezioniNonRegolari: number;
+  sezioniOk: number | null;
+  sezioniNonRegolari: number | null;
   workflowId: string | null;
+  origin: RpctScanOrigin | null;
+  loading: boolean;
 }
 
 @Component({
   selector: 'app-rpct-dashboard',
   templateUrl: './rpct-dashboard.component.html',
-  standalone: false
+  standalone: false,
+  providers: [RpctCountsService]
 })
 export class RpctDashboardComponent implements OnInit {
 
@@ -35,7 +38,7 @@ export class RpctDashboardComponent implements OnInit {
   constructor(
     private oidcSecurityService: OidcSecurityService,
     private companyService: CompanyService,
-    private resultService: ResultService,
+    private rpctCountsService: RpctCountsService,
     private authGuard: AuthGuard,
     private router: Router
   ) {}
@@ -74,48 +77,45 @@ export class RpctDashboardComponent implements OnInit {
       lastScanDate: null,
       status: null,
       badge: 'secondary',
-      sezioniOk: 0,
-      sezioniNonRegolari: 0,
-      workflowId: null
+      sezioniOk: null,
+      sezioniNonRegolari: null,
+      workflowId: null,
+      origin: null,
+      loading: true
     }));
 
-    const requests = ipas.map(ipa =>
-      forkJoin({
-        companies: this.companyService.getAll({ codiceIpa: ipa, size: 1 }).pipe(catchError(() => of([]))),
-        workflow: this.resultService.lastWorflowCompleted(ipa, false).pipe(catchError(() => of(null)))
-      })
-    );
+    // Spec 001: ultima scansione completata tra dedicate + globali, conteggi filtrati per codiceIpa
+    this.rpctCountsService.listGlobalScans().pipe(
+      switchMap(globals => forkJoin(ipas.map(ipa =>
+        forkJoin({
+          companies: this.companyService.getAll({ codiceIpa: ipa, size: 1 }).pipe(catchError(() => of([]))),
+          scans: this.rpctCountsService.listScans(ipa, globals)
+        })
+      )))
+    ).subscribe(results => {
+      results.forEach((res, i) => {
+        const row = this.rows[i];
+        const company: Company = res.companies?.[0];
+        if (company) row.denominazioneEnte = company.denominazioneEnte;
 
-    forkJoin(requests).pipe(
-      switchMap(results => {
-        results.forEach((res, i) => {
-          const company: Company = res.companies?.[0];
-          const workflow: Workflow | null = res.workflow;
-          if (company) this.rows[i].denominazioneEnte = company.denominazioneEnte;
-          if (workflow) {
-            this.rows[i].workflowId = workflow.workflowId;
-            this.rows[i].lastScanDate = workflow.startTime;
-            this.rows[i].status = workflow.status;
-            this.rows[i].badge = workflow.badge;
-          }
+        const last: RpctScan | undefined = res.scans.find(scan => scan.workflow.isCompleted);
+        if (!last) {
+          row.loading = false;
+          return;
+        }
+        const workflow: Workflow = last.workflow;
+        row.workflowId = workflow.workflowId;
+        row.lastScanDate = workflow.startTime;
+        row.status = workflow.status;
+        row.badge = workflow.badge;
+        row.origin = last.origin;
+
+        this.rpctCountsService.countFor(row.codiceIpa, workflow.workflowId).subscribe(counts => {
+          row.sezioniOk = counts ? counts.sezioniOk : null;
+          row.sezioniNonRegolari = counts ? counts.sezioniNonRegolari : null;
+          row.loading = false;
         });
-
-        const workflowIds = this.rows
-          .map(r => r.workflowId)
-          .filter((id): id is string => !!id);
-
-        if (workflowIds.length === 0) return of(null);
-        return this.resultService.getWorkflowMap(undefined, workflowIds).pipe(catchError(() => of(null)));
-      })
-    ).subscribe(workflowMap => {
-      if (workflowMap) {
-        this.rows.forEach(row => {
-          if (!row.workflowId) return;
-          const counts = workflowMap[row.workflowId] || {};
-          row.sezioniOk = (counts[200] || 0) + (counts[202] || 0);
-          row.sezioniNonRegolari = (counts[404] || 0) + (counts[400] || 0) + (counts[500] || 0);
-        });
-      }
+      });
       this.isLoading = false;
     });
   }
