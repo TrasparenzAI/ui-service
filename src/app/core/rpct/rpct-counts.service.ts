@@ -38,9 +38,12 @@ export class RpctCountsService {
     );
   }
 
-  /** Scansioni della PA: dedicate + globali, dalla più recente. */
-  listScans(codiceIpa: string, globals: RpctScan[]): Observable<RpctScan[]> {
-    return this.resultService.listWorkflows(codiceIpa, false).pipe(
+  /**
+   * Scansioni della PA: dedicate + globali, dalla più recente.
+   * refreshRunning: aggiorna dal Conductor lo stato delle dedicate in RUNNING (spec 003).
+   */
+  listScans(codiceIpa: string, globals: RpctScan[], refreshRunning = false): Observable<RpctScan[]> {
+    return this.resultService.listWorkflows(codiceIpa, refreshRunning).pipe(
       map(workflows => (workflows || []).map(workflow => ({ workflow, origin: 'dedicata' as RpctScanOrigin }))),
       catchError(() => of([] as RpctScan[])),
       map(dedicated => [...dedicated, ...globals].sort(
