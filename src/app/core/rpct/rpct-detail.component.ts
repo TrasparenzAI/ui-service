@@ -1,16 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter, take, catchError, switchMap } from 'rxjs/operators';
-import { forkJoin, of } from 'rxjs';
+import { filter, take, catchError, switchMap, map } from 'rxjs/operators';
+import { forkJoin, of, Subscription, timer } from 'rxjs';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../../../environments/environment';
 import { AuthGuard } from '../../auth/auth-guard';
 import { CompanyService } from '../company/company.service';
 import { ResultService } from '../result/result.service';
 import { Company } from '../company/company.model';
-import { Workflow } from '../conductor/workflow.model';
+import { Workflow, Status } from '../conductor/workflow.model';
 import { Result } from '../result/result.model';
 import { RpctCountsService, RpctScan, RpctScanOrigin } from './rpct-counts.service';
+import { RpctScanService } from './rpct-scan.service';
+import { ApiMessageService, MessageType } from '../api-message.service';
 
 interface HistoryRow {
   workflowId: string;
@@ -23,14 +26,15 @@ interface HistoryRow {
 }
 
 const HISTORY_SIZE = 10;
+const POLLING_MS = 30000;
 
 @Component({
   selector: 'app-rpct-detail',
   templateUrl: './rpct-detail.component.html',
   standalone: false,
-  providers: [RpctCountsService]
+  providers: [RpctCountsService, RpctScanService]
 })
-export class RpctDetailComponent implements OnInit {
+export class RpctDetailComponent implements OnInit, OnDestroy {
 
   codiceIpa: string | null = null;
   accessDenied = false;
@@ -41,6 +45,11 @@ export class RpctDetailComponent implements OnInit {
   hasRunning = false;
   nonConformi: Result[] = [];
   historyRows: HistoryRow[] = [];
+  isStartingScan = false;
+
+  // Spec 003: workflowId delle scansioni dedicate in corso, seguite con polling
+  private runningIds = new Set<string>();
+  private pollingSub: Subscription | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -49,7 +58,9 @@ export class RpctDetailComponent implements OnInit {
     private authGuard: AuthGuard,
     private companyService: CompanyService,
     private resultService: ResultService,
-    private rpctCountsService: RpctCountsService
+    private rpctCountsService: RpctCountsService,
+    private rpctScanService: RpctScanService,
+    private apiMessageService: ApiMessageService
   ) {}
 
   ngOnInit(): void {
@@ -87,14 +98,16 @@ export class RpctDetailComponent implements OnInit {
     forkJoin({
       companies: this.companyService.getAll({ codiceIpa, size: 1 }).pipe(catchError(() => of([]))),
       scans: this.rpctCountsService.listGlobalScans().pipe(
-        switchMap(globals => this.rpctCountsService.listScans(codiceIpa, globals))
+        switchMap(globals => this.rpctCountsService.listScans(codiceIpa, globals, true))
       )
     }).pipe(
       switchMap(({ companies, scans }) => {
         this.company = (companies as Company[])[0] || null;
 
         // hasRunning solo sulle dedicate: una globale gira ~2 giorni ogni 6 (spec 001 research)
-        this.hasRunning = scans.some(s => s.origin === 'dedicata' && s.workflow.isRunning);
+        const running = scans.filter(s => s.origin === 'dedicata' && s.workflow.isRunning);
+        this.hasRunning = running.length > 0;
+        this.runningIds = new Set(running.map(s => s.workflow.workflowId));
         this.lastWorkflow = scans.find(s => s.workflow.isCompleted)?.workflow || null;
 
         const history: RpctScan[] = scans.slice(0, HISTORY_SIZE);
@@ -134,7 +147,78 @@ export class RpctDetailComponent implements OnInit {
       });
 
       this.isLoading = false;
+      this.syncPolling();
     });
+  }
+
+  /** Spec 003: avvia la scansione e la mostra subito nello storico come RUNNING. */
+  startScan(): void {
+    if (!this.codiceIpa || this.hasRunning || this.isStartingScan) return;
+    const codiceIpa = this.codiceIpa;
+    this.isStartingScan = true;
+    this.rpctScanService.start(codiceIpa).subscribe({
+      next: workflowId => {
+        this.isStartingScan = false;
+        this.apiMessageService.sendMessage(MessageType.SUCCESS, `Scansione avviata per ${codiceIpa}.`);
+        this.historyRows = [{
+          workflowId,
+          startTime: new Date(),
+          status: Status.RUNNING,
+          badge: 'primary',
+          sezioniOk: null,
+          sezioniNonRegolari: null,
+          origin: 'dedicata' as RpctScanOrigin
+        }, ...this.historyRows].slice(0, HISTORY_SIZE);
+        this.hasRunning = true;
+        this.runningIds.add(workflowId);
+        this.syncPolling();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isStartingScan = false;
+        const message = this.rpctScanService.isForbidden(error)
+          ? `Non sei autorizzato ad avviare una scansione per ${codiceIpa}.`
+          : `Impossibile avviare la scansione (errore ${error?.status ?? 'sconosciuto'}).`;
+        this.apiMessageService.sendMessage(MessageType.ERROR, message);
+      }
+    });
+  }
+
+  /** Polling ogni 30s dello stato delle scansioni in corso; a fine scansione ricarica i dati. */
+  private syncPolling(): void {
+    if (this.runningIds.size === 0) {
+      this.stopPolling();
+      return;
+    }
+    if (this.pollingSub) return;
+    this.pollingSub = timer(POLLING_MS, POLLING_MS).pipe(
+      switchMap(() => forkJoin([...this.runningIds].map(id =>
+        this.rpctScanService.status(id).pipe(map(workflow => ({ id, workflow })))
+      )))
+    ).subscribe(results => {
+      results.forEach(({ id, workflow }) => {
+        if (!workflow) return;
+        const row = this.historyRows.find(r => r.workflowId === id);
+        if (row) {
+          row.status = workflow.status;
+          row.badge = workflow.badge;
+        }
+        if (!workflow.isRunning) this.runningIds.delete(id);
+      });
+      if (this.runningIds.size === 0 && this.codiceIpa) {
+        this.stopPolling();
+        this.hasRunning = false;
+        this.loadData(this.codiceIpa);
+      }
+    });
+  }
+
+  private stopPolling(): void {
+    this.pollingSub?.unsubscribe();
+    this.pollingSub = null;
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
   }
 
   goToSearch(workflowId?: string): void {

@@ -25,8 +25,9 @@
           <span class="badge bg-primary ms-2">Scansione in corso...</span>
         }
       </div>
-      <button itButton="primary" [disabled]="hasRunning || isLoading">
-        <it-icon name="play-circle" size="sm"></it-icon> Avvia nuova scansione
+      <button itButton="primary" [disabled]="hasRunning || isLoading || isStartingScan" (click)="startScan()">
+        <it-icon name="play-circle" size="sm"></it-icon>
+        {{ isStartingScan ? 'Avvio in corso...' : 'Avvia nuova scansione' }}
       </button>
     </div>
 
