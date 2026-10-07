@@ -10,20 +10,25 @@ import { ResultService } from '../result/result.service';
 import { Company } from '../company/company.model';
 import { Workflow } from '../conductor/workflow.model';
 import { Result } from '../result/result.model';
+import { RpctCountsService, RpctScan, RpctScanOrigin } from './rpct-counts.service';
 
 interface HistoryRow {
   workflowId: string;
   startTime: Date;
   status: string;
   badge: string;
-  sezioniOk: number;
-  sezioniNonRegolari: number;
+  sezioniOk: number | null;
+  sezioniNonRegolari: number | null;
+  origin: RpctScanOrigin;
 }
+
+const HISTORY_SIZE = 10;
 
 @Component({
   selector: 'app-rpct-detail',
   templateUrl: './rpct-detail.component.html',
-  standalone: false
+  standalone: false,
+  providers: [RpctCountsService]
 })
 export class RpctDetailComponent implements OnInit {
 
@@ -43,7 +48,8 @@ export class RpctDetailComponent implements OnInit {
     private oidcSecurityService: OidcSecurityService,
     private authGuard: AuthGuard,
     private companyService: CompanyService,
-    private resultService: ResultService
+    private resultService: ResultService,
+    private rpctCountsService: RpctCountsService
   ) {}
 
   ngOnInit(): void {
@@ -77,19 +83,21 @@ export class RpctDetailComponent implements OnInit {
   }
 
   private loadData(codiceIpa: string): void {
+    // Spec 001: scansioni = dedicate + globali; conteggi sempre filtrati per codiceIpa
     forkJoin({
       companies: this.companyService.getAll({ codiceIpa, size: 1 }).pipe(catchError(() => of([]))),
-      workflows: this.resultService.listWorkflows(codiceIpa, false).pipe(catchError(() => of([])))
+      scans: this.rpctCountsService.listGlobalScans().pipe(
+        switchMap(globals => this.rpctCountsService.listScans(codiceIpa, globals))
+      )
     }).pipe(
-      switchMap(({ companies, workflows }) => {
+      switchMap(({ companies, scans }) => {
         this.company = (companies as Company[])[0] || null;
 
-        const allWorkflows = workflows as Workflow[];
-        this.hasRunning = allWorkflows.some(w => w.isRunning);
-        const completed = allWorkflows.filter(w => w.isCompleted);
-        this.lastWorkflow = completed[0] || null;
+        // hasRunning solo sulle dedicate: una globale gira ~2 giorni ogni 6 (spec 001 research)
+        this.hasRunning = scans.some(s => s.origin === 'dedicata' && s.workflow.isRunning);
+        this.lastWorkflow = scans.find(s => s.workflow.isCompleted)?.workflow || null;
 
-        const workflowIds = allWorkflows.map(w => w.workflowId).filter(Boolean);
+        const history: RpctScan[] = scans.slice(0, HISTORY_SIZE);
 
         const nonConformiCall = this.lastWorkflow
           ? this.resultService.getAll(
@@ -98,28 +106,30 @@ export class RpctDetailComponent implements OnInit {
             ).pipe(catchError(() => of([])))
           : of([]);
 
-        const countsCall = workflowIds.length
-          ? this.resultService.getWorkflowMap(undefined, workflowIds).pipe(catchError(() => of(null)))
-          : of(null);
+        const countsCall = history.length
+          ? forkJoin(history.map(s => this.rpctCountsService.countFor(codiceIpa, s.workflow.workflowId)))
+          : of([]);
 
         return forkJoin({ nonConformi: nonConformiCall, counts: countsCall }).pipe(
-          switchMap(({ nonConformi, counts }) => of({ allWorkflows, nonConformi, counts }))
+          switchMap(({ nonConformi, counts }) => of({ history, nonConformi, counts }))
         );
       })
-    ).subscribe(({ allWorkflows, nonConformi, counts }) => {
+    ).subscribe(({ history, nonConformi, counts }) => {
       this.nonConformi = (nonConformi as Result[]).filter(
         r => r.status !== 200 && r.status !== 202
       );
 
-      this.historyRows = (allWorkflows as Workflow[]).map(w => {
-        const c = counts?.[w.workflowId] || {};
+      this.historyRows = history.map((scan, i) => {
+        const w = scan.workflow;
+        const c = counts[i];
         return {
           workflowId: w.workflowId,
           startTime: w.startTime,
           status: w.status,
           badge: w.badge,
-          sezioniOk: (c[200] || 0) + (c[202] || 0),
-          sezioniNonRegolari: (c[404] || 0) + (c[400] || 0) + (c[500] || 0)
+          sezioniOk: c ? c.sezioniOk : null,
+          sezioniNonRegolari: c ? c.sezioniNonRegolari : null,
+          origin: scan.origin
         };
       });
 

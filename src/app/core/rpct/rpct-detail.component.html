@@ -113,6 +113,7 @@
                 <thead class="table-light">
                   <tr>
                     <th>Data</th>
+                    <th>Tipo</th>
                     <th>Stato</th>
                     <th class="text-center">Sezioni OK</th>
                     <th class="text-center">Non conformi</th>
@@ -123,14 +124,27 @@
                   @for (row of historyRows; track row.workflowId) {
                     <tr>
                       <td>{{ row.startTime | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td>
+                        <span [class]="row.origin === 'globale' ? 'badge bg-secondary' : 'badge bg-primary'">
+                          {{ row.origin === 'globale' ? 'Globale' : 'Dedicata' }}
+                        </span>
+                      </td>
                       <td><span [class]="'badge bg-' + row.badge">{{ row.status }}</span></td>
                       <td class="text-center">
-                        <span class="badge bg-success">{{ row.sezioniOk }}</span>
+                        @if (row.sezioniOk === null) {
+                          <span class="text-muted">—</span>
+                        } @else {
+                          <span class="badge bg-success">{{ row.sezioniOk }}</span>
+                        }
                       </td>
                       <td class="text-center">
-                        <span [class]="row.sezioniNonRegolari > 0 ? 'badge bg-danger' : 'badge bg-success'">
-                          {{ row.sezioniNonRegolari }}
-                        </span>
+                        @if (row.sezioniNonRegolari === null) {
+                          <span class="text-muted">—</span>
+                        } @else {
+                          <span [class]="row.sezioniNonRegolari > 0 ? 'badge bg-danger' : 'badge bg-success'">
+                            {{ row.sezioniNonRegolari }}
+                          </span>
+                        }
                       </td>
                       <td class="text-end">
                         <button itButton="outline-primary" size="xs" (click)="goToSearch(row.workflowId)">
