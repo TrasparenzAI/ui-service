@@ -393,7 +393,7 @@ export abstract class CommonService<T extends Base> {
    * @param {HttpParams} params
    * @returns {Observable<any>}
    */
-  public getArray(relativePath: string, params: HttpParams, customRequestMapping?: string): Observable<T[]> {
+  public getArray(relativePath: string, params?: HttpParams, customRequestMapping?: string): Observable<T[]> {
 
     const requestMapping = customRequestMapping ? customRequestMapping :  this.getRequestMapping();
     return this.getApiBase()
@@ -511,6 +511,24 @@ export abstract class CommonService<T extends Base> {
               catchError((httpErrorResponse: HttpErrorResponse) => {
                 const springError = new SpringError(httpErrorResponse, this.translateService);
                 this.apiMessageService.sendMessage(MessageType.ERROR, springError.getRestErrorMessage());
+                return throwError(() => springError);
+              })
+            );
+        })
+      );
+  }
+
+  public actuatorInfo(): Observable<any> {
+    return this.getApiBase()
+      .pipe(
+        switchMap((apiBase) => {
+          return this.httpClient.get( apiBase + `/actuator/info`,{}).pipe(
+              map((result) => {
+                return result;
+              }),
+              catchError( (httpErrorResponse: HttpErrorResponse) => {
+                const springError = new SpringError(httpErrorResponse, this.translateService);
+                this.apiMessageService.sendMessage(MessageType.ERROR,  springError.getRestErrorMessage());
                 return throwError(() => springError);
               })
             );

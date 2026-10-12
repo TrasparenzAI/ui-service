@@ -58,7 +58,21 @@
         "UNREACHABLE": "Non raggiungibile",
         "unknown": "Sconosciuto"
       },
-      "unavailable": "N/D"
+      "unavailable": "N/D",
+      "indice-pa-history": {
+        "title": "Storico degli aggiornamenti da IndicePA",
+        "cols": {
+          "date": "Data e ora di completamento dell'aggiornamento",
+          "updatedFrom": "Eventuale filtro `updatedFrom` usato per processare solo gli enti aggiornati dopo una certa data",
+          "total": "Totale delle Amministrazioni lette da IndicePA",
+          "processed": "Amministrazioni processate",
+          "active": "Amministrazioni presenti nel sistema",
+          "visible": "Amministrazioni visibili nel sistema",
+          "inserted": "Amministrazioni inserite nel sistema",
+          "modified": "Amministrazioni modificate nel sistema",
+          "deleted": "Amministrazioni non più presenti in IndicePA e cancellate logicamente nel sistema"
+        }
+      }
     },
     "ai": {
       "defaultModel": "Modello di default",
@@ -155,6 +169,9 @@
         }        
       }
     },
+    "core": {
+      "page": "pagina"
+    },
     "navigation" : {
       "full-login": "Area riservata",
       "logout": "Esci",
@@ -177,6 +194,7 @@
       "start-now": "Avvia Ora",
       "chat-ai": "Chat AI",
       "credits": "Crediti",
+      "details": "Dettagli",
       "rpct-dashboard": "RPCT Dashboard",
       "grafici-mappe": {
         "title": "Statistiche",
@@ -190,6 +208,7 @@
       "title": "Filtra la tua ricerca"
     },
     "company" : {
+      "service-title":"Public Sites Service",
       "denominazioneEnte": "Denominazione Ente",
       "codiceIpa": "Codice IPA",
       "codiceFiscaleEnte": "Codice Fiscale",
@@ -209,7 +228,9 @@
       "history-description": "Storico sezioni AT rilevate",
       "visibile": "Visibile",
       "message-invisibile": "Sei sicuro di volere rendere NON VISIBILE l'amministrazione {{denominazioneEnte}}?",
-      "message-visibile": "Sei sicuro di volere rendere nuovamente VISIBILE l'amministrazione {{denominazioneEnte}}?"
+      "message-visibile": "Sei sicuro di volere rendere nuovamente VISIBILE l'amministrazione {{denominazioneEnte}}?",
+      "lock-status": "Lock degli aggiornamenti attivo",
+      "last-update":"La data di ultimo aggiornamento delle PA è il {{lastUpdate}}"
     },
     "result": {
       "destinationUrl": "URL della Regola",
@@ -293,6 +314,10 @@
         "404" : {
           "title": "Non Trovato",
           "ruletitle": "Non Trovato"
+        },
+        "405" : {
+          "title": "Mancata corrispondenza del metodo",
+          "ruletitle": "Mancata corrispondenza del metodo"
         },
         "500" : {
           "title": "Sito PA non dichiarato",

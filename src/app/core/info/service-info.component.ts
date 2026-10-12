@@ -1,11 +1,13 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { ConfigurationService } from '../configuration/configuration.service';
 import { Configuration } from '../configuration/configuration.model';
 import { environment } from '../../../environments/environment';
-import { Build, ServiceInfo } from './service-info.model';
+import { Build, IndicePaUpdateRecord, ServiceInfo } from './service-info.model';
 import { HttpClient } from '@angular/common/http';
 import { catchError, forkJoin, map, of } from 'rxjs';
 import packageJson from '../../../../package.json';
+import { ItModalComponent } from 'design-angular-kit';
+import { CompanyService } from '../company/company.service';
 
 @Component({
     selector: 'service-info',
@@ -16,10 +18,20 @@ import packageJson from '../../../../package.json';
 })
 export class ServiceInfoComponent implements OnInit {
   protected services: ServiceInfo[] = [];
+  // Stato modale
+  @ViewChild("lockModal") lockModal!: ItModalComponent;
+  protected lockStatus: boolean | null = null;
+  protected indicePaHistory: IndicePaUpdateRecord[] = [];
+  protected indicePaHistoryLoading = false;
+  // Paginazione storico
+  protected historyCurrentPage = 0;
+  protected historyPageSize = 5;
+  protected historyTotalPages = 0;
 
   constructor(
     private httpClient: HttpClient,
     private configurationService: ConfigurationService,
+    private companyService: CompanyService,
   ) {}
 
   ngOnInit(): void {
@@ -40,6 +52,68 @@ export class ServiceInfoComponent implements OnInit {
       forkJoin(serviceUrls.map((url) => this.fetchServiceInfo(url))).subscribe((infos: ServiceInfo[]) => {
         this.services = [uiService, ...infos];
       });
+    });
+  }
+
+  openDetails(service: ServiceInfo): void {
+    this.lockStatus = null;
+    this.indicePaHistory = [];
+    this.indicePaHistoryLoading = true;
+    this.historyCurrentPage = 0;
+    this.historyTotalPages = 0;
+
+    this.companyService.getAny(`/v1/admin/lockStatus`).pipe(
+      catchError(() => of(null))
+    ).subscribe((locked) => {
+      if (locked !== null) {
+        this.lockStatus = locked;
+      }
+    });
+
+    this.loadHistoryPage(0);
+    this.lockModal.toggle();
+  }
+
+  onHistoryPageChange(page: number): void {
+    this.loadHistoryPage(page);
+  }
+
+  onHistoryPageSizeChange(size: number): void {
+    this.historyPageSize = size;
+    this.historyCurrentPage = 0;
+    this.loadHistoryPage(0);
+  }
+
+  private loadHistoryPage(page: number): void {
+    this.indicePaHistoryLoading = true;
+    this.companyService.getAny(
+      `/v1/admin/indicePaUpdateHistory?sort=updateDate,desc&page=${page}&size=${this.historyPageSize}`
+    ).pipe(
+      catchError(() => of(null))
+    ).subscribe((history) => {
+      if (history) {
+        this.indicePaHistory = (history.content || []).map((record: any) => ({
+          ...record,
+          updateDate: record.updateDate ? new Date(record.updateDate) : undefined
+        } as IndicePaUpdateRecord));
+        this.historyCurrentPage = history.page?.number ?? page;
+        this.historyTotalPages = history.page?.totalPages ?? 0;
+      }
+      this.indicePaHistoryLoading = false;
+    });
+  }
+
+
+  onToggleLock(newValue: boolean): void {
+    const endpoint = newValue ? 'lock' : 'unlock';
+    this.httpClient.post(`${environment.companyApiUrl}/v1/admin/${endpoint}`, null).pipe(
+      catchError(() => {
+        return of(null);
+      })
+    ).subscribe((res) => {
+      if (res !== null) {
+        this.lockStatus = newValue;
+      }
     });
   }
 

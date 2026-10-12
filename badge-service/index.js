@@ -6,8 +6,8 @@ const { buildGaugeOption } = require('./gauge-options');
 
 const app = express();
 const RESULT_API_URL = process.env.RESULT_API_URL;
-const API_URL = process.env.API_URL;
 const RULE_API_URL = process.env.RULE_API_URL;
+const COMPANY_API_URL = process.env.COMPANY_API_URL;
 
 function countRules(node) {
   let count = 1; // conta questo nodo
@@ -17,18 +17,6 @@ function countRules(node) {
     }
   }
   return count;
-}
-
-// Recupera root_rule dal config-service
-async function getRootRule() {
-  const response = await fetch(`${API_URL}/config-service/properties`);
-  if (!response.ok) throw new Error('Config service non raggiungibile');
-  const data = await response.json();
-  const properties = data._embedded?.properties ?? [];
-  const cronBody = properties.find(p => p.key === 'workflow.cron.body');
-  if (!cronBody) throw new Error('workflow.cron.body non trovato');
-  const body = JSON.parse(cronBody.value);
-  return body.input.root_rule; 
 }
 
 // Recupera il totale delle regole dal rule-service
@@ -58,26 +46,30 @@ app.get('/badge/:codiceIpa.png', async (req, res) => {
       height,
       time: new Date().toISOString()
     });
+
+    const companyUrl = `${COMPANY_API_URL}/v1/companies?codiceIpa=${codiceIpa}`;
+    const responseCompany = await fetch(companyUrl);
+    const companyData = await responseCompany.json();
+    const companysArray = companyData.content || []; 
     
-    const url = `${RESULT_API_URL}/v1/results/codiceipa?codiceIpa=${codiceIpa}&size=500`;
+    if (companysArray.length == 0) return res.status(404).end();
+
+    const url = `${RESULT_API_URL}/v1/results/codiceipa/count?codiceIpa=${codiceIpa}&status=200&status=202`;
 
     const response = await fetch(url);
 
     const data = await response.json();
-    const resultsArray = data.content || []; 
-    
-    if (resultsArray.length == 0) return res.status(404).end();
 
     // 2. Filtra sull'array identificato
-    const rulesOK = resultsArray.filter(r => r.status == 200 || r.status == 202).length;
+    const rulesOK = data.total;
 
-    const rootRule = await getRootRule();
+    const rootRule = data.rule;
     const totalRules = await getTotalRules(rootRule); 
 
     const gaugeData = {
       rulesOK: rulesOK,
       total: totalRules,
-      denominazioneEnte: resultsArray[0]?.company?.denominazioneEnte,
+      denominazioneEnte: companysArray[0].denominazioneEnte,
       codiceIpa
     };
 

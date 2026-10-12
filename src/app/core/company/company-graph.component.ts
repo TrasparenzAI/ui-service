@@ -231,6 +231,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
         }
       } else {
         this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
+          var rootRule;
           configurations.forEach((conf: Configuration) => {
             if (conf.key === ConfigurationService.JSONRULES_KEY) {
               this.ruleConfigurationId = conf.id;
@@ -239,6 +240,10 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
               Object.keys(value).forEach((key: string) => {
                 this.rules.set(key, this.ruleService.buildInstance(value[key]));
               });
+            }
+            if (conf.key === ConfigurationService.WORKFLOW_CRON_BODY) {
+              let jsonvalue = JSON.parse(conf.value);
+              rootRule = jsonvalue.input.root_rule;
             }            
           });
           if (this.rules) {
@@ -249,7 +254,7 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
                 this.loadRuleData(value.rootRule, this.rules.get(value.rootRule));
               }
             });
-            this.loadRuleData(Rule.AMMINISTRAZIONE_TRASPARENTE, this.rules.get(Rule.AMMINISTRAZIONE_TRASPARENTE));
+            this.loadRuleData(rootRule || Rule.AMMINISTRAZIONE_TRASPARENTE, this.rules.get(rootRule || Rule.AMMINISTRAZIONE_TRASPARENTE));
           } else {
             this.data = [];
           }

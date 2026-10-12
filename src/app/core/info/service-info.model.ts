@@ -16,7 +16,7 @@ export class ServiceInfo {
     @JsonProperty('status', String, true)
     public status?: string;
 
-    constructor(artifact: string, name: string, time: Date, version: string, group: string, status?: string) {
+    constructor(artifact: string, name: string, time: Date|undefined, version: string|undefined, group: string|undefined, status?: string) {
         this.artifact = artifact;
         this.name = name;
         this.time = time;
@@ -30,4 +30,28 @@ export class ServiceInfo {
 export class Build {
     @JsonProperty('build', ServiceInfo)
     public build: ServiceInfo;
+}
+
+@JsonObject("IndicePaUpdateRecord")
+export class IndicePaUpdateRecord {
+    @JsonProperty('id')
+    public id!: number;
+    @JsonProperty('updateDate', ISODateTimeConverter)
+    public updateDate!: Date;
+    @JsonProperty('updatedFrom')
+    public updatedFrom!: string;
+    @JsonProperty('totalIndicePaCompanies')
+    public totalIndicePaCompanies!: number;
+    @JsonProperty('processedCompanies')
+    public processedCompanies!: number;
+    @JsonProperty('totalActiveCompanies')
+    public totalActiveCompanies!: number;
+    @JsonProperty('totalVisibleCompanies')
+    public totalVisibleCompanies!: number;
+    @JsonProperty('insertedCompanies')
+    public insertedCompanies!: number;
+    @JsonProperty('modifiedCompanies')
+    public modifiedCompanies!: number;
+    @JsonProperty('deletedCompanies')
+    public deletedCompanies!: number;
 }

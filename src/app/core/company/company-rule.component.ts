@@ -77,14 +77,10 @@ export class CompanyRuleComponent implements OnInit, OnChanges, OnDestroy,AfterV
   }
 
   workflowRuleName(workflowId: string): Observable<string> {
-    if (this.isAuthenticated) {
-      return this.resultService.getWorkflow(workflowId).pipe(
-        map((result: Workflow) => result.root_rule),
-        catchError(() => this.ruleFromConfiguration())
-      );
-    } else {
-      return this.ruleFromConfiguration();
-    }
+    return this.resultService.getWorkflow(workflowId).pipe(
+      map((result: Workflow) => result.root_rule),
+      catchError(() => this.ruleFromConfiguration())
+    );
   }
 
   ruleFromConfiguration(): Observable<string> {
