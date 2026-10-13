@@ -64,6 +64,7 @@ import { ServiceInfoComponent } from './info/service-info.component';
 import { ChatModule } from './ai/chat.module';
 import { RpctDashboardComponent } from './rpct/rpct-dashboard.component';
 import { RpctDetailComponent } from './rpct/rpct-detail.component';
+import { RpctAtmapComponent } from './rpct/rpct-atmap.component';
 import { NgxEchartsModule } from 'ngx-echarts';
 /**
  * Nel core module inserisco tutti i components necessari all'avvio dell'applicazione.
@@ -98,6 +99,7 @@ import { NgxEchartsModule } from 'ngx-echarts';
         ResultRuleListComponent,
         RpctDashboardComponent,
         RpctDetailComponent,
+        RpctAtmapComponent,
     ],
     imports: [
         AppRoutingModule,

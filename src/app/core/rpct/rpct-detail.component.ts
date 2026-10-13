@@ -16,6 +16,7 @@ import { RpctScanService } from './rpct-scan.service';
 import { ApiMessageService, MessageType } from '../api-message.service';
 import { TranslateService } from '@ngx-translate/core';
 import { isRunningStatus, rpctStatusLabel, RPCT_RUNNING_ROW_CLASS } from './rpct-status';
+import { RpctAtmapService, RpctAtMapState } from './rpct-atmap.service';
 
 interface HistoryRow {
   workflowId: string;
@@ -35,7 +36,7 @@ const POLLING_MS = 30000;
   templateUrl: './rpct-detail.component.html',
   standalone: false,
   styleUrls: ['./rpct-spinner.css'],
-  providers: [RpctCountsService, RpctScanService]
+  providers: [RpctCountsService, RpctScanService, RpctAtmapService]
 })
 export class RpctDetailComponent implements OnInit, OnDestroy {
 
@@ -52,6 +53,9 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
 
   // Spec 005: riga verde chiaro per le scansioni in corso
   readonly runningRowClass = RPCT_RUNNING_ROW_CLASS;
+
+  // Spec 008: ultima AT map della PA (null = in caricamento)
+  atMapState: RpctAtMapState | null = null;
 
   // Spec 006: scansione globale in corso (confermata dal Conductor), blocca l'avvio manuale
   hasGlobalRunning = false;
@@ -72,7 +76,8 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     private rpctCountsService: RpctCountsService,
     private rpctScanService: RpctScanService,
     private apiMessageService: ApiMessageService,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private rpctAtmapService: RpctAtmapService
   ) {}
 
   ngOnInit(): void {
@@ -106,6 +111,9 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
   }
 
   private loadData(codiceIpa: string): void {
+    // Spec 008: AT map caricata a parte, non blocca la pagina
+    this.rpctAtmapService.last(codiceIpa).subscribe(state => this.atMapState = state);
+
     // Spec 001: scansioni = dedicate + globali; conteggi sempre filtrati per codiceIpa
     forkJoin({
       companies: this.companyService.getAll({ codiceIpa, size: 1 }).pipe(catchError(() => of([]))),
@@ -287,6 +295,11 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     const params: any = { codiceIpa: this.codiceIpa };
     if (workflowId) params.workflowId = workflowId;
     this.router.navigate(['/search'], { queryParams: params });
+  }
+
+  /** Spec 008: pagina AT map della PA. */
+  goToAtmap(): void {
+    this.router.navigate(['/dashboard', this.codiceIpa, 'atmap']);
   }
 
   goBack(): void {

@@ -20,6 +20,7 @@
             <th>Stato</th>
             <th class="text-center">Sezioni OK</th>
             <th class="text-center">Non regolari</th>
+            <th class="text-center">AT map</th>
             <th></th>
           </tr>
         </thead>
@@ -70,6 +71,14 @@
                   <span [class]="row.sezioniNonRegolari > 0 ? 'badge bg-danger' : 'badge bg-success'">
                     {{ row.sezioniNonRegolari }}
                   </span>
+                }
+              </td>
+              <td class="text-center">
+                @switch (row.atmap) {
+                  @case ('loading') { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> }
+                  @case ('present') { <span class="badge bg-success">Presente</span> }
+                  @case ('absent') { <span class="badge bg-danger">Non presente</span> }
+                  @default { <span class="badge bg-secondary" title="Dato non ancora disponibile">N/D</span> }
                 }
               </td>
               <td class="text-end">

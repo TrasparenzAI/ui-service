@@ -11,6 +11,7 @@ import { AuthGuard } from '../../auth/auth-guard';
 import { RpctCountsService, RpctScan, RpctScanOrigin } from './rpct-counts.service';
 import { TranslateService } from '@ngx-translate/core';
 import { isRunningStatus, rpctStatusLabel, RPCT_RUNNING_ROW_CLASS } from './rpct-status';
+import { RpctAtmapService, RpctAtMapStatus } from './rpct-atmap.service';
 
 interface RpctTableRow {
   codiceIpa: string;
@@ -25,6 +26,8 @@ interface RpctTableRow {
   loading: boolean;
   // Spec 005: la PA ha almeno una scansione in corso (dedicata o globale confermata dal Conductor)
   running: boolean;
+  // Spec 008: AT map dell'ultima scansione completata ('loading' finché la chiamata non risponde)
+  atmap: RpctAtMapStatus | 'loading';
 }
 
 @Component({
@@ -32,7 +35,7 @@ interface RpctTableRow {
   templateUrl: './rpct-dashboard.component.html',
   standalone: false,
   styleUrls: ['./rpct-spinner.css'],
-  providers: [RpctCountsService]
+  providers: [RpctCountsService, RpctAtmapService]
 })
 export class RpctDashboardComponent implements OnInit {
 
@@ -50,7 +53,8 @@ export class RpctDashboardComponent implements OnInit {
     private rpctCountsService: RpctCountsService,
     private authGuard: AuthGuard,
     private router: Router,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private rpctAtmapService: RpctAtmapService
   ) {}
 
   ngOnInit(): void {
@@ -92,8 +96,12 @@ export class RpctDashboardComponent implements OnInit {
       workflowId: null,
       origin: null,
       loading: true,
-      running: false
+      running: false,
+      atmap: 'loading'
     }));
+
+    // Spec 008: stato AT map per PA, indipendente dal resto della tabella
+    this.rows.forEach(row => this.rpctAtmapService.last(row.codiceIpa).subscribe(res => row.atmap = res.state));
 
     // Spec 001: ultima scansione completata tra dedicate + globali, conteggi filtrati per codiceIpa
     this.rpctCountsService.listGlobalScans(true).pipe(

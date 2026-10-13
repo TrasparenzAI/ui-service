@@ -94,6 +94,34 @@
           </div>
         </div>
       </div>
+
+      <!-- AT map (spec 008) -->
+      <div class="card mb-4">
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="fw-bold me-3">AT map</span>
+            @switch (atMapState?.state) {
+              @case (undefined) { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> }
+              @case ('present') {
+                <span class="badge bg-success">Presente</span>
+                @if (atMapState?.atMap?.url) {
+                  <a [href]="atMapState?.atMap?.url" target="_blank" rel="noopener"><small>{{ atMapState?.atMap?.url }}</small></a>
+                }
+              }
+              @case ('absent') {
+                <span class="badge bg-danger">Non presente</span>
+                @if (atMapState?.atMap?.errorMessage) {
+                  <small class="text-muted">{{ atMapState?.atMap?.errorMessage }}</small>
+                }
+              }
+              @default { <span class="text-muted">Informazione in attesa del servizio dedicato</span> }
+            }
+          </div>
+          <button itButton="outline-primary" (click)="goToAtmap()">
+            <it-icon name="list" size="sm"></it-icon> Apri AT map
+          </button>
+        </div>
+      </div>
     }
 
     <!-- Azioni (spec 005): visibile anche durante il caricamento, con pulsante disabilitato -->
