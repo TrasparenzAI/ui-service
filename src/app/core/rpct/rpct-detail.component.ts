@@ -224,10 +224,10 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
       },
       error: (error: HttpErrorResponse) => {
         this.isStartingScan = false;
-        const message = this.rpctScanService.isForbidden(error)
-          ? `Non sei autorizzato ad avviare una scansione per ${codiceIpa}.`
-          : `Impossibile avviare la scansione (errore ${error?.status ?? 'sconosciuto'}).`;
-        this.apiMessageService.sendMessage(MessageType.ERROR, message);
+        // Spec 009: 409 = scansione della PA già in corso → ricarica per mostrare riga e blocco
+        const { message, alreadyRunning } = this.rpctScanService.startErrorMessage(error, codiceIpa);
+        this.apiMessageService.sendMessage(alreadyRunning ? MessageType.WARNING : MessageType.ERROR, message);
+        if (alreadyRunning) this.loadData(codiceIpa);
       }
     });
   }
