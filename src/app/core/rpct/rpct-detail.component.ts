@@ -505,10 +505,12 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     this.loadPageCounts();
   }
 
-  goToSearch(workflowId?: string): void {
-    const params: any = { codiceIpa: this.codiceIpa };
-    if (workflowId) params.workflowId = workflowId;
-    this.router.navigate(['/search'], { queryParams: params });
+  /**
+   * Dettaglio di una scansione: grafico delle sezioni dell'ente per quella scansione (pagina company-graph esistente).
+   * /search usa /v1/results, non accessibile al ruolo RPCT; company-graph legge con byWorkflow (RPCT dalla result-service 0.3.6).
+   */
+  goToScanDetail(workflowId: string): void {
+    this.router.navigate(['/company-graph'], { queryParams: { codiceIpa: this.codiceIpa, workflowId } });
   }
 
   /** Spec 008: pagina AT map della PA. */

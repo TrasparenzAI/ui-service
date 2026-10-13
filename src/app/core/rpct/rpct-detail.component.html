@@ -135,7 +135,7 @@
                       <span class="rpct-h-ok"><strong>{{ row.counts.sezioniOk }}</strong><span class="rpct-muted">/{{ row.counts.total }}</span></span>
                       <span class="rpct-h-ko fw-bold" [class.text-danger]="row.counts.sezioniNonRegolari > 0" [class.text-success]="row.counts.sezioniNonRegolari === 0">{{ row.counts.sezioniNonRegolari }}</span>
                     }
-                    <a class="rpct-h-link" href="" (click)="$event.preventDefault(); goToSearch(row.workflowId)">Dettaglio ›</a>
+                    <a class="rpct-h-link" href="" (click)="$event.preventDefault(); goToScanDetail(row.workflowId)">Dettaglio ›</a>
                   </div>
                 }
               } @empty {
