@@ -7,7 +7,7 @@ import { LoginResponse, OidcSecurityService } from 'angular-auth-oidc-client';
 import { OrgChart } from "d3-org-chart";
 import { ItModalComponent, ItTabContainerComponent, ItTabItemComponent, NotificationPosition, SelectControlOption } from 'design-angular-kit';
 import { jsPDF } from "jspdf";
-import { Observable, map, of as observableOf, of, switchMap } from 'rxjs';
+import { Observable, forkJoin, map, of as observableOf, of, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthGuard } from '../../auth/auth-guard';
 import { RoleEnum } from '../../auth/role.enum';
@@ -230,23 +230,22 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
           this.manageChart();
         }
       } else {
-        this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
-          var rootRule;
-          configurations.forEach((conf: Configuration) => {
-            if (conf.key === ConfigurationService.JSONRULES_KEY) {
-              this.ruleConfigurationId = conf.id;
-              this.rules = new Map();
-              let value = JSON.parse(conf.value);
-              Object.keys(value).forEach((key: string) => {
-                this.rules.set(key, this.ruleService.buildInstance(value[key]));
-              });
+        forkJoin({
+          rules: this.configurationService.findOne(ConfigurationService.APP_RULE, ConfigurationService.JSONRULES_KEY),
+          workflowBody: this.configurationService.findOne(ConfigurationService.APP_SCHEDULER, ConfigurationService.WORKFLOW_CRON_BODY)
+        }).subscribe({
+          next: ({ rules, workflowBody }) => {
+            if (!rules) {
+              return;
             }
-            if (conf.key === ConfigurationService.WORKFLOW_CRON_BODY) {
-              let jsonvalue = JSON.parse(conf.value);
-              rootRule = jsonvalue.input.root_rule;
-            }            
-          });
-          if (this.rules) {
+            this.ruleConfigurationId = rules.id;
+            this.rules = new Map();
+            const value = JSON.parse(rules.value);
+            Object.keys(value).forEach((key: string) => {
+              this.rules.set(key, this.ruleService.buildInstance(value[key]));
+            });
+            const rootRule: string = (workflowBody ? JSON.parse(workflowBody.value)?.input?.root_rule : undefined)
+              || Rule.AMMINISTRAZIONE_TRASPARENTE;
             this.loadSelectRules();
             this.filterFormSearch.controls.rootRule.patchValue(Rule.AMMINISTRAZIONE_TRASPARENTE);
             this.filterFormSearch.valueChanges.subscribe((value: any) => {
@@ -254,11 +253,10 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
                 this.loadRuleData(value.rootRule, this.rules.get(value.rootRule));
               }
             });
-            this.loadRuleData(rootRule || Rule.AMMINISTRAZIONE_TRASPARENTE, this.rules.get(rootRule || Rule.AMMINISTRAZIONE_TRASPARENTE));
-          } else {
-            this.data = [];
-          }
-        });    
+            this.loadRuleData(rootRule, this.rules.get(rootRule));
+          },
+          error: () => { /* già notificato dal servizio */ }
+        });
       }
     });
   }
