@@ -23,7 +23,7 @@ interface RpctTableRow {
   workflowId: string | null;
   origin: RpctScanOrigin | null;
   loading: boolean;
-  // Spec 005: la PA ha almeno una scansione in corso (dedicata o globale)
+  // Spec 005: la PA ha almeno una scansione in corso (dedicata o globale confermata dal Conductor)
   running: boolean;
 }
 
@@ -96,7 +96,7 @@ export class RpctDashboardComponent implements OnInit {
     }));
 
     // Spec 001: ultima scansione completata tra dedicate + globali, conteggi filtrati per codiceIpa
-    this.rpctCountsService.listGlobalScans().pipe(
+    this.rpctCountsService.listGlobalScans(true).pipe(
       switchMap(globals => forkJoin(ipas.map(ipa =>
         forkJoin({
           companies: this.companyService.getAll({ codiceIpa: ipa, size: 1 }).pipe(catchError(() => of([]))),

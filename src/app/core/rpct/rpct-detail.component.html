@@ -101,6 +101,12 @@
       <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div class="d-flex align-items-center flex-wrap gap-2">
           <span class="fw-bold me-3">Azioni</span>
+          @if (hasGlobalRunning) {
+            <span class="badge table-success d-inline-flex align-items-center gap-2" style="background-color: var(--bs-table-bg)">
+              <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
+              Scansione globale in corso
+            </span>
+          }
           @if (hasRunning) {
             <span class="badge table-success d-inline-flex align-items-center gap-2" style="background-color: var(--bs-table-bg)">
               <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
@@ -108,7 +114,7 @@
             </span>
           }
         </div>
-        <button itButton="primary" [disabled]="hasRunning || isLoading || isStartingScan" (click)="startScan()">
+        <button itButton="primary" [disabled]="hasRunning || hasGlobalRunning || isLoading || isStartingScan" (click)="startScan()">
           <it-icon name="play-circle" size="sm"></it-icon>
           {{ isStartingScan ? 'Avvio in corso...' : 'Avvia nuova scansione' }}
         </button>

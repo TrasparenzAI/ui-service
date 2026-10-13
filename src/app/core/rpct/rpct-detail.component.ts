@@ -53,8 +53,13 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
   // Spec 005: riga verde chiaro per le scansioni in corso
   readonly runningRowClass = RPCT_RUNNING_ROW_CLASS;
 
+  // Spec 006: scansione globale in corso (confermata dal Conductor), blocca l'avvio manuale
+  hasGlobalRunning = false;
+
   // Spec 003: workflowId delle scansioni dedicate in corso, seguite con polling
   private runningIds = new Set<string>();
+  // Spec 006: workflowId delle scansioni globali in corso, seguite con lo stesso polling
+  private globalRunningIds = new Set<string>();
   private pollingSub: Subscription | null = null;
 
   constructor(
@@ -104,17 +109,18 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     // Spec 001: scansioni = dedicate + globali; conteggi sempre filtrati per codiceIpa
     forkJoin({
       companies: this.companyService.getAll({ codiceIpa, size: 1 }).pipe(catchError(() => of([]))),
-      scans: this.rpctCountsService.listGlobalScans().pipe(
+      scans: this.rpctCountsService.listGlobalScans(true).pipe(
         switchMap(globals => this.rpctCountsService.listScans(codiceIpa, globals, true))
       )
     }).pipe(
       switchMap(({ companies, scans }) => {
         this.company = (companies as Company[])[0] || null;
 
-        // hasRunning solo sulle dedicate: una globale gira ~2 giorni ogni 6 (spec 001 research)
+        // hasRunning = dedicate; hasGlobalRunning = globali confermate dal Conductor (spec 006)
         const running = scans.filter(s => s.origin === 'dedicata' && s.workflow.isRunning);
         this.hasRunning = running.length > 0;
         this.runningIds = new Set(running.map(s => s.workflow.workflowId));
+        this.setGlobalRunning(scans);
         this.lastWorkflow = scans.find(s => s.workflow.isCompleted)?.workflow || null;
 
         const history: RpctScan[] = scans.slice(0, HISTORY_SIZE);
@@ -158,11 +164,39 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Spec 003: avvia la scansione e la mostra subito nello storico come RUNNING. */
+  /** Spec 006: globali in corso (origin 'globale', già confermate dal Conductor). */
+  private setGlobalRunning(scans: RpctScan[]): void {
+    this.globalRunningIds = new Set(
+      scans.filter(s => s.origin === 'globale' && s.workflow.isRunning).map(s => s.workflow.workflowId)
+    );
+    this.hasGlobalRunning = this.globalRunningIds.size > 0;
+  }
+
+  /**
+   * Spec 003: avvia la scansione e la mostra subito nello storico come RUNNING.
+   * Spec 006: prima ricontrolla le globali; se una è in corso non avvia e blocca il pulsante.
+   */
   startScan(): void {
-    if (!this.codiceIpa || this.hasRunning || this.isStartingScan) return;
+    if (!this.codiceIpa || this.hasRunning || this.hasGlobalRunning || this.isStartingScan) return;
     const codiceIpa = this.codiceIpa;
     this.isStartingScan = true;
+    this.rpctCountsService.listGlobalScans(true).subscribe(globals => {
+      if (globals.some(s => s.workflow.isRunning)) {
+        this.setGlobalRunning(globals);
+        this.isStartingScan = false;
+        this.apiMessageService.sendMessage(
+          MessageType.WARNING,
+          'È in corso una scansione globale: la scansione manuale potrà essere avviata al termine.'
+        );
+        this.syncPolling();
+        return;
+      }
+      this.startDedicatedScan(codiceIpa);
+    });
+  }
+
+  /** Spec 003: avvio effettivo (invariato), dopo il ricontrollo delle globali. */
+  private startDedicatedScan(codiceIpa: string): void {
     this.rpctScanService.start(codiceIpa).subscribe({
       next: workflowId => {
         this.isStartingScan = false;
@@ -190,30 +224,41 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** Polling ogni 30s dello stato delle scansioni in corso; a fine scansione ricarica i dati. */
+  /**
+   * Polling ogni 30s dello stato delle scansioni in corso, dedicate e globali (spec 003, 006).
+   * Quando una termina ricarica i dati: loadData() ricalcola i blocchi e riavvia il polling se serve.
+   */
   private syncPolling(): void {
-    if (this.runningIds.size === 0) {
+    const ids = [...this.runningIds, ...this.globalRunningIds];
+    if (ids.length === 0) {
       this.stopPolling();
       return;
     }
     if (this.pollingSub) return;
     this.pollingSub = timer(POLLING_MS, POLLING_MS).pipe(
-      switchMap(() => forkJoin([...this.runningIds].map(id =>
+      switchMap(() => forkJoin([...this.runningIds, ...this.globalRunningIds].map(id =>
         this.rpctScanService.status(id).pipe(map(workflow => ({ id, workflow })))
       )))
     ).subscribe(results => {
+      let ended = false;
       results.forEach(({ id, workflow }) => {
+        // null = Conductor non raggiungibile: nessun cambiamento (resta in corso)
         if (!workflow) return;
         const row = this.historyRows.find(r => r.workflowId === id);
         if (row) {
           row.status = workflow.status;
           row.badge = workflow.badge;
         }
-        if (!workflow.isRunning) this.runningIds.delete(id);
+        if (!workflow.isRunning) {
+          this.runningIds.delete(id);
+          this.globalRunningIds.delete(id);
+          ended = true;
+        }
       });
-      if (this.runningIds.size === 0 && this.codiceIpa) {
+      if (ended && this.codiceIpa) {
         this.stopPolling();
-        this.hasRunning = false;
+        this.hasRunning = this.runningIds.size > 0;
+        this.hasGlobalRunning = this.globalRunningIds.size > 0;
         this.loadData(this.codiceIpa);
       }
     });

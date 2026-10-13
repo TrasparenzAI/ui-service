@@ -30,9 +30,13 @@ export class RpctCountsService {
 
   constructor(private resultService: ResultService) {}
 
-  /** Workflow globali (tutte le PA): da caricare una volta e passare a listScans(). */
-  listGlobalScans(): Observable<RpctScan[]> {
-    return this.resultService.listWorkflows(undefined, false).pipe(
+  /**
+   * Workflow globali (tutte le PA): da caricare una volta e passare a listScans().
+   * refreshRunning: conferma dal Conductor lo stato delle globali in RUNNING (spec 006);
+   * se il Conductor non risponde resta lo stato del result-service.
+   */
+  listGlobalScans(refreshRunning = false): Observable<RpctScan[]> {
+    return this.resultService.listWorkflows(undefined, refreshRunning).pipe(
       map(workflows => (workflows || []).map(workflow => ({ workflow, origin: 'globale' as RpctScanOrigin }))),
       catchError(() => of([]))
     );
