@@ -1,7 +1,7 @@
 {
   "name": "trasparenzai",
-  "version": "2.7.5",
-  "buildDate": "2026-10-13T08:35:31.198Z",
+  "version": "2.7.6",
+  "buildDate": "2026-10-13T09:11:35.406Z",
   "license": "GNU Affero General Public License v3.0",
   "scripts": {
     "ng": "ng",
