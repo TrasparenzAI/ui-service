@@ -4,7 +4,7 @@
 
   @if (isLoading) {
     <div class="d-flex justify-content-center my-5">
-      <it-progress-spinner></it-progress-spinner>
+      <it-spinner double="true"></it-spinner>
     </div>
   } @else if (rows.length === 0) {
     <it-alert type="warning">
@@ -25,7 +25,7 @@
         </thead>
         <tbody>
           @for (row of rows; track row.codiceIpa) {
-            <tr style="cursor: pointer" (click)="goToDetail(row.codiceIpa)">
+            <tr style="cursor: pointer" [class]="row.running ? runningRowClass : ''" (click)="goToDetail(row.codiceIpa)">
               <td>
                 <strong>{{ row.denominazioneEnte }}</strong>
                 <br><small class="text-muted">{{ row.codiceIpa }}</small>
@@ -41,15 +41,20 @@
                 }
               </td>
               <td>
-                @if (row.status) {
-                  <span [class]="'badge bg-' + row.badge">{{ row.status }}</span>
+                @if (row.running) {
+                  <span class="d-inline-flex align-items-center gap-2">
+                    <span class="badge bg-primary">{{ statusLabel(runningStatus) }}</span>
+                    <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
+                  </span>
+                } @else if (row.status) {
+                  <span [class]="'badge bg-' + row.badge">{{ statusLabel(row.status) }}</span>
                 } @else {
                   <span class="text-muted">—</span>
                 }
               </td>
               <td class="text-center">
                 @if (row.loading) {
-                  <it-progress-spinner [small]="true"></it-progress-spinner>
+                  <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
                 } @else if (row.sezioniOk === null) {
                   <span class="text-muted">—</span>
                 } @else {
@@ -58,7 +63,7 @@
               </td>
               <td class="text-center">
                 @if (row.loading) {
-                  <it-progress-spinner [small]="true"></it-progress-spinner>
+                  <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
                 } @else if (row.sezioniNonRegolari === null) {
                   <span class="text-muted">—</span>
                 } @else {

@@ -14,6 +14,8 @@ import { Result } from '../result/result.model';
 import { RpctCountsService, RpctScan, RpctScanOrigin } from './rpct-counts.service';
 import { RpctScanService } from './rpct-scan.service';
 import { ApiMessageService, MessageType } from '../api-message.service';
+import { TranslateService } from '@ngx-translate/core';
+import { isRunningStatus, rpctStatusLabel, RPCT_RUNNING_ROW_CLASS } from './rpct-status';
 
 interface HistoryRow {
   workflowId: string;
@@ -32,6 +34,7 @@ const POLLING_MS = 30000;
   selector: 'app-rpct-detail',
   templateUrl: './rpct-detail.component.html',
   standalone: false,
+  styleUrls: ['./rpct-spinner.css'],
   providers: [RpctCountsService, RpctScanService]
 })
 export class RpctDetailComponent implements OnInit, OnDestroy {
@@ -47,6 +50,9 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
   historyRows: HistoryRow[] = [];
   isStartingScan = false;
 
+  // Spec 005: riga verde chiaro per le scansioni in corso
+  readonly runningRowClass = RPCT_RUNNING_ROW_CLASS;
+
   // Spec 003: workflowId delle scansioni dedicate in corso, seguite con polling
   private runningIds = new Set<string>();
   private pollingSub: Subscription | null = null;
@@ -60,7 +66,8 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     private resultService: ResultService,
     private rpctCountsService: RpctCountsService,
     private rpctScanService: RpctScanService,
-    private apiMessageService: ApiMessageService
+    private apiMessageService: ApiMessageService,
+    private translateService: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -219,6 +226,16 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopPolling();
+  }
+
+  /** Spec 005: scansione in corso (riga evidenziata + spinner). */
+  isRunning(status: string | null | undefined): boolean {
+    return isRunningStatus(status);
+  }
+
+  /** Spec 005: etichetta italiana dello stato (chiavi esistenti it.workflow.status.*). */
+  statusLabel(status: string | null | undefined): string {
+    return rpctStatusLabel(this.translateService, status);
   }
 
   goToSearch(workflowId?: string): void {

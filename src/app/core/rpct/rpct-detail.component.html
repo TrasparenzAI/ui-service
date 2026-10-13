@@ -11,8 +11,8 @@
 
   @if (!accessDenied) {
 
-    <!-- Header -->
-    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <!-- Header (spec 005: azioni spostate nella card "Azioni" sopra lo storico) -->
+    <div class="d-flex align-items-center mb-4 flex-wrap gap-2">
       <div class="d-flex align-items-center gap-3">
         <button itButton="outline-primary" (click)="goBack()">
           <it-icon name="arrow-left" size="sm"></it-icon> Torna alla lista
@@ -21,19 +21,12 @@
           <h3 class="mb-0">{{ company?.denominazioneEnte || codiceIpa }}</h3>
           <small class="text-muted">{{ codiceIpa }}</small>
         </div>
-        @if (hasRunning) {
-          <span class="badge bg-primary ms-2">Scansione in corso...</span>
-        }
       </div>
-      <button itButton="primary" [disabled]="hasRunning || isLoading || isStartingScan" (click)="startScan()">
-        <it-icon name="play-circle" size="sm"></it-icon>
-        {{ isStartingScan ? 'Avvio in corso...' : 'Avvia nuova scansione' }}
-      </button>
     </div>
 
     @if (isLoading) {
       <div class="d-flex justify-content-center my-5">
-        <it-progress-spinner></it-progress-spinner>
+        <it-spinner double="true"></it-spinner>
       </div>
     } @else {
 
@@ -101,7 +94,28 @@
           </div>
         </div>
       </div>
+    }
 
+    <!-- Azioni (spec 005): visibile anche durante il caricamento, con pulsante disabilitato -->
+    <div class="card mb-4">
+      <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+          <span class="fw-bold me-3">Azioni</span>
+          @if (hasRunning) {
+            <span class="badge table-success d-inline-flex align-items-center gap-2" style="background-color: var(--bs-table-bg)">
+              <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
+              Scansione in corso
+            </span>
+          }
+        </div>
+        <button itButton="primary" [disabled]="hasRunning || isLoading || isStartingScan" (click)="startScan()">
+          <it-icon name="play-circle" size="sm"></it-icon>
+          {{ isStartingScan ? 'Avvio in corso...' : 'Avvia nuova scansione' }}
+        </button>
+      </div>
+    </div>
+
+    @if (!isLoading) {
       <!-- Storico scansioni -->
       <div class="card">
         <div class="card-header fw-bold">Storico scansioni</div>
@@ -123,14 +137,21 @@
                 </thead>
                 <tbody>
                   @for (row of historyRows; track row.workflowId) {
-                    <tr>
+                    <tr [class]="isRunning(row.status) ? runningRowClass : ''">
                       <td>{{ row.startTime | date:'dd/MM/yyyy HH:mm' }}</td>
                       <td>
                         <span [class]="row.origin === 'globale' ? 'badge bg-secondary' : 'badge bg-primary'">
                           {{ row.origin === 'globale' ? 'Globale' : 'Dedicata' }}
                         </span>
                       </td>
-                      <td><span [class]="'badge bg-' + row.badge">{{ row.status }}</span></td>
+                      <td>
+                        <span class="d-inline-flex align-items-center gap-2">
+                          <span [class]="'badge bg-' + row.badge">{{ statusLabel(row.status) }}</span>
+                          @if (isRunning(row.status)) {
+                            <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
+                          }
+                        </span>
+                      </td>
                       <td class="text-center">
                         @if (row.sezioniOk === null) {
                           <span class="text-muted">—</span>

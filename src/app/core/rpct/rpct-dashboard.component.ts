@@ -9,6 +9,8 @@ import { Workflow, Status } from '../conductor/workflow.model';
 import { environment } from '../../../environments/environment';
 import { AuthGuard } from '../../auth/auth-guard';
 import { RpctCountsService, RpctScan, RpctScanOrigin } from './rpct-counts.service';
+import { TranslateService } from '@ngx-translate/core';
+import { isRunningStatus, rpctStatusLabel, RPCT_RUNNING_ROW_CLASS } from './rpct-status';
 
 interface RpctTableRow {
   codiceIpa: string;
@@ -21,12 +23,15 @@ interface RpctTableRow {
   workflowId: string | null;
   origin: RpctScanOrigin | null;
   loading: boolean;
+  // Spec 005: la PA ha almeno una scansione in corso (dedicata o globale)
+  running: boolean;
 }
 
 @Component({
   selector: 'app-rpct-dashboard',
   templateUrl: './rpct-dashboard.component.html',
   standalone: false,
+  styleUrls: ['./rpct-spinner.css'],
   providers: [RpctCountsService]
 })
 export class RpctDashboardComponent implements OnInit {
@@ -35,12 +40,17 @@ export class RpctDashboardComponent implements OnInit {
   userName: string = '';
   isLoading = true;
 
+  // Spec 005: riga verde chiaro per le PA con scansione in corso
+  readonly runningRowClass = RPCT_RUNNING_ROW_CLASS;
+  readonly runningStatus = Status.RUNNING;
+
   constructor(
     private oidcSecurityService: OidcSecurityService,
     private companyService: CompanyService,
     private rpctCountsService: RpctCountsService,
     private authGuard: AuthGuard,
-    private router: Router
+    private router: Router,
+    private translateService: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -81,7 +91,8 @@ export class RpctDashboardComponent implements OnInit {
       sezioniNonRegolari: null,
       workflowId: null,
       origin: null,
-      loading: true
+      loading: true,
+      running: false
     }));
 
     // Spec 001: ultima scansione completata tra dedicate + globali, conteggi filtrati per codiceIpa
@@ -97,6 +108,7 @@ export class RpctDashboardComponent implements OnInit {
         const row = this.rows[i];
         const company: Company = res.companies?.[0];
         if (company) row.denominazioneEnte = company.denominazioneEnte;
+        row.running = res.scans.some(scan => isRunningStatus(scan.workflow.status));
 
         const last: RpctScan | undefined = res.scans.find(scan => scan.workflow.isCompleted);
         if (!last) {
@@ -118,6 +130,11 @@ export class RpctDashboardComponent implements OnInit {
       });
       this.isLoading = false;
     });
+  }
+
+  /** Spec 005: etichetta italiana dello stato (chiavi esistenti it.workflow.status.*). */
+  statusLabel(status: string | null | undefined): string {
+    return rpctStatusLabel(this.translateService, status);
   }
 
   goToDetail(codiceIpa: string): void {
