@@ -31,12 +31,15 @@
       </div>
       <div class="rpct-stat">
         <div class="rpct-stat-label">Con non conformità <it-icon name="info-circle" size="sm" [itTooltip]="t.nonConformitaAdmin"></it-icon></div>
-        <div class="rpct-stat-value text-danger">{{ adminConNonConformita }}</div>
+        <div class="rpct-stat-value text-danger">
+          @if (countsLoading) { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> } @else { {{ adminConNonConformita }} }
+        </div>
       </div>
       <div class="rpct-stat">
         <div class="rpct-stat-label">Ultima scansione</div>
         <div class="rpct-stat-value rpct-stat-value--sm">
-          @if (ultimaScansione) { {{ ultimaScansione | date:'dd/MM/yyyy HH:mm' }} } @else { — }
+          @if (countsLoading) { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> }
+          @else if (ultimaScansione) { {{ ultimaScansione | date:'dd/MM/yyyy HH:mm' }} } @else { — }
         </div>
       </div>
     </div>

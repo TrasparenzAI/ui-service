@@ -178,6 +178,11 @@ export class RpctDashboardComponent implements OnInit, OnDestroy {
     return `${total ? start + 1 : 0}–${Math.min(total, start + this.pageSize)} di ${total}`;
   }
 
+  /** Spec 011: il riepilogo si mostra solo quando i conteggi di tutte le righe sono arrivati (niente 0 provvisorio). */
+  get countsLoading(): boolean {
+    return this.rows.some(r => r.loading);
+  }
+
   /** Spec 011: riepilogo — amministrazioni con almeno una sezione non conforme nell'ultima scansione. */
   get adminConNonConformita(): number {
     return this.rows.filter(r => (r.sezioniNonRegolari || 0) > 0).length;

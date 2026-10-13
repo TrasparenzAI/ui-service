@@ -80,16 +80,21 @@ export class RpctCountsService {
     );
   }
 
-  /** Spec 011: sezioni della regola (stesso calcolo del gauge); null se la regola non è disponibile. */
-  ruleSections(ruleName: string | null | undefined): Observable<string[] | null> {
-    if (!ruleName) return of(null);
+  /** Spec 011: albero delle regole dal rule-service (una sola chiamata per pagina), anche per il gauge. */
+  rules(): Observable<Map<String, Rule> | null> {
     if (!this.rules$) {
       this.rules$ = this.ruleService.getRules().pipe(
         catchError(() => of(null)),
         shareReplay(1)
       );
     }
-    return this.rules$.pipe(
+    return this.rules$;
+  }
+
+  /** Spec 011: sezioni della regola (stesso calcolo del gauge); null se la regola non è disponibile. */
+  ruleSections(ruleName: string | null | undefined): Observable<string[] | null> {
+    if (!ruleName) return of(null);
+    return this.rules().pipe(
       map(rules => {
         const rule = rules?.get(ruleName);
         return rule ? rule.getCharts(undefined, ruleName, []).map(chart => chart.nodeId) : null;
@@ -104,38 +109,40 @@ export class RpctCountsService {
       '/codiceipa/byWorkflow'
     );
     return forkJoin({ rows: results$, sections: this.ruleSections(ruleName) }).pipe(
-      map(({ rows, sections }) => {
-        const results: Result[] = rows || [];
-        if (results.length >= COUNT_PAGE_SIZE) {
-          console.warn(`RPCT: ${results.length} risultati per ${codiceIpa}/${workflowId}, conteggi forse troncati`);
-        }
-        const isOk = (r: Result) => r.status == 200 || r.status == 202;
-        const sezioniOk = results.filter(isOk).length;
-        // Sezioni con esito KO: nome e pagina dal risultato stesso, nessuna corrispondenza con l'albero
-        const koResults: RpctNonConforme[] = results.filter(r => !isOk(r))
-          .map(r => ({ sezione: r.ruleName, url: r.destinationUrl || null }));
-        if (!sections) {
-          return {
-            sezioniOk, sezioniNonRegolari: koResults.length, total: results.length,
-            nonConformi: koResults, senzaEsito: 0, hasResults: results.length > 0
-          };
-        }
-        // Numeri come il gauge: totale = sezioni della regola, non conformi = totale − OK
-        const total = sections.length;
-        const sezioniNonRegolari = Math.max(0, total - sezioniOk);
-        // Sezioni figlie senza alcun risultato (la radice non entra nel confronto per nome)
-        const resultNames = new Set(results.map(r => r.ruleName));
-        const missing: RpctNonConforme[] = sections
-          .filter(name => name !== ruleName && !resultNames.has(name))
-          .map(name => ({ sezione: name, url: null }));
-        const nonConformi = [...koResults, ...missing];
-        return {
-          sezioniOk, sezioniNonRegolari, total, nonConformi,
-          senzaEsito: Math.max(0, sezioniNonRegolari - nonConformi.length),
-          hasResults: results.length > 0
-        };
-      }),
+      map(({ rows, sections }) => this.computeCounts(rows || [], sections, ruleName)),
       catchError(() => of(null))
     );
+  }
+
+  /** Spec 011: numeri come il gauge; elenco dai risultati KO + sezioni figlie senza risultato. */
+  private computeCounts(results: Result[], sections: string[] | null, ruleName?: string | null): RpctCounts {
+    if (results.length >= COUNT_PAGE_SIZE) {
+      console.warn(`RPCT: ${results.length} risultati, conteggi forse troncati`);
+    }
+    const isOk = (r: Result) => r.status == 200 || r.status == 202;
+    const sezioniOk = results.filter(isOk).length;
+    // Sezioni con esito KO: nome e pagina dal risultato stesso, nessuna corrispondenza con l'albero
+    const koResults: RpctNonConforme[] = results.filter(r => !isOk(r))
+      .map(r => ({ sezione: r.ruleName, url: r.destinationUrl || null }));
+    if (!sections) {
+      return {
+        sezioniOk, sezioniNonRegolari: koResults.length, total: results.length,
+        nonConformi: koResults, senzaEsito: 0, hasResults: results.length > 0
+      };
+    }
+    // Numeri come il gauge: totale = sezioni della regola, non conformi = totale − OK
+    const total = sections.length;
+    const sezioniNonRegolari = Math.max(0, total - sezioniOk);
+    // Sezioni figlie senza alcun risultato (la radice non entra nel confronto per nome)
+    const resultNames = new Set(results.map(r => r.ruleName));
+    const missing: RpctNonConforme[] = sections
+      .filter(name => name !== ruleName && !resultNames.has(name))
+      .map(name => ({ sezione: name, url: null }));
+    const nonConformi = [...koResults, ...missing];
+    return {
+      sezioniOk, sezioniNonRegolari, total, nonConformi,
+      senzaEsito: Math.max(0, sezioniNonRegolari - nonConformi.length),
+      hasResults: results.length > 0
+    };
   }
 }

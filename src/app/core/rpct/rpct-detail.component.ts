@@ -64,6 +64,8 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
   lastOrigin: RpctScanOrigin | null = null;
   // Spec 011: conteggi dell'ultima scansione completata (sezioni della regola, come il gauge)
   lastCounts: RpctCounts | null = null;
+  // Spec 011: la lettura dei risultati dell'ultima scansione è fallita (diverso da "nessun risultato")
+  lastCountsFailed = false;
   hasRunning = false;
   nonConformi: RpctNonConforme[] = [];
   koExpanded = false;
@@ -158,6 +160,7 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     this.lastWorkflow = null;
     this.lastOrigin = null;
     this.lastCounts = null;
+    this.lastCountsFailed = false;
     this.nonConformi = [];
     this.koExpanded = false;
     this.isStartingScan = false;
@@ -236,6 +239,7 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     this.lastOrigin = data.last?.origin || null;
     // Spec 011: report e sezioni non conformi dalla stessa fonte dei conteggi (sezioni della regola)
     this.lastCounts = data.lastCounts && data.lastCounts.hasResults ? data.lastCounts : null;
+    this.lastCountsFailed = !!data.last && data.lastCounts === null;
     this.nonConformi = this.lastCounts?.nonConformi || [];
     if (this.lastWorkflow && data.lastCounts) this.countsCache.set(this.lastWorkflow.workflowId, data.lastCounts);
 

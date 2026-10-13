@@ -48,7 +48,9 @@
                 </div>
               } @else {
                 <p class="rpct-empty">
-                  {{ lastWorkflow ? 'Nessun dato per questa scansione.' : 'Nessuna scansione completata disponibile.' }}
+                  @if (lastCountsFailed) { Impossibile caricare i risultati dell'ultima scansione. }
+                  @else if (lastWorkflow) { Nessun risultato per questa amministrazione nell'ultima scansione. }
+                  @else { Nessuna scansione completata disponibile. }
                 </p>
               }
             </section>
@@ -63,7 +65,7 @@
                 <it-icon name="info-circle" size="sm" [itTooltip]="t.sezioniNonConformi"></it-icon>
               </div>
               @if (!lastCounts) {
-                <p class="rpct-empty">Nessun dato disponibile.</p>
+                <p class="rpct-empty">{{ lastCountsFailed ? 'Impossibile caricare i risultati.' : 'Nessun dato disponibile.' }}</p>
               } @else if (lastCounts.sezioniNonRegolari === 0 && nonConformi.length === 0) {
                 <p class="rpct-empty">Nessuna sezione non conforme.</p>
               } @else {
@@ -131,7 +133,7 @@
                       <span class="rpct-h-ko rpct-muted">—</span>
                     } @else {
                       <span class="rpct-h-ok"><strong>{{ row.counts.sezioniOk }}</strong><span class="rpct-muted">/{{ row.counts.total }}</span></span>
-                      <span class="rpct-h-ko fw-bold" [class.text-danger]="row.counts.sezioniNonRegolari > 0" [class.text-success]="row.counts.sezioniNonRegolari === 0">{{ row.counts.sezioniNonRegolari }} KO</span>
+                      <span class="rpct-h-ko fw-bold" [class.text-danger]="row.counts.sezioniNonRegolari > 0" [class.text-success]="row.counts.sezioniNonRegolari === 0">{{ row.counts.sezioniNonRegolari }}</span>
                     }
                     <a class="rpct-h-link" href="" (click)="$event.preventDefault(); goToSearch(row.workflowId)">Dettaglio ›</a>
                   </div>
@@ -170,7 +172,7 @@
             </div>
           } @else {
             <p class="rpct-tool-text">
-              Verifica di nuovo {{ lastCounts ? 'le ' + lastCounts.total + ' regole' : 'le regole' }} sul sito dell'amministrazione.
+              Avvia una nuova scansione per verificare di nuovo il sito dell'amministrazione.
             </p>
           }
           <!-- Spec 010 (F4): elenco delle globali non leggibile → avvio bloccato finché la verifica non riesce -->

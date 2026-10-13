@@ -38,7 +38,7 @@
 .rpct-rows { border-top: 2px solid #1a1a1a; }
 /* Storico a tutta larghezza: colonne a griglia distribuite sulla riga, intestazione leggera */
 .rpct-hrow {
-  display: grid; grid-template-columns: minmax(150px, 1.4fr) minmax(100px, 1fr) minmax(130px, 1fr) minmax(90px, .8fr) minmax(100px, .8fr) auto;
+  display: grid; grid-template-columns: minmax(150px, 1.4fr) minmax(100px, 1fr) minmax(130px, 1fr) minmax(90px, .8fr) minmax(100px, .8fr) 110px;
   align-items: center; gap: 8px 16px; padding: 12px 8px; border-bottom: 1px solid #d9dadb; font-size: 16px;
 }
 .rpct-hrow--head { padding-top: 10px; padding-bottom: 10px; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #5d7083; }
