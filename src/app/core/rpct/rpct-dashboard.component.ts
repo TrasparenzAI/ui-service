@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError, filter, switchMap, take } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, filter, switchMap, take, takeUntil } from 'rxjs/operators';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { CompanyService } from '../company/company.service';
 import { Company } from '../company/company.model';
@@ -12,6 +12,7 @@ import { RpctCountsService, RpctScan, RpctScanOrigin } from './rpct-counts.servi
 import { isRunningStatus } from './rpct-status';
 import { RpctAtmapService, RpctAtMapStatus } from './rpct-atmap.service';
 import { RPCT_TOOLTIPS } from './rpct-tooltips';
+import { rpctIpas } from './rpct-user';
 
 interface RpctTableRow {
   codiceIpa: string;
@@ -39,7 +40,7 @@ const PAGE_SIZE = 5;
   styleUrls: ['./rpct-spinner.css', './rpct-dashboard.component.css'],
   providers: [RpctCountsService, RpctAtmapService]
 })
-export class RpctDashboardComponent implements OnInit {
+export class RpctDashboardComponent implements OnInit, OnDestroy {
 
   readonly t = RPCT_TOOLTIPS;
   readonly pageSize = PAGE_SIZE;
@@ -51,6 +52,9 @@ export class RpctDashboardComponent implements OnInit {
   // Spec 011: ricerca per nome o codice IPA e paginazione lato client (5 per pagina)
   search = '';
   page = 1;
+
+  // Spec 010 (F1): chiude tutte le chiamate quando si lascia la pagina
+  private destroy$ = new Subject<void>();
 
   constructor(
     private oidcSecurityService: OidcSecurityService,
@@ -71,10 +75,11 @@ export class RpctDashboardComponent implements OnInit {
       return;
     }
 
-    // Aspetta userData con rpct_ipas popolato, prende solo la prima emissione valida
+    // Spec 010 (F2): aspetta i dati utente e decide anche se rpct_ipas manca o è vuoto
     this.oidcSecurityService.userData$.pipe(
-      filter(({ userData }) => !!userData?.rpct_ipas?.length),
-      take(1)
+      filter(({ userData }) => !!userData),
+      take(1),
+      takeUntil(this.destroy$)
     ).subscribe(({ userData }) => {
       this.loadData(userData);
     });
@@ -82,7 +87,7 @@ export class RpctDashboardComponent implements OnInit {
 
   private loadData(userData: any): void {
     this.userName = userData?.name || '';
-    const ipas: string[] = userData?.rpct_ipas || [];
+    const ipas: string[] = rpctIpas(userData);
 
     if (ipas.length === 0) {
       this.isLoading = false;
@@ -104,16 +109,19 @@ export class RpctDashboardComponent implements OnInit {
     }));
 
     // Spec 008: stato AT map per PA, indipendente dal resto della tabella
-    this.rows.forEach(row => this.rpctAtmapService.last(row.codiceIpa).subscribe(res => row.atmap = res.state));
+    this.rows.forEach(row => this.rpctAtmapService.last(row.codiceIpa).pipe(takeUntil(this.destroy$))
+      .subscribe(res => row.atmap = res.state));
 
     // Spec 001: ultima scansione completata tra dedicate + globali, conteggi filtrati per codiceIpa
     this.rpctCountsService.listGlobalScans(true).pipe(
       switchMap(globals => forkJoin(ipas.map(ipa =>
         forkJoin({
           companies: this.companyService.getAll({ codiceIpa: ipa, size: 1 }).pipe(catchError(() => of([]))),
-          scans: this.rpctCountsService.listScans(ipa, globals)
+          // Spec 010 (F8): dedicate in corso confermate dal Conductor, come nel dettaglio
+          scans: this.rpctCountsService.listScans(ipa, globals, true)
         })
-      )))
+      ))),
+      takeUntil(this.destroy$)
     ).subscribe(results => {
       results.forEach((res, i) => {
         const row = this.rows[i];
@@ -132,7 +140,9 @@ export class RpctDashboardComponent implements OnInit {
         row.lastScanDate = workflow.startTime;
         row.origin = last.origin;
 
-        this.rpctCountsService.countFor(row.codiceIpa, workflow.workflowId, workflow.root_rule).subscribe(counts => {
+        this.rpctCountsService.countFor(row.codiceIpa, workflow.workflowId, workflow.root_rule).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(counts => {
           // Spec 011: senza risultati per la PA i conteggi restano "—" (mai uno 0 conforme)
           const valid = counts && counts.hasResults ? counts : null;
           row.sezioniOk = valid ? valid.sezioniOk : null;
@@ -190,6 +200,11 @@ export class RpctDashboardComponent implements OnInit {
 
   goTo(page: number): void {
     this.page = Math.min(Math.max(1, page), this.pages);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   goToDetail(codiceIpa: string): void {

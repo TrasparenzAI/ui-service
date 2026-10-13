@@ -56,9 +56,13 @@ export class RpctCountsService {
    * se il Conductor non risponde resta lo stato del result-service.
    */
   listGlobalScans(refreshRunning = false): Observable<RpctScan[]> {
+    return this.globalScans(refreshRunning).pipe(catchError(() => of([])));
+  }
+
+  /** Spec 010 (F4): come listGlobalScans() ma propaga l'errore, per non scambiare "non letto" con "nessuna globale". */
+  globalScans(refreshRunning = false): Observable<RpctScan[]> {
     return this.resultService.listWorkflows(undefined, refreshRunning).pipe(
-      map(workflows => (workflows || []).map(workflow => ({ workflow, origin: 'globale' as RpctScanOrigin }))),
-      catchError(() => of([]))
+      map(workflows => (workflows || []).map(workflow => ({ workflow, origin: 'globale' as RpctScanOrigin })))
     );
   }
 

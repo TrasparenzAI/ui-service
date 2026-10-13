@@ -173,9 +173,23 @@
               Verifica di nuovo {{ lastCounts ? 'le ' + lastCounts.total + ' regole' : 'le regole' }} sul sito dell'amministrazione.
             </p>
           }
+          <!-- Spec 010 (F4): elenco delle globali non leggibile → avvio bloccato finché la verifica non riesce -->
+          @if (globalCheckFailed && !runningKind) {
+            <div class="rpct-alert-warning" role="alert">
+              Non è stato possibile verificare se è in corso una scansione globale.
+              <button type="button" class="rpct-link-btn" (click)="reload()">Riprova</button>
+            </div>
+          }
+          <!-- Spec 010 (F5): sessione scaduta durante l'avvio -->
+          @if (sessionExpired) {
+            <div class="rpct-alert-warning" role="alert">
+              Sessione scaduta: per avviare la scansione effettua di nuovo l'accesso.
+              <button type="button" class="rpct-link-btn" (click)="relogin()">Accedi di nuovo</button>
+            </div>
+          }
           <button itButton="primary" class="w-100"
-                  [disabled]="hasRunning || hasGlobalRunning || isLoading || isStartingScan"
-                  [attr.aria-disabled]="hasRunning || hasGlobalRunning || isLoading || isStartingScan"
+                  [disabled]="startDisabled"
+                  [attr.aria-disabled]="startDisabled"
                   (click)="startScan()">
             {{ isStartingScan ? 'Avvio in corso...' : 'Avvia nuova scansione' }}
           </button>

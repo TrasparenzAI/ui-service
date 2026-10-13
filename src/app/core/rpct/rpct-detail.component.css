@@ -71,6 +71,8 @@
 .rpct-tool-text { margin: 4px 0 16px; font-size: 15px; color: #5d7083; line-height: 1.4; }
 .rpct-alert-running { display: flex; gap: 10px; align-items: flex-start; background: #e3f2e8; border-radius: 4px; padding: 12px; margin: 8px 0 16px; color: #0b4521; font-size: 15px; }
 .rpct-alert-spin { margin-top: 3px; }
+.rpct-alert-warning { background: #fff4e5; color: #5c3a00; border-radius: 4px; padding: 12px; margin: 8px 0 16px; font-size: 14px; line-height: 1.4; }
+.rpct-link-btn { background: none; border: 0; padding: 0; margin-left: 4px; color: var(--bs-primary, #13753a); font-weight: 600; text-decoration: underline; cursor: pointer; }
 .rpct-alert-sub { font-size: 14px; color: #3d4a55; }
 
 .rpct-badge { background: #e3e7ea; color: #3d4a55; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 4px; }
