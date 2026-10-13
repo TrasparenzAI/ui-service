@@ -1,0 +1,83 @@
+/* Spec 011: dettaglio amministrazione RPCT (handoff Claude Design). Colori dal tema dove esistono. */
+.rpct { width: 100%; padding: 32px 24px 64px; box-sizing: border-box; }
+.rpct-muted { color: #5d7083; }
+.rpct-empty { color: #5d7083; margin: 12px 0 0; }
+
+.rpct-back { display: inline-flex; font-size: 16px; font-weight: 600; text-decoration: none; margin-bottom: 12px; color: var(--bs-primary, #13753a); }
+.rpct-back:hover { color: #0b4521; }
+
+.rpct-dhead { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #e3e7ea; }
+.rpct-dtitle { font-size: clamp(26px, 3.6vw, 36px); font-weight: 700; line-height: 1.25; margin: 0; }
+.rpct-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 8px; font-size: 15px; color: #5d7083; }
+.rpct-chip-code { font: 500 13px var(--bs-font-monospace, 'Roboto Mono', monospace); background: #eef1ee; color: #1a1a1a; padding: 2px 8px; border-radius: 4px; }
+
+.rpct-layout { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.rpct-main { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+.rpct-cards { display: flex; flex-wrap: wrap; gap: 24px; }
+.rpct-card { box-shadow: 0 2px 16px rgba(0, 0, 0, .08); border-radius: 4px; padding: 24px; min-width: 0; background: #fff; }
+.rpct-card--report { flex: 1 1 260px; display: flex; flex-direction: column; align-items: center; }
+.rpct-card--ko { flex: 1.4 1 300px; }
+.rpct-card-head { align-self: stretch; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.rpct-card-head h2 { margin: 0; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.rpct-card-head--start { justify-content: flex-start; align-items: center; margin-bottom: 4px; }
+
+/* Gauge esistente (company-rule): nella nostra card si nasconde la sua barra titolo e si adatta la riga "Check regole" */
+.rpct-gauge { width: 100%; max-width: 300px; margin-top: 8px; }
+.rpct-report ::ng-deep .chart-container { background: transparent !important; box-shadow: none !important; }
+.rpct-report ::ng-deep .chart-container > .bg-dark { display: none !important; }
+.rpct-report ::ng-deep .chart-container .font-monospace { font: 600 17px var(--bs-font-monospace, 'Roboto Mono', monospace); color: #109444; }
+.rpct-report ::ng-deep .chart-container > .h6 { margin-top: 6px; }
+
+.rpct-badge-danger { background: var(--bs-danger, #c02a43); color: #fff; font-weight: 700; font-size: 13px; padding: 1px 8px; border-radius: 4px; }
+.rpct-ko-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid #eceeef; padding: 12px 0; }
+.rpct-slug { font: 400 14px var(--bs-font-monospace, 'Roboto Mono', monospace); overflow-wrap: anywhere; min-width: 0; }
+.rpct-ko-page { flex: none; font-size: 14px; }
+.rpct-more { margin-top: 12px; background: none; border: 0; padding: 4px 0; color: var(--bs-primary, #13753a); font-weight: 600; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+.rpct-h2 { margin: 8px 0 12px; font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.rpct-rows { border-top: 2px solid #1a1a1a; }
+/* Storico a tutta larghezza: colonne a griglia distribuite sulla riga, intestazione leggera */
+.rpct-hrow {
+  display: grid; grid-template-columns: minmax(150px, 1.4fr) minmax(100px, 1fr) minmax(130px, 1fr) minmax(90px, .8fr) minmax(100px, .8fr) auto;
+  align-items: center; gap: 8px 16px; padding: 12px 8px; border-bottom: 1px solid #d9dadb; font-size: 16px;
+}
+.rpct-hrow--head { padding-top: 10px; padding-bottom: 10px; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #5d7083; }
+.rpct-hrow--running { background: #e3f2e8; border-bottom-color: #b8dcc6; }
+.rpct-h-state { font-size: 15px; }
+.rpct-h-ko { white-space: nowrap; }
+.rpct-h-link { justify-self: end; font-weight: 600; font-size: 15px; text-decoration: none; white-space: nowrap; }
+@media (max-width: 767.98px) {
+  .rpct-hrow { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+  .rpct-hrow--head { display: none; }
+  .rpct-h-date { flex: 1 1 120px; }
+  .rpct-h-link { margin-left: auto; }
+}
+.rpct-disabled { color: #9aa5ae; cursor: not-allowed; }
+.rpct-running { display: inline-flex; align-items: center; gap: 8px; color: #0b4521; font-weight: 600; }
+
+.rpct-chip { border: 1px solid #8a9aa8; color: #3d4a55; font-size: 13px; font-weight: 600; padding: 1px 8px; border-radius: 12px; white-space: nowrap; }
+.rpct-chip--primary { border-color: var(--bs-primary, #13753a); color: var(--bs-primary, #13753a); }
+.rpct-chip--fill { background: #fff; }
+
+.rpct-pager { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; }
+.rpct-range { font-size: 14px; color: #5d7083; }
+.rpct-pager ::ng-deep nav { margin: 0; }
+
+.rpct-aside { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 12px; position: sticky; top: 16px; }
+.rpct-aside-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #5d7083; }
+.rpct-tool { border: 1px solid #d9dadb; border-radius: 4px; padding: 20px; }
+.rpct-tool-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.rpct-tool-title--between { justify-content: space-between; }
+.rpct-tool-text { margin: 4px 0 16px; font-size: 15px; color: #5d7083; line-height: 1.4; }
+.rpct-alert-running { display: flex; gap: 10px; align-items: flex-start; background: #e3f2e8; border-radius: 4px; padding: 12px; margin: 8px 0 16px; color: #0b4521; font-size: 15px; }
+.rpct-alert-spin { margin-top: 3px; }
+.rpct-alert-sub { font-size: 14px; color: #3d4a55; }
+
+.rpct-badge { background: #e3e7ea; color: #3d4a55; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 4px; }
+.rpct-badge--success { background: var(--bs-success, #008055); color: #fff; }
+.rpct-badge--danger { background: var(--bs-danger, #c02a43); color: #fff; }
+
+/* Su mobile la colonna Strumenti scende sotto il contenuto e non resta fissa */
+@media (max-width: 991.98px) {
+  .rpct-aside { position: static; }
+}

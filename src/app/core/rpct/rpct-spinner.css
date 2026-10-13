@@ -1,15 +1,15 @@
-/* Spec 005: spinner in linea (16px), cerchio fisso che non altera l'altezza delle righe e non si deforma nei flex. */
+/* Spec 005/011: spinner in linea (16px) come nel design, cerchio fisso che non altera l'altezza delle righe. */
 .rpct-spin {
   display: inline-block;
   flex: 0 0 16px;
   width: 16px;
   height: 16px;
   box-sizing: border-box;
-  border: 2px solid hsl(210, 3%, 85%);
-  border-top-color: hsl(210, 17%, 44%);
+  border: 2px solid #b8dcc6;
+  border-top-color: var(--bs-primary, #13753a);
   border-radius: 50%;
   vertical-align: middle;
-  animation: rpct-spin 0.75s linear infinite;
+  animation: rpct-spin 0.8s linear infinite;
 }
 
 @keyframes rpct-spin {

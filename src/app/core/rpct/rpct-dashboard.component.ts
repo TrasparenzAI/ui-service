@@ -5,47 +5,52 @@ import { catchError, filter, switchMap, take } from 'rxjs/operators';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { CompanyService } from '../company/company.service';
 import { Company } from '../company/company.model';
-import { Workflow, Status } from '../conductor/workflow.model';
+import { Workflow } from '../conductor/workflow.model';
 import { environment } from '../../../environments/environment';
 import { AuthGuard } from '../../auth/auth-guard';
 import { RpctCountsService, RpctScan, RpctScanOrigin } from './rpct-counts.service';
-import { TranslateService } from '@ngx-translate/core';
-import { isRunningStatus, rpctStatusLabel, RPCT_RUNNING_ROW_CLASS } from './rpct-status';
+import { isRunningStatus } from './rpct-status';
 import { RpctAtmapService, RpctAtMapStatus } from './rpct-atmap.service';
+import { RPCT_TOOLTIPS } from './rpct-tooltips';
 
 interface RpctTableRow {
   codiceIpa: string;
   denominazioneEnte: string;
   lastScanDate: Date | null;
-  status: Status | null;
-  badge: string;
-  sezioniOk: number | null;
-  sezioniNonRegolari: number | null;
   workflowId: string | null;
   origin: RpctScanOrigin | null;
+  sezioniOk: number | null;
+  // Spec 011: sezioni della regola (es. 52) e non conformi = sezioni senza esito OK
+  total: number | null;
+  sezioniNonRegolari: number | null;
   loading: boolean;
-  // Spec 005: la PA ha almeno una scansione in corso (dedicata o globale confermata dal Conductor)
-  running: boolean;
+  // Spec 005/011: scansione in corso per la PA (la dedicata prevale sulla globale)
+  running: RpctScanOrigin | null;
   // Spec 008: AT map dell'ultima scansione completata ('loading' finché la chiamata non risponde)
   atmap: RpctAtMapStatus | 'loading';
 }
+
+const PAGE_SIZE = 5;
 
 @Component({
   selector: 'app-rpct-dashboard',
   templateUrl: './rpct-dashboard.component.html',
   standalone: false,
-  styleUrls: ['./rpct-spinner.css'],
+  styleUrls: ['./rpct-spinner.css', './rpct-dashboard.component.css'],
   providers: [RpctCountsService, RpctAtmapService]
 })
 export class RpctDashboardComponent implements OnInit {
+
+  readonly t = RPCT_TOOLTIPS;
+  readonly pageSize = PAGE_SIZE;
 
   rows: RpctTableRow[] = [];
   userName: string = '';
   isLoading = true;
 
-  // Spec 005: riga verde chiaro per le PA con scansione in corso
-  readonly runningRowClass = RPCT_RUNNING_ROW_CLASS;
-  readonly runningStatus = Status.RUNNING;
+  // Spec 011: ricerca per nome o codice IPA e paginazione lato client (5 per pagina)
+  search = '';
+  page = 1;
 
   constructor(
     private oidcSecurityService: OidcSecurityService,
@@ -53,7 +58,6 @@ export class RpctDashboardComponent implements OnInit {
     private rpctCountsService: RpctCountsService,
     private authGuard: AuthGuard,
     private router: Router,
-    private translateService: TranslateService,
     private rpctAtmapService: RpctAtmapService
   ) {}
 
@@ -89,14 +93,13 @@ export class RpctDashboardComponent implements OnInit {
       codiceIpa: ipa,
       denominazioneEnte: ipa,
       lastScanDate: null,
-      status: null,
-      badge: 'secondary',
-      sezioniOk: null,
-      sezioniNonRegolari: null,
       workflowId: null,
       origin: null,
+      sezioniOk: null,
+      total: null,
+      sezioniNonRegolari: null,
       loading: true,
-      running: false,
+      running: null,
       atmap: 'loading'
     }));
 
@@ -116,7 +119,8 @@ export class RpctDashboardComponent implements OnInit {
         const row = this.rows[i];
         const company: Company = res.companies?.[0];
         if (company) row.denominazioneEnte = company.denominazioneEnte;
-        row.running = res.scans.some(scan => isRunningStatus(scan.workflow.status));
+        const running = res.scans.filter(scan => isRunningStatus(scan.workflow.status));
+        row.running = running.some(s => s.origin === 'dedicata') ? 'dedicata' : running.length ? 'globale' : null;
 
         const last: RpctScan | undefined = res.scans.find(scan => scan.workflow.isCompleted);
         if (!last) {
@@ -126,13 +130,14 @@ export class RpctDashboardComponent implements OnInit {
         const workflow: Workflow = last.workflow;
         row.workflowId = workflow.workflowId;
         row.lastScanDate = workflow.startTime;
-        row.status = workflow.status;
-        row.badge = workflow.badge;
         row.origin = last.origin;
 
-        this.rpctCountsService.countFor(row.codiceIpa, workflow.workflowId).subscribe(counts => {
-          row.sezioniOk = counts ? counts.sezioniOk : null;
-          row.sezioniNonRegolari = counts ? counts.sezioniNonRegolari : null;
+        this.rpctCountsService.countFor(row.codiceIpa, workflow.workflowId, workflow.root_rule).subscribe(counts => {
+          // Spec 011: senza risultati per la PA i conteggi restano "—" (mai uno 0 conforme)
+          const valid = counts && counts.hasResults ? counts : null;
+          row.sezioniOk = valid ? valid.sezioniOk : null;
+          row.total = valid ? valid.total : null;
+          row.sezioniNonRegolari = valid ? valid.sezioniNonRegolari : null;
           row.loading = false;
         });
       });
@@ -140,9 +145,51 @@ export class RpctDashboardComponent implements OnInit {
     });
   }
 
-  /** Spec 005: etichetta italiana dello stato (chiavi esistenti it.workflow.status.*). */
-  statusLabel(status: string | null | undefined): string {
-    return rpctStatusLabel(this.translateService, status);
+  /** Spec 011: righe filtrate dalla ricerca (nome o codice IPA). */
+  get filtered(): RpctTableRow[] {
+    const q = this.search.trim().toLowerCase();
+    if (!q) return this.rows;
+    return this.rows.filter(r => r.denominazioneEnte.toLowerCase().includes(q) || r.codiceIpa.toLowerCase().includes(q));
+  }
+
+  get pages(): number {
+    return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
+  }
+
+  get pageRows(): RpctTableRow[] {
+    const start = (Math.min(this.page, this.pages) - 1) * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  /** Spec 011: "1–5 di 12". */
+  get rangeLabel(): string {
+    const total = this.filtered.length;
+    const start = (Math.min(this.page, this.pages) - 1) * this.pageSize;
+    return `${total ? start + 1 : 0}–${Math.min(total, start + this.pageSize)} di ${total}`;
+  }
+
+  /** Spec 011: riepilogo — amministrazioni con almeno una sezione non conforme nell'ultima scansione. */
+  get adminConNonConformita(): number {
+    return this.rows.filter(r => (r.sezioniNonRegolari || 0) > 0).length;
+  }
+
+  /** Spec 011: riepilogo — scansione più recente tra le ultime completate. */
+  get ultimaScansione(): Date | null {
+    const dates = this.rows.map(r => r.lastScanDate).filter((d): d is Date => !!d);
+    return dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : null;
+  }
+
+  /** Spec 011: percentuale per la barra "sezioni OK". */
+  okPercent(row: RpctTableRow): number {
+    return row.total ? Math.round((row.sezioniOk || 0) / row.total * 100) : 0;
+  }
+
+  onSearch(): void {
+    this.page = 1;
+  }
+
+  goTo(page: number): void {
+    this.page = Math.min(Math.max(1, page), this.pages);
   }
 
   goToDetail(codiceIpa: string): void {

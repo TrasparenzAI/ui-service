@@ -1,6 +1,17 @@
-<div class="container my-4">
-  <h2>RPCT Dashboard</h2>
-  <p class="text-muted">Benvenuto, <strong>{{ userName }}</strong></p>
+<div class="rpct">
+  <!-- Intestazione (spec 011) -->
+  <div class="rpct-head">
+    <div>
+      <h1 class="rpct-title">RPCT Dashboard</h1>
+      <p class="rpct-welcome">Benvenuto, <strong>{{ userName }}</strong></p>
+    </div>
+    @if (rows.length > 0) {
+      <div class="rpct-search">
+        <it-input type="search" label="Cerca amministrazione" placeholder="Nome o codice IPA"
+                  [(ngModel)]="search" (ngModelChange)="onSearch()"></it-input>
+      </div>
+    }
+  </div>
 
   @if (isLoading) {
     <div class="d-flex justify-content-center my-5">
@@ -11,83 +22,89 @@
       Nessuna amministrazione associata al tuo account.
     </it-alert>
   } @else {
-    <div class="table-responsive">
-      <table class="table table-hover align-middle">
-        <thead>
-          <tr>
-            <th>Amministrazione</th>
-            <th>Ultima scansione</th>
-            <th>Stato</th>
-            <th class="text-center">Sezioni OK</th>
-            <th class="text-center">Non regolari</th>
-            <th class="text-center">AT map</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of rows; track row.codiceIpa) {
-            <tr style="cursor: pointer" [class]="row.running ? runningRowClass : ''" (click)="goToDetail(row.codiceIpa)">
-              <td>
-                <strong>{{ row.denominazioneEnte }}</strong>
-                <br><small class="text-muted">{{ row.codiceIpa }}</small>
-              </td>
-              <td>
-                @if (row.lastScanDate) {
-                  {{ row.lastScanDate | date:'dd/MM/yyyy HH:mm' }}
-                  @if (row.origin) {
-                    <br><small class="text-muted">{{ row.origin === 'globale' ? 'Globale' : 'Dedicata' }}</small>
-                  }
-                } @else {
-                  <span class="text-muted">—</span>
-                }
-              </td>
-              <td>
-                @if (row.running) {
-                  <span class="d-inline-flex align-items-center gap-2">
-                    <span class="badge bg-primary">{{ statusLabel(runningStatus) }}</span>
-                    <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
-                  </span>
-                } @else if (row.status) {
-                  <span [class]="'badge bg-' + row.badge">{{ statusLabel(row.status) }}</span>
-                } @else {
-                  <span class="text-muted">—</span>
-                }
-              </td>
-              <td class="text-center">
-                @if (row.loading) {
-                  <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
-                } @else if (row.sezioniOk === null) {
-                  <span class="text-muted">—</span>
-                } @else {
-                  <span class="badge bg-success">{{ row.sezioniOk }}</span>
-                }
-              </td>
-              <td class="text-center">
-                @if (row.loading) {
-                  <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
-                } @else if (row.sezioniNonRegolari === null) {
-                  <span class="text-muted">—</span>
-                } @else {
-                  <span [class]="row.sezioniNonRegolari > 0 ? 'badge bg-danger' : 'badge bg-success'">
-                    {{ row.sezioniNonRegolari }}
-                  </span>
-                }
-              </td>
-              <td class="text-center">
-                @switch (row.atmap) {
-                  @case ('loading') { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> }
-                  @case ('present') { <span class="badge bg-success">Presente</span> }
-                  @case ('absent') { <span class="badge bg-danger">Non presente</span> }
-                  @default { <span class="badge bg-secondary" title="Dato non ancora disponibile">N/D</span> }
-                }
-              </td>
-              <td class="text-end">
-                <it-icon name="chevron-right" color="primary"></it-icon>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+
+    <!-- Riepilogo -->
+    <div class="rpct-stats">
+      <div class="rpct-stat">
+        <div class="rpct-stat-label">Amministrazioni <it-icon name="info-circle" size="sm" [itTooltip]="t.amministrazioni"></it-icon></div>
+        <div class="rpct-stat-value">{{ rows.length }}</div>
+      </div>
+      <div class="rpct-stat">
+        <div class="rpct-stat-label">Con non conformità <it-icon name="info-circle" size="sm" [itTooltip]="t.nonConformitaAdmin"></it-icon></div>
+        <div class="rpct-stat-value text-danger">{{ adminConNonConformita }}</div>
+      </div>
+      <div class="rpct-stat">
+        <div class="rpct-stat-label">Ultima scansione</div>
+        <div class="rpct-stat-value rpct-stat-value--sm">
+          @if (ultimaScansione) { {{ ultimaScansione | date:'dd/MM/yyyy HH:mm' }} } @else { — }
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista amministrazioni -->
+    <div class="rpct-rows">
+      @for (row of pageRows; track row.codiceIpa) {
+        <div class="rpct-row" role="link" tabindex="0"
+             (click)="goToDetail(row.codiceIpa)" (keydown.enter)="goToDetail(row.codiceIpa)">
+          <div class="rpct-col-name">
+            <span class="rpct-name">{{ row.denominazioneEnte }}</span>
+            <span class="rpct-code">{{ row.codiceIpa }}</span>
+          </div>
+          <div class="rpct-col-date">
+            @if (row.lastScanDate) {
+              <div>{{ row.lastScanDate | date:'dd/MM/yyyy HH:mm' }}</div>
+            } @else {
+              <div class="rpct-muted">—</div>
+            }
+            @if (row.running) {
+              <div class="rpct-running" role="status">
+                <span class="rpct-spin" aria-hidden="true"></span>
+                {{ row.running === 'globale' ? 'Globale in corso' : 'Dedicata in corso' }}
+              </div>
+            } @else if (row.origin) {
+              <div class="rpct-sub">Scansione {{ row.origin }}</div>
+            }
+          </div>
+          <div class="rpct-col-ok">
+            @if (row.loading) {
+              <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
+            } @else if (row.sezioniOk === null || row.total === null) {
+              <span class="rpct-muted">—</span>
+            } @else {
+              <div><strong>{{ row.sezioniOk }}</strong><span class="rpct-muted"> / {{ row.total }} sezioni OK</span></div>
+              <div class="rpct-progress"><div class="rpct-progress-bar" [style.width.%]="okPercent(row)"></div></div>
+            }
+          </div>
+          <div class="rpct-col-ko">
+            @if (!row.loading && row.sezioniNonRegolari !== null) {
+              @if (row.sezioniNonRegolari > 0) {
+                <span class="rpct-badge-danger">{{ row.sezioniNonRegolari }} {{ row.sezioniNonRegolari === 1 ? 'non conforme' : 'non conformi' }}</span>
+              } @else {
+                <span class="rpct-ok-text">Tutto conforme</span>
+              }
+            }
+          </div>
+          <div class="rpct-col-at">
+            @switch (row.atmap) {
+              @case ('loading') { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> }
+              @case ('present') { AT map <span class="rpct-ok-text">Presente</span> }
+              @case ('absent') { AT map <span class="text-danger fw-semibold">Non presente</span> }
+              @default { AT map N/D }
+            }
+          </div>
+          <span class="rpct-chevron" aria-hidden="true">›</span>
+        </div>
+      } @empty {
+        <p class="rpct-muted py-3 mb-0">Nessuna amministrazione corrisponde alla ricerca.</p>
+      }
+    </div>
+
+    <!-- Paginazione (spec 011): 5 per pagina -->
+    <div class="rpct-pager">
+      <span class="rpct-range">{{ rangeLabel }}</span>
+      @if (pages > 1) {
+        <it-pagination [currentPage]="page - 1" [pageNumbers]="pages" (pageEvent)="goTo($event + 1)"></it-pagination>
+      }
     </div>
   }
 </div>

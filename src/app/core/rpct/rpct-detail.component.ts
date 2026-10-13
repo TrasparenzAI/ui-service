@@ -7,38 +7,42 @@ import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { environment } from '../../../environments/environment';
 import { AuthGuard } from '../../auth/auth-guard';
 import { CompanyService } from '../company/company.service';
-import { ResultService } from '../result/result.service';
 import { Company } from '../company/company.model';
 import { Workflow, Status } from '../conductor/workflow.model';
-import { Result } from '../result/result.model';
-import { RpctCountsService, RpctScan, RpctScanOrigin } from './rpct-counts.service';
+import { RpctCounts, RpctCountsService, RpctNonConforme, RpctScan, RpctScanOrigin } from './rpct-counts.service';
 import { RpctScanService } from './rpct-scan.service';
 import { ApiMessageService, MessageType } from '../api-message.service';
-import { TranslateService } from '@ngx-translate/core';
-import { isRunningStatus, rpctStatusLabel, RPCT_RUNNING_ROW_CLASS } from './rpct-status';
+import { isRunningStatus, rpctStateClass, rpctStateLabel } from './rpct-status';
 import { RpctAtmapService, RpctAtMapState } from './rpct-atmap.service';
+import { RPCT_TOOLTIPS } from './rpct-tooltips';
 
 interface HistoryRow {
   workflowId: string;
   startTime: Date;
   status: string;
   badge: string;
-  sezioniOk: number | null;
-  sezioniNonRegolari: number | null;
   origin: RpctScanOrigin;
+  rootRule: string | null;
+  // Spec 011: undefined = da caricare, null = non disponibili (errore o nessun risultato)
+  counts?: RpctCounts | null;
 }
 
-const HISTORY_SIZE = 10;
+const PAGE_SIZE = 5;
+const KO_LIMIT = 5;
 const POLLING_MS = 30000;
 
 @Component({
   selector: 'app-rpct-detail',
   templateUrl: './rpct-detail.component.html',
   standalone: false,
-  styleUrls: ['./rpct-spinner.css'],
+  styleUrls: ['./rpct-spinner.css', './rpct-detail.component.css'],
   providers: [RpctCountsService, RpctScanService, RpctAtmapService]
 })
 export class RpctDetailComponent implements OnInit, OnDestroy {
+
+  readonly t = RPCT_TOOLTIPS;
+  readonly pageSize = PAGE_SIZE;
+  readonly koLimit = KO_LIMIT;
 
   codiceIpa: string | null = null;
   accessDenied = false;
@@ -46,13 +50,19 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
 
   company: Company | null = null;
   lastWorkflow: Workflow | null = null;
+  lastOrigin: RpctScanOrigin | null = null;
+  // Spec 011: conteggi dell'ultima scansione completata (sezioni della regola, come il gauge)
+  lastCounts: RpctCounts | null = null;
   hasRunning = false;
-  nonConformi: Result[] = [];
-  historyRows: HistoryRow[] = [];
+  nonConformi: RpctNonConforme[] = [];
+  koExpanded = false;
   isStartingScan = false;
 
-  // Spec 005: riga verde chiaro per le scansioni in corso
-  readonly runningRowClass = RPCT_RUNNING_ROW_CLASS;
+  // Spec 011: storico completo (dedicate + globali), 5 per pagina, conteggi solo per la pagina visibile
+  historyRows: HistoryRow[] = [];
+  historyPage = 1;
+  private countsCache = new Map<string, RpctCounts | null>();
+  private pendingCounts = new Set<string>();
 
   // Spec 008: ultima AT map della PA (null = in caricamento)
   atMapState: RpctAtMapState | null = null;
@@ -72,11 +82,9 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     private oidcSecurityService: OidcSecurityService,
     private authGuard: AuthGuard,
     private companyService: CompanyService,
-    private resultService: ResultService,
     private rpctCountsService: RpctCountsService,
     private rpctScanService: RpctScanService,
     private apiMessageService: ApiMessageService,
-    private translateService: TranslateService,
     private rpctAtmapService: RpctAtmapService
   ) {}
 
@@ -129,47 +137,59 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
         this.hasRunning = running.length > 0;
         this.runningIds = new Set(running.map(s => s.workflow.workflowId));
         this.setGlobalRunning(scans);
-        this.lastWorkflow = scans.find(s => s.workflow.isCompleted)?.workflow || null;
+        const last = scans.find(s => s.workflow.isCompleted);
+        this.lastWorkflow = last?.workflow || null;
+        this.lastOrigin = last?.origin || null;
 
-        const history: RpctScan[] = scans.slice(0, HISTORY_SIZE);
+        // Spec 011: report e sezioni non conformi dalla stessa fonte dei conteggi (sezioni della regola)
+        const lastCountsCall = this.lastWorkflow
+          ? this.rpctCountsService.countFor(codiceIpa, this.lastWorkflow.workflowId, this.lastWorkflow.root_rule)
+          : of(null);
 
-        const nonConformiCall = this.lastWorkflow
-          ? this.resultService.getAll(
-              { codiceIpa, workflowId: this.lastWorkflow.workflowId, size: 500 },
-              '/codiceipa/byWorkflow'
-            ).pipe(catchError(() => of([])))
-          : of([]);
-
-        const countsCall = history.length
-          ? forkJoin(history.map(s => this.rpctCountsService.countFor(codiceIpa, s.workflow.workflowId)))
-          : of([]);
-
-        return forkJoin({ nonConformi: nonConformiCall, counts: countsCall }).pipe(
-          switchMap(({ nonConformi, counts }) => of({ history, nonConformi, counts }))
-        );
+        return lastCountsCall.pipe(map(lastCounts => ({ scans, lastCounts })));
       })
-    ).subscribe(({ history, nonConformi, counts }) => {
-      this.nonConformi = (nonConformi as Result[]).filter(
-        r => r.status !== 200 && r.status !== 202
-      );
+    ).subscribe(({ scans, lastCounts }) => {
+      this.lastCounts = lastCounts && lastCounts.hasResults ? lastCounts : null;
+      this.nonConformi = this.lastCounts?.nonConformi || [];
+      if (this.lastWorkflow && lastCounts) this.countsCache.set(this.lastWorkflow.workflowId, lastCounts);
 
-      this.historyRows = history.map((scan, i) => {
-        const w = scan.workflow;
-        const c = counts[i];
-        return {
-          workflowId: w.workflowId,
-          startTime: w.startTime,
-          status: w.status,
-          badge: w.badge,
-          sezioniOk: c ? c.sezioniOk : null,
-          sezioniNonRegolari: c ? c.sezioniNonRegolari : null,
-          origin: scan.origin
-        };
-      });
+      this.historyRows = scans.map((scan: RpctScan) => this.toHistoryRow(scan));
+      this.historyPage = Math.min(this.historyPage, this.historyPages);
 
       this.isLoading = false;
+      this.loadPageCounts();
       this.syncPolling();
     });
+  }
+
+  private toHistoryRow(scan: RpctScan): HistoryRow {
+    const w = scan.workflow;
+    const row: HistoryRow = {
+      workflowId: w.workflowId,
+      startTime: w.startTime,
+      status: w.status,
+      badge: w.badge,
+      origin: scan.origin,
+      rootRule: w.root_rule || null
+    };
+    if (!w.isRunning && this.countsCache.has(w.workflowId)) row.counts = this.countsCache.get(w.workflowId);
+    return row;
+  }
+
+  /** Spec 011: conteggi per le righe della pagina visibile; quelli delle scansioni terminate restano in cache. */
+  private loadPageCounts(): void {
+    if (!this.codiceIpa) return;
+    const codiceIpa = this.codiceIpa;
+    this.historyItems
+      .filter(row => row.counts === undefined && !this.isRunning(row.status) && !this.pendingCounts.has(row.workflowId))
+      .forEach(row => {
+        this.pendingCounts.add(row.workflowId);
+        this.rpctCountsService.countFor(codiceIpa, row.workflowId, row.rootRule).subscribe(counts => {
+          this.pendingCounts.delete(row.workflowId);
+          this.countsCache.set(row.workflowId, counts);
+          row.counts = counts;
+        });
+      });
   }
 
   /** Spec 006: globali in corso (origin 'globale', già confermate dal Conductor). */
@@ -214,10 +234,11 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
           startTime: new Date(),
           status: Status.RUNNING,
           badge: 'primary',
-          sezioniOk: null,
-          sezioniNonRegolari: null,
-          origin: 'dedicata' as RpctScanOrigin
-        }, ...this.historyRows].slice(0, HISTORY_SIZE);
+          origin: 'dedicata' as RpctScanOrigin,
+          rootRule: null
+        }, ...this.historyRows];
+        // Spec 011: torna alla prima pagina per mostrare la riga in corso
+        this.historyPage = 1;
         this.hasRunning = true;
         this.runningIds.add(workflowId);
         this.syncPolling();
@@ -286,9 +307,49 @@ export class RpctDetailComponent implements OnInit, OnDestroy {
     return isRunningStatus(status);
   }
 
-  /** Spec 005: etichetta italiana dello stato (chiavi esistenti it.workflow.status.*). */
-  statusLabel(status: string | null | undefined): string {
-    return rpctStatusLabel(this.translateService, status);
+  /** Spec 011: etichetta e colore dello stato con la dicitura del design. */
+  stateLabel(status: string | null | undefined): string {
+    return rpctStateLabel(status);
+  }
+
+  stateClass(status: string | null | undefined): string {
+    return rpctStateClass(status);
+  }
+
+  /** Spec 011: scansione in corso mostrata nella card Scansione (la dedicata prevale sulla globale). */
+  get runningKind(): RpctScanOrigin | null {
+    return this.hasRunning ? 'dedicata' : this.hasGlobalRunning ? 'globale' : null;
+  }
+
+  get runningStartedAt(): Date | null {
+    const kind = this.runningKind;
+    return this.historyRows.find(r => r.origin === kind && this.isRunning(r.status))?.startTime || null;
+  }
+
+  /** Spec 011: sezioni non conformi, al massimo 5 se la lista non è espansa. */
+  get visibleKo(): RpctNonConforme[] {
+    return this.koExpanded ? this.nonConformi : this.nonConformi.slice(0, this.koLimit);
+  }
+
+  get historyPages(): number {
+    return Math.max(1, Math.ceil(this.historyRows.length / this.pageSize));
+  }
+
+  get historyItems(): HistoryRow[] {
+    const start = (this.historyPage - 1) * this.pageSize;
+    return this.historyRows.slice(start, start + this.pageSize);
+  }
+
+  /** Spec 011: "1–5 di 12". */
+  get historyRange(): string {
+    const total = this.historyRows.length;
+    const start = (this.historyPage - 1) * this.pageSize;
+    return `${total ? start + 1 : 0}–${Math.min(total, start + this.pageSize)} di ${total}`;
+  }
+
+  goToHistoryPage(page: number): void {
+    this.historyPage = Math.min(Math.max(1, page), this.historyPages);
+    this.loadPageCounts();
   }
 
   goToSearch(workflowId?: string): void {

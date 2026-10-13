@@ -1,221 +1,212 @@
-<div class="container-fluid my-4 px-4">
+<div class="rpct">
+
+  <a class="rpct-back" href="" (click)="$event.preventDefault(); goBack()">‹ Torna alla lista</a>
 
   @if (accessDenied) {
     <it-alert type="danger">
       Non sei autorizzato a visualizzare questa amministrazione.
     </it-alert>
-    <button itButton="outline-primary" class="mt-3" (click)="goBack()">
-      <it-icon name="arrow-left" size="sm"></it-icon> Torna alla lista
-    </button>
   }
 
   @if (!accessDenied) {
 
-    <!-- Header (spec 005: azioni spostate nella card "Azioni" sopra lo storico) -->
-    <div class="d-flex align-items-center mb-4 flex-wrap gap-2">
-      <div class="d-flex align-items-center gap-3">
-        <button itButton="outline-primary" (click)="goBack()">
-          <it-icon name="arrow-left" size="sm"></it-icon> Torna alla lista
-        </button>
-        <div>
-          <h3 class="mb-0">{{ company?.denominazioneEnte || codiceIpa }}</h3>
-          <small class="text-muted">{{ codiceIpa }}</small>
-        </div>
+    <!-- Intestazione (spec 011) -->
+    <header class="rpct-dhead">
+      <h1 class="rpct-dtitle">{{ company?.denominazioneEnte || codiceIpa }}</h1>
+      <div class="rpct-meta">
+        <span class="rpct-chip-code">{{ codiceIpa }}</span>
+        @if (lastWorkflow) {
+          <span>Ultima scansione {{ lastWorkflow.startTime | date:'dd/MM/yyyy HH:mm' }} · {{ lastOrigin === 'globale' ? 'Globale' : 'Dedicata' }}</span>
+        }
       </div>
-    </div>
+    </header>
 
-    @if (isLoading) {
-      <div class="d-flex justify-content-center my-5">
-        <it-spinner double="true"></it-spinner>
-      </div>
-    } @else {
+    <div class="rpct-layout">
 
-      <!-- Riga superiore: gauge + sezioni non conformi -->
-      <div class="row mb-4">
+      <!-- Colonna principale -->
+      <div class="rpct-main">
+        @if (isLoading) {
+          <div class="d-flex justify-content-center my-5">
+            <it-spinner double="true"></it-spinner>
+          </div>
+        } @else {
 
-        <!-- Gauge conformità -->
-        <div class="col-md-5">
-          @if (company && lastWorkflow) {
-            <company-rule
-              [company]="company"
-              [workflowId]="lastWorkflow.workflowId"
-              [isAuthenticated]="true"
-              chartDivStyle="width:100%;height:280px;">
-            </company-rule>
-          } @else {
-            <div class="bg-light p-4 text-center text-muted rounded">
-              Nessuna scansione completata disponibile.
-            </div>
-          }
-        </div>
-
-        <!-- Tabella sezioni non conformi -->
-        <div class="col-md-7">
-          <div class="card h-100">
-            <div class="card-header bg-danger text-white fw-bold">
-              Sezioni non conformi
-              @if (lastWorkflow) {
-                <span class="float-end badge bg-light text-danger">{{ nonConformi.length }}</span>
-              }
-            </div>
-            <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
-              @if (nonConformi.length === 0) {
-                <p class="text-muted p-3 mb-0">
-                  @if (lastWorkflow) { Nessuna sezione non conforme. }
-                  @else { Nessun dato disponibile. }
-                </p>
+          <div class="rpct-cards">
+            <!-- Report regole: gauge esistente (company-rule), titolo nella card -->
+            <section class="rpct-card rpct-card--report rpct-report">
+              <div class="rpct-card-head">
+                <h2>Report regole <it-icon name="info-circle" size="sm" [itTooltip]="t.reportRegole"></it-icon></h2>
+              </div>
+              @if (company && lastWorkflow && lastCounts) {
+                <div class="rpct-gauge">
+                  <company-rule
+                    [company]="company"
+                    [workflowId]="lastWorkflow.workflowId"
+                    [isAuthenticated]="true"
+                    chartDivStyle="width:100%;height:240px;">
+                  </company-rule>
+                </div>
               } @else {
-                <table class="table table-sm table-hover mb-0">
-                  <thead class="table-light sticky-top">
-                    <tr>
-                      <th>Sezione</th>
-                      <th>Pagina</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (result of nonConformi; track result.id) {
-                      <tr>
-                        <td><small>{{ result.ruleName }}</small></td>
-                        <td>
-                          @if (result.destinationUrl) {
-                            <a [href]="result.destinationUrl" target="_blank" rel="noopener">
-                              <it-icon name="external-link" size="xs"></it-icon>
-                            </a>
-                          } @else {
-                            <span class="text-muted">—</span>
-                          }
-                        </td>
-                      </tr>
+                <p class="rpct-empty">
+                  {{ lastWorkflow ? 'Nessun dato per questa scansione.' : 'Nessuna scansione completata disponibile.' }}
+                </p>
+              }
+            </section>
+
+            <!-- Sezioni non conformi -->
+            <section class="rpct-card rpct-card--ko">
+              <div class="rpct-card-head rpct-card-head--start">
+                <h2>Sezioni non conformi</h2>
+                @if (lastCounts) {
+                  <span class="rpct-badge-danger">{{ lastCounts.sezioniNonRegolari }}</span>
+                }
+                <it-icon name="info-circle" size="sm" [itTooltip]="t.sezioniNonConformi"></it-icon>
+              </div>
+              @if (!lastCounts) {
+                <p class="rpct-empty">Nessun dato disponibile.</p>
+              } @else if (lastCounts.sezioniNonRegolari === 0 && nonConformi.length === 0) {
+                <p class="rpct-empty">Nessuna sezione non conforme.</p>
+              } @else {
+                @for (s of visibleKo; track s.sezione) {
+                  <div class="rpct-ko-row">
+                    <span class="rpct-slug">{{ s.sezione }}</span>
+                    @if (s.url) {
+                      <a class="rpct-ko-page" [href]="s.url" target="_blank" rel="noopener">Pagina <it-icon name="external-link" size="xs" color="primary"></it-icon></a>
+                    } @else {
+                      <span class="rpct-ko-page rpct-muted">Pagina —</span>
                     }
-                  </tbody>
-                </table>
+                  </div>
+                }
+                @if (lastCounts.senzaEsito > 0) {
+                  <div class="rpct-ko-row">
+                    <span class="rpct-muted">{{ lastCounts.senzaEsito === 1 ? '1 sezione senza esito' : lastCounts.senzaEsito + ' sezioni senza esito' }}</span>
+                    <span class="rpct-ko-page rpct-muted">Pagina —</span>
+                  </div>
+                }
+                @if (nonConformi.length > koLimit) {
+                  <button type="button" class="rpct-more" [attr.aria-expanded]="koExpanded" (click)="koExpanded = !koExpanded">
+                    {{ koExpanded ? 'Mostra meno ▴' : 'Mostra altre ' + (nonConformi.length - koLimit) + ' sezioni ▾' }}
+                  </button>
+                }
+              }
+            </section>
+          </div>
+
+          <!-- Storico scansioni (5 per pagina) -->
+          <section>
+            <h2 class="rpct-h2">Storico scansioni <it-icon name="info-circle" size="sm" [itTooltip]="t.storico"></it-icon></h2>
+            <div class="rpct-rows">
+              <div class="rpct-hrow rpct-hrow--head" aria-hidden="true">
+                <span>Data</span>
+                <span>Tipo</span>
+                <span>Stato</span>
+                <span>Sezioni OK</span>
+                <span>Non conformi</span>
+                <span></span>
+              </div>
+              @for (row of historyItems; track row.workflowId) {
+                @if (isRunning(row.status)) {
+                  <div class="rpct-hrow rpct-hrow--running" role="status">
+                    <span class="rpct-h-date">{{ row.startTime | date:'dd/MM/yyyy HH:mm' }}</span>
+                    <span class="rpct-h-type">
+                      <span class="rpct-chip rpct-chip--fill" [class.rpct-chip--primary]="row.origin === 'dedicata'">{{ row.origin === 'globale' ? 'Globale' : 'Dedicata' }}</span>
+                    </span>
+                    <span class="rpct-h-state rpct-running"><span class="rpct-spin" aria-hidden="true"></span> In corso</span>
+                    <span class="rpct-h-ok rpct-muted">—</span>
+                    <span class="rpct-h-ko rpct-muted">—</span>
+                    <span class="rpct-h-link rpct-disabled" aria-disabled="true" itTooltip="Disponibile al termine della scansione">Dettaglio ›</span>
+                  </div>
+                } @else {
+                  <div class="rpct-hrow">
+                    <span class="rpct-h-date">{{ row.startTime | date:'dd/MM/yyyy HH:mm' }}</span>
+                    <span class="rpct-h-type">
+                      <span class="rpct-chip" [class.rpct-chip--primary]="row.origin === 'dedicata'">{{ row.origin === 'globale' ? 'Globale' : 'Dedicata' }}</span>
+                    </span>
+                    <span class="rpct-h-state fw-semibold" [class]="stateClass(row.status)">● {{ stateLabel(row.status) }}</span>
+                    @if (row.counts === undefined) {
+                      <span class="rpct-h-ok"><span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span></span>
+                      <span class="rpct-h-ko"></span>
+                    } @else if (!row.counts || !row.counts.hasResults) {
+                      <span class="rpct-h-ok rpct-muted">—</span>
+                      <span class="rpct-h-ko rpct-muted">—</span>
+                    } @else {
+                      <span class="rpct-h-ok"><strong>{{ row.counts.sezioniOk }}</strong><span class="rpct-muted">/{{ row.counts.total }}</span></span>
+                      <span class="rpct-h-ko fw-bold" [class.text-danger]="row.counts.sezioniNonRegolari > 0" [class.text-success]="row.counts.sezioniNonRegolari === 0">{{ row.counts.sezioniNonRegolari }} KO</span>
+                    }
+                    <a class="rpct-h-link" href="" (click)="$event.preventDefault(); goToSearch(row.workflowId)">Dettaglio ›</a>
+                  </div>
+                }
+              } @empty {
+                <p class="rpct-empty py-3">Nessuna scansione trovata.</p>
               }
             </div>
-          </div>
-        </div>
+            <div class="rpct-pager">
+              <span class="rpct-range">{{ historyRange }}</span>
+              @if (historyPages > 1) {
+                <it-pagination [currentPage]="historyPage - 1" [pageNumbers]="historyPages" (pageEvent)="goToHistoryPage($event + 1)"></it-pagination>
+              }
+            </div>
+          </section>
+        }
       </div>
 
-      <!-- AT map (spec 008) -->
-      <div class="card mb-4">
-        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
-          <div class="d-flex align-items-center flex-wrap gap-2">
-            <span class="fw-bold me-3">AT map</span>
-            @switch (atMapState?.state) {
-              @case (undefined) { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> }
-              @case ('present') {
-                <span class="badge bg-success">Presente</span>
-                @if (atMapState?.atMap?.url) {
-                  <a [href]="atMapState?.atMap?.url" target="_blank" rel="noopener"><small>{{ atMapState?.atMap?.url }}</small></a>
-                }
-              }
-              @case ('absent') {
-                <span class="badge bg-danger">Non presente</span>
-                @if (atMapState?.atMap?.errorMessage) {
-                  <small class="text-muted">{{ atMapState?.atMap?.errorMessage }}</small>
-                }
-              }
-              @default { <span class="text-muted">Informazione in attesa del servizio dedicato</span> }
-            }
-          </div>
-          <button itButton="outline-primary" (click)="goToAtmap()">
-            <it-icon name="list" size="sm"></it-icon> Apri AT map
+      <!-- Colonna Strumenti -->
+      <aside class="rpct-aside">
+        <div class="rpct-aside-label">Strumenti <it-icon name="info-circle" size="sm" [itTooltip]="t.strumenti"></it-icon></div>
+
+        <!-- Scansione (spec 003/006/009) -->
+        <div class="rpct-tool">
+          <div class="rpct-tool-title">Scansione <it-icon name="info-circle" size="sm" [itTooltip]="t.scansione"></it-icon></div>
+          @if (runningKind) {
+            <div class="rpct-alert-running" role="status">
+              <span class="rpct-spin rpct-alert-spin" aria-hidden="true"></span>
+              <div>
+                <div class="fw-semibold">Scansione {{ runningKind }} in corso</div>
+                <div class="rpct-alert-sub">
+                  @if (runningStartedAt) { Avviata il {{ runningStartedAt | date:'dd/MM/yyyy HH:mm' }}. }
+                  Potrai avviarne una nuova al termine.
+                </div>
+              </div>
+            </div>
+          } @else {
+            <p class="rpct-tool-text">
+              Verifica di nuovo {{ lastCounts ? 'le ' + lastCounts.total + ' regole' : 'le regole' }} sul sito dell'amministrazione.
+            </p>
+          }
+          <button itButton="primary" class="w-100"
+                  [disabled]="hasRunning || hasGlobalRunning || isLoading || isStartingScan"
+                  [attr.aria-disabled]="hasRunning || hasGlobalRunning || isLoading || isStartingScan"
+                  (click)="startScan()">
+            {{ isStartingScan ? 'Avvio in corso...' : 'Avvia nuova scansione' }}
           </button>
         </div>
-      </div>
-    }
 
-    <!-- Azioni (spec 005): visibile anche durante il caricamento, con pulsante disabilitato -->
-    <div class="card mb-4">
-      <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="d-flex align-items-center flex-wrap gap-2">
-          <span class="fw-bold me-3">Azioni</span>
-          @if (hasGlobalRunning) {
-            <span class="badge table-success d-inline-flex align-items-center gap-2" style="background-color: var(--bs-table-bg)">
-              <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
-              Scansione globale in corso
-            </span>
-          }
-          @if (hasRunning) {
-            <span class="badge table-success d-inline-flex align-items-center gap-2" style="background-color: var(--bs-table-bg)">
-              <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
-              Scansione in corso
-            </span>
-          }
+        <!-- AT map (spec 008) -->
+        <div class="rpct-tool">
+          <div class="rpct-tool-title rpct-tool-title--between">
+            <span class="rpct-tool-title">AT map <it-icon name="info-circle" size="sm" [itTooltip]="t.atMap"></it-icon></span>
+            @switch (atMapState?.state) {
+              @case (undefined) { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> }
+              @case ('present') { <span class="rpct-badge rpct-badge--success">Presente</span> }
+              @case ('absent') { <span class="rpct-badge rpct-badge--danger">Non presente</span> }
+              @default { <span class="rpct-badge">N/D</span> }
+            }
+          </div>
+          <p class="rpct-tool-text">
+            @switch (atMapState?.state) {
+              @case ('present') {
+                @if (atMapState?.atMap?.url) {
+                  <a [href]="atMapState?.atMap?.url" target="_blank" rel="noopener" class="text-break">{{ atMapState?.atMap?.url }}</a>
+                } @else { AT map individuata sul sito. }
+              }
+              @case ('absent') { {{ atMapState?.atMap?.errorMessage || 'Nessuna AT map individuata sul sito.' }} }
+              @case (undefined) { Caricamento in corso… }
+              @default { Informazione in attesa del servizio dedicato. }
+            }
+          </p>
+          <button itButton="outline-primary" class="w-100" (click)="goToAtmap()">Apri AT map</button>
         </div>
-        <button itButton="primary" [disabled]="hasRunning || hasGlobalRunning || isLoading || isStartingScan" (click)="startScan()">
-          <it-icon name="play-circle" size="sm"></it-icon>
-          {{ isStartingScan ? 'Avvio in corso...' : 'Avvia nuova scansione' }}
-        </button>
-      </div>
+      </aside>
     </div>
-
-    @if (!isLoading) {
-      <!-- Storico scansioni -->
-      <div class="card">
-        <div class="card-header fw-bold">Storico scansioni</div>
-        <div class="card-body p-0">
-          @if (historyRows.length === 0) {
-            <p class="text-muted p-3 mb-0">Nessuna scansione trovata.</p>
-          } @else {
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th>Data</th>
-                    <th>Tipo</th>
-                    <th>Stato</th>
-                    <th class="text-center">Sezioni OK</th>
-                    <th class="text-center">Non conformi</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (row of historyRows; track row.workflowId) {
-                    <tr [class]="isRunning(row.status) ? runningRowClass : ''">
-                      <td>{{ row.startTime | date:'dd/MM/yyyy HH:mm' }}</td>
-                      <td>
-                        <span [class]="row.origin === 'globale' ? 'badge bg-secondary' : 'badge bg-primary'">
-                          {{ row.origin === 'globale' ? 'Globale' : 'Dedicata' }}
-                        </span>
-                      </td>
-                      <td>
-                        <span class="d-inline-flex align-items-center gap-2">
-                          <span [class]="'badge bg-' + row.badge">{{ statusLabel(row.status) }}</span>
-                          @if (isRunning(row.status)) {
-                            <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
-                          }
-                        </span>
-                      </td>
-                      <td class="text-center">
-                        @if (row.sezioniOk === null) {
-                          <span class="text-muted">—</span>
-                        } @else {
-                          <span class="badge bg-success">{{ row.sezioniOk }}</span>
-                        }
-                      </td>
-                      <td class="text-center">
-                        @if (row.sezioniNonRegolari === null) {
-                          <span class="text-muted">—</span>
-                        } @else {
-                          <span [class]="row.sezioniNonRegolari > 0 ? 'badge bg-danger' : 'badge bg-success'">
-                            {{ row.sezioniNonRegolari }}
-                          </span>
-                        }
-                      </td>
-                      <td class="text-end">
-                        <button itButton="outline-primary" size="xs" (click)="goToSearch(row.workflowId)">
-                          Dettaglio
-                        </button>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        </div>
-      </div>
-
-    }
   }
 </div>
