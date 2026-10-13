@@ -381,6 +381,8 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
         this.workflowBODYForm.controls.workflow_id_preserve.patchValue(conf.value ? String(conf.value).split(',').filter(Boolean) : []);
       }],
       [S.APP_SCHEDULER, S.WORKFLOW_CRON_BODY, (conf) => this.applyWorkflowBody(JSON.parse(conf.value))],
+      // La root rule del form si legge dal body: qui serve solo a registrare id e version della riga, per aggiornarla (PUT) invece di duplicarla
+      [S.APP_SCHEDULER, S.WORKFLOW_CRON_ROOT_RULE, () => { /* nessun campo da valorizzare */ }],
       [S.APP_SCHEDULER, S.COLOR, (conf) => this.applyColor(JSON.parse(conf.value))],
       [S.APP_UI, S.MENU, (conf) => this.applyMenu(conf)],
       [S.APP_RESULT, S.SLICE, (conf) => this.applySlice(JSON.parse(conf.value))],

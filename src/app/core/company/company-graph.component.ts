@@ -232,9 +232,9 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
       } else {
         forkJoin({
           rules: this.configurationService.findOne(ConfigurationService.APP_RULE, ConfigurationService.JSONRULES_KEY),
-          workflowBody: this.configurationService.findOne(ConfigurationService.APP_SCHEDULER, ConfigurationService.WORKFLOW_CRON_BODY)
+          workflowRootRule: this.configurationService.findOne(ConfigurationService.APP_SCHEDULER, ConfigurationService.WORKFLOW_CRON_ROOT_RULE)
         }).subscribe({
-          next: ({ rules, workflowBody }) => {
+          next: ({ rules, workflowRootRule }) => {
             if (!rules) {
               return;
             }
@@ -244,8 +244,10 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
             Object.keys(value).forEach((key: string) => {
               this.rules.set(key, this.ruleService.buildInstance(value[key]));
             });
-            const rootRule: string = (workflowBody ? JSON.parse(workflowBody.value)?.input?.root_rule : undefined)
+            const rootRule: string = (workflowRootRule ? workflowRootRule.value : undefined)
               || Rule.AMMINISTRAZIONE_TRASPARENTE;
+
+            console.log(rootRule);  
             this.loadSelectRules();
             this.filterFormSearch.controls.rootRule.patchValue(Rule.AMMINISTRAZIONE_TRASPARENTE);
             this.filterFormSearch.valueChanges.subscribe((value: any) => {
