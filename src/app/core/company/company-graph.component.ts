@@ -23,6 +23,7 @@ import { Rule, RuleChart, Term } from '../rule/rule.model';
 import { RuleService } from '../rule/rule.service';
 import { Company } from './company.model';
 import { CompanyService } from './company.service';
+import { canReadScanResults } from '../rpct/rpct-user';
 import * as _ from "lodash";
 
 @Component({
@@ -318,12 +319,17 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
 
   manageChart(workflowId?: string) {
     this.workflowRuleName(workflowId).subscribe((ruleName: string) => {
+      // Risultati per scansione solo se l'utente può leggerli per questo ente; altrimenti i dati pubblici
+      let resultsPath = "/codiceipa";
+      if (canReadScanResults(this.userData, this.codiceIpa)) {
+        resultsPath = "/codiceipa/byWorkflow";
+      }
       this.resultService.getAll({
         workflowId: workflowId,
         codiceIpa: this.codiceIpa,
         size: 500,
         noCache: true
-      }, this.userData ? "/codiceipa/byWorkflow" : "/codiceipa").subscribe((results: Result[]) => {
+      }, resultsPath).subscribe((results: Result[]) => {
         if (results.length === 0) {
           this.apiMessageService.sendMessage(MessageType.WARNING, `Risultati non presenti per la PA: ${this.company?.denominazioneEnte}!`);
         }
