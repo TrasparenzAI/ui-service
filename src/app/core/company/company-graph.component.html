@@ -126,9 +126,11 @@
                 <div class="d-flex flex-row justify-content-around w-100">
                   @if (authenticated && (isSuperuser || isAdmin || isRPCT)) {
                     <app-show-workflow-history [codiceIpa]="company.codiceIpa"></app-show-workflow-history>
-                    <a itButton="outline-warning" size="xs" class="mt-1" translate routerLink="/history" [queryParams]="{workflowId: '',codiceIpa: company.codiceIpa, sort: 'createdAt,desc'}">
-                      <it-icon name="chart-line" color="warning"></it-icon>it.company.history
-                    </a>
+                    @if (authenticated && (isSuperuser || isAdmin)) {
+                      <a itButton="outline-warning" size="xs" class="mt-1" translate routerLink="/history" [queryParams]="{workflowId: '',codiceIpa: company.codiceIpa, sort: 'createdAt,desc'}">
+                        <it-icon name="chart-line" color="warning"></it-icon>it.company.history
+                      </a>
+                    }
                   }
                   <a itButton="outline-success" size="xs" class="mt-1" translate routerLink="/company-map" [queryParams]="{codiceIpa: company.codiceIpa}">
                     <it-icon name="map-marker-circle" color="success"></it-icon>it.company.map
