@@ -437,6 +437,11 @@ export class CompanyGraphComponent implements OnInit, OnDestroy, OnChanges{
     }    
   }
 
+  get isRPCT(): boolean {
+    if (this.company === undefined) return false;
+    return this.authGuard.isRPCT(this.company.codiceIpa, this.userData);
+  }
+
   ngAfterViewInit() {
     if (!this.chart) {
       this.chart = new OrgChart(); // Zoom ridotto per iPad;

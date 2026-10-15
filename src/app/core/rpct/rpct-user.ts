@@ -1,7 +1,7 @@
 import { RoleEnum } from '../../auth/role.enum';
 
 /** Ruoli con accesso alle pagine generali: Home e risultati per scansione di qualsiasi ente. */
-const GENERAL_ACCESS_ROLES: string[] = [RoleEnum.ADMIN, RoleEnum.SUPERUSER, RoleEnum.ROLE_USER];
+const GENERAL_ACCESS_ROLES: string[] = [RoleEnum.ADMIN, RoleEnum.SUPERUSER, RoleEnum.USER];
 
 /**
  * Spec 010 (F3): codici IPA autorizzati dal claim rpct_ipas, come lista di codici esatti senza duplicati.

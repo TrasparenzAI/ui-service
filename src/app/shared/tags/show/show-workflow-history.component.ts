@@ -59,7 +59,7 @@ import saveAs from 'file-saver';
                         <div>{{'it.workflow.status.'+ workflow.status | translate}}</div>
                       </div>
                     </a>
-                    @if (isAbleToStartWorkflow && (workflow.correlationId == codiceIpa || workflow.codiceIpa == codiceIpa) ) {
+                    @if (isAbleToDeleteWorkflow && (workflow.correlationId == codiceIpa || workflow.codiceIpa == codiceIpa) ) {
                       <a
                         itButton="danger"
                         (click)="removeWorkflow(workflow)"
@@ -148,18 +148,12 @@ export class ShowWorkflowHistoryComponent implements OnInit{
   @ViewChild(`workflowModal`) workflowModal: ItModalComponent;
   workflows: Workflow[];
   isRefreshing: boolean = false;
-  isAbleToStartWorkflow: boolean = false;
-  isCSVVisible: boolean = false;
   protected optionsRule: Array<SelectControlOption> = [];
   authenticated = false;
   isAdmin: boolean;
   userData: any;
 
   ngOnInit(): void {
-    this.authGuard.hasRole([RoleEnum.ADMIN, RoleEnum.SUPERUSER]).subscribe((hasRole: boolean) => {
-      this.isAbleToStartWorkflow = hasRole;
-      this.isCSVVisible = hasRole;
-    });
     if (this.authGuard.isDevAuthBypassEnabled()) {
       this.authenticated = true;
       this.userData = this.authGuard.getDevBypassUserData();
@@ -190,10 +184,25 @@ export class ShowWorkflowHistoryComponent implements OnInit{
     }
   }
 
+  get isCSVVisible(): boolean {
+    return this.authGuard.hasRolesFromUserData([RoleEnum.ADMIN, RoleEnum.SUPERUSER], this.userData) ||
+      this.authGuard.isRPCT(this.codiceIpa, this.userData);
+  }
+
+  get isAbleToStartWorkflow(): boolean{
+    return this.authGuard.hasRolesFromUserData([RoleEnum.ADMIN, RoleEnum.SUPERUSER], this.userData);
+  }
+
+  get isAbleToDeleteWorkflow(): boolean{
+    return this.authGuard.hasRolesFromUserData([RoleEnum.ADMIN, RoleEnum.SUPERUSER], this.userData) ||
+      this.authGuard.isRPCT(this.codiceIpa, this.userData);
+  }
+
   openWorkflowList() {
-    this.configurationService.getAll().subscribe((configurations: Configuration[]) => {
-      configurations.forEach((conf: Configuration) => {
-          if (conf.key === ConfigurationService.JSONRULES_KEY) {
+    this.configurationService.findByKey(ConfigurationService.JSONRULES_KEY).subscribe({
+      next: (confs: Configuration[]) => {
+        confs.forEach((conf: Configuration) => {
+          try {
             let resultRules = new Map();
             let value = JSON.parse(conf.value);
             Object.keys(value).forEach((key: string) => {
@@ -207,8 +216,13 @@ export class ShowWorkflowHistoryComponent implements OnInit{
                 text: `${key} - ${text}`
               });
             });
-          }      
-      });
+
+          } catch (ex) {
+            console.error(`Configurazione "${ConfigurationService.JSONRULES_KEY}" non valida`, ex);
+          }
+        });
+      },
+      error: () => { /* già notificato dal servizio */ }
     });
     this.resultService.listWorkflows(undefined, true).subscribe((workflows: Workflow[]) => {
       this.resultService.listWorkflows(this.codiceIpa, true).subscribe((ipaWorkflows: Workflow[]) => {

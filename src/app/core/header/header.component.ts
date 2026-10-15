@@ -102,6 +102,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isAdmin: boolean = false;
   isSuperUser: boolean = false;
   isRpct: boolean = false;
+  isUser: boolean = false;
 
   userData: any;
   menuLinks!: any[];
@@ -169,12 +170,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
             this.userData = userData;
             this.isAdmin = this.authGuard.hasRolesFromUserData([RoleEnum.ADMIN], userData);
             this.isSuperUser = this.authGuard.hasRolesFromUserData([RoleEnum.SUPERUSER], userData);
+            this.isUser = this.authGuard.hasRolesFromUserData([RoleEnum.USER], userData);
             this.isRpct = this.authGuard.hasRolesFromUserData([RoleEnum.RPCT], userData);
           });    
         });
       }    
     }
     this.responsiveFn();
+  }
+
+  protected get isAnalisiSezioniVisible() {
+    return this.authenticated && (this.isUser || this.isAdmin || this.isSuperUser);
   }
 
   @HostListener("window:resize", []) 

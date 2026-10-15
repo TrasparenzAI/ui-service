@@ -68,6 +68,16 @@ export class AuthGuard implements CanActivate, CanActivateChild, CanDeactivate<u
         }));
     }
 
+    isRPCT(ipaCode: string, userData: any): boolean {
+        const claim = userData?.rpct_ipas;
+        if (!Array.isArray(claim)) return false;
+        const codes = claim
+            .filter((code: unknown): code is string => typeof code === 'string')
+            .map(code => code.trim())
+            .filter(code => code.length > 0);
+        return codes.filter((code: unknown): code is string => code === ipaCode).length > 0;
+    }
+
     isDevAuthBypassEnabled(): boolean {
         return !environment.production && !!environment.devBypassAdminAuth;
     }
@@ -81,7 +91,7 @@ export class AuthGuard implements CanActivate, CanActivateChild, CanDeactivate<u
             name: 'Dev Admin',
             email: 'dev.admin@localhost',
             realm_access: {
-                roles: [RoleEnum.ADMIN, RoleEnum.SUPERUSER, RoleEnum.ROLE_USER]
+                roles: [RoleEnum.ADMIN, RoleEnum.SUPERUSER, RoleEnum.USER]
             }
         };
     }
