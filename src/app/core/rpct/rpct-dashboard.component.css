@@ -1,0 +1,48 @@
+/* Spec 011: lista amministrazioni RPCT (handoff Claude Design). Colori dal tema dove esistono. */
+.rpct { width: 100%; padding: 32px 24px 64px; box-sizing: border-box; }
+.rpct-muted { color: #5d7083; }
+
+.rpct-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 28px; }
+.rpct-title { font-size: clamp(28px, 4vw, 40px); font-weight: 700; line-height: 1.1; margin: 0; }
+.rpct-welcome { font-size: 18px; margin: 6px 0 0; color: #5d7083; }
+.rpct-welcome strong { color: #1a1a1a; font-weight: 600; }
+.rpct-search { flex: 0 1 320px; min-width: 240px; }
+.rpct-search ::ng-deep .form-group { margin-bottom: 0; }
+
+.rpct-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.rpct-stat { border: 1px solid #e3e7ea; border-radius: 4px; padding: 16px 20px; }
+.rpct-stat-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #5d7083; }
+.rpct-stat-value { font-size: 32px; font-weight: 700; }
+.rpct-stat-value--sm { font-size: 22px; margin-top: 6px; }
+
+.rpct-rows { border-top: 2px solid #1a1a1a; }
+.rpct-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px;
+  padding: 18px 12px; border-bottom: 1px solid #d9dadb; cursor: pointer; color: inherit;
+}
+.rpct-row:hover { background: #f5f8f6; }
+.rpct-row:focus-visible { outline: 2px solid var(--bs-primary, #13753a); outline-offset: -2px; }
+
+.rpct-col-name { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; }
+.rpct-name { font-size: 18px; font-weight: 600; color: var(--bs-primary, #13753a); }
+.rpct-code { font-family: var(--bs-font-monospace, 'Roboto Mono', monospace); font-size: 13px; color: #5d7083; margin-top: 2px; }
+
+.rpct-col-date { flex: 0 0 170px; font-size: 16px; }
+.rpct-sub { font-size: 14px; color: #5d7083; }
+.rpct-running { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #0b4521; font-weight: 600; }
+
+.rpct-col-ok { flex: 0 0 180px; font-size: 15px; }
+.rpct-progress { height: 4px; background: #e3e7ea; margin-top: 6px; border-radius: 2px; }
+.rpct-progress-bar { height: 4px; background: var(--bs-success, #008055); border-radius: 2px; }
+
+.rpct-col-ko { flex: 0 0 130px; }
+.rpct-badge-danger { background: var(--bs-danger, #c02a43); color: #fff; font-weight: 700; font-size: 14px; padding: 2px 10px; border-radius: 4px; white-space: nowrap; }
+.rpct-ok-text { color: #006644; font-weight: 600; font-size: 15px; }
+
+.rpct-col-at { flex: 0 0 90px; font-size: 14px; color: #5d7083; }
+.rpct-chevron { flex: 0 0 auto; font-size: 22px; color: var(--bs-primary, #13753a); }
+
+.rpct-pager { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; }
+.rpct-range { font-size: 14px; color: #5d7083; }
+.rpct-pager ::ng-deep .pagination-wrapper,
+.rpct-pager ::ng-deep nav { margin: 0; }

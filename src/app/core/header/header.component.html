@@ -122,6 +122,14 @@
         <span class="ps-1" translate>it.navigation.rule</span>
       </a>
     </it-navbar-item>
+    @if (authenticated && isRpct) {
+      <it-navbar-item>
+        <a class="nav-link close-menu" (click)="toggleCollapse()" [routerLinkActive]="['active']" routerLink="/dashboard">
+          <it-icon size="sm" class="d-none d-xl-block" [color]="iconColor" name="pa"></it-icon>
+          <span translate>it.navigation.rpct-dashboard</span>
+        </a>
+      </it-navbar-item>
+    }
     @if (authenticated) {
       <it-navbar-item>
         <it-dropdown mode="nav">

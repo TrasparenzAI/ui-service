@@ -1,0 +1,113 @@
+<div class="rpct">
+  <!-- Intestazione (spec 011) -->
+  <div class="rpct-head">
+    <div>
+      <h1 class="rpct-title">RPCT Dashboard</h1>
+      <p class="rpct-welcome">Benvenuto, <strong>{{ userName }}</strong></p>
+    </div>
+    @if (rows.length > 0) {
+      <div class="rpct-search">
+        <it-input type="search" label="Cerca amministrazione" placeholder="Nome o codice IPA"
+                  [(ngModel)]="search" (ngModelChange)="onSearch()"></it-input>
+      </div>
+    }
+  </div>
+
+  @if (isLoading) {
+    <div class="d-flex justify-content-center my-5">
+      <it-spinner double="true"></it-spinner>
+    </div>
+  } @else if (rows.length === 0) {
+    <it-alert type="warning">
+      Nessuna amministrazione associata al tuo account.
+    </it-alert>
+  } @else {
+
+    <!-- Riepilogo -->
+    <div class="rpct-stats">
+      <div class="rpct-stat">
+        <div class="rpct-stat-label">Amministrazioni <it-icon name="info-circle" size="sm" [itTooltip]="t.amministrazioni"></it-icon></div>
+        <div class="rpct-stat-value">{{ rows.length }}</div>
+      </div>
+      <div class="rpct-stat">
+        <div class="rpct-stat-label">Con non conformità <it-icon name="info-circle" size="sm" [itTooltip]="t.nonConformitaAdmin"></it-icon></div>
+        <div class="rpct-stat-value text-danger">
+          @if (countsLoading) { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> } @else { {{ adminConNonConformita }} }
+        </div>
+      </div>
+      <div class="rpct-stat">
+        <div class="rpct-stat-label">Ultima scansione</div>
+        <div class="rpct-stat-value rpct-stat-value--sm">
+          @if (countsLoading) { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> }
+          @else if (ultimaScansione) { {{ ultimaScansione | date:'dd/MM/yyyy HH:mm' }} } @else { — }
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista amministrazioni -->
+    <div class="rpct-rows">
+      @for (row of pageRows; track row.codiceIpa) {
+        <div class="rpct-row" role="link" tabindex="0"
+             (click)="goToDetail(row.codiceIpa)" (keydown.enter)="goToDetail(row.codiceIpa)">
+          <div class="rpct-col-name">
+            <span class="rpct-name">{{ row.denominazioneEnte }}</span>
+            <span class="rpct-code">{{ row.codiceIpa }}</span>
+          </div>
+          <div class="rpct-col-date">
+            @if (row.lastScanDate) {
+              <div>{{ row.lastScanDate | date:'dd/MM/yyyy HH:mm' }}</div>
+            } @else {
+              <div class="rpct-muted">—</div>
+            }
+            @if (row.running) {
+              <div class="rpct-running" role="status">
+                <span class="rpct-spin" aria-hidden="true"></span>
+                {{ row.running === 'globale' ? 'Globale in corso' : 'Dedicata in corso' }}
+              </div>
+            } @else if (row.origin) {
+              <div class="rpct-sub">Scansione {{ row.origin }}</div>
+            }
+          </div>
+          <div class="rpct-col-ok">
+            @if (row.loading) {
+              <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span>
+            } @else if (row.sezioniOk === null || row.total === null) {
+              <span class="rpct-muted">—</span>
+            } @else {
+              <div><strong>{{ row.sezioniOk }}</strong><span class="rpct-muted"> / {{ row.total }} sezioni OK</span></div>
+              <div class="rpct-progress"><div class="rpct-progress-bar" [style.width.%]="okPercent(row)"></div></div>
+            }
+          </div>
+          <div class="rpct-col-ko">
+            @if (!row.loading && row.sezioniNonRegolari !== null) {
+              @if (row.sezioniNonRegolari > 0) {
+                <span class="rpct-badge-danger">{{ row.sezioniNonRegolari }} {{ row.sezioniNonRegolari === 1 ? 'non conforme' : 'non conformi' }}</span>
+              } @else {
+                <span class="rpct-ok-text">Tutto conforme</span>
+              }
+            }
+          </div>
+          <div class="rpct-col-at">
+            @switch (row.atmap) {
+              @case ('loading') { <span class="rpct-spin" role="status" aria-label="Caricamento in corso"></span> }
+              @case ('present') { AT map <span class="rpct-ok-text">Presente</span> }
+              @case ('absent') { AT map <span class="text-danger fw-semibold">Non presente</span> }
+              @default { AT map N/D }
+            }
+          </div>
+          <span class="rpct-chevron" aria-hidden="true">›</span>
+        </div>
+      } @empty {
+        <p class="rpct-muted py-3 mb-0">Nessuna amministrazione corrisponde alla ricerca.</p>
+      }
+    </div>
+
+    <!-- Paginazione (spec 011): 5 per pagina -->
+    <div class="rpct-pager">
+      <span class="rpct-range">{{ rangeLabel }}</span>
+      @if (pages > 1) {
+        <it-pagination [currentPage]="page - 1" [pageNumbers]="pages" (pageEvent)="goTo($event + 1)"></it-pagination>
+      }
+    </div>
+  }
+</div>

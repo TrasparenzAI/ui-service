@@ -21,6 +21,10 @@ import { ResultPieRuleComponent } from './core/result/result-pie-rule.component'
 import { ServiceInfoComponent } from './core/info/service-info.component';
 import { ChatComponent } from './core/ai/chat.component';
 import { HistoryComponent } from './core/result/history.component';
+import { RpctDashboardComponent } from './core/rpct/rpct-dashboard.component';
+import { RpctDetailComponent } from './core/rpct/rpct-detail.component';
+import { RpctAtmapComponent } from './core/rpct/rpct-atmap.component';
+import { RpctHomeGuard } from './core/rpct/rpct-home.guard';
 
 // Guard condizionale basata sull'environment
 const shouldEnforceOidc = environment.oidc.enable && !(environment.devBypassAdminAuth && !environment.production);
@@ -32,6 +36,7 @@ const appRoutes: Routes = [
   {
     path: '', children: [
       { path: '', canActivate: [AuthRedirectGuard], component: HomeComponent },
+      { path: 'home', canMatch: [RpctHomeGuard], children: [] },
       { path: 'home', component: HomeComponent },
       { path: 'search', component: SearchComponent },
       { path: 'company-search', component: CompanySearchComponent },
@@ -39,6 +44,24 @@ const appRoutes: Routes = [
       { path: 'company-graph', component: CompanyGraphComponent },
       { path: 'result-pie', component: ResultPieComponent },
       { path: 'credits', component: CreditsComponent },
+      {
+        path: 'dashboard',
+        component: RpctDashboardComponent,
+        canActivate: [...oidcGuard, AuthGuard],
+        data: { role: RoleEnum.RPCT }
+      },
+      {
+        path: 'dashboard/:codiceIpa',
+        component: RpctDetailComponent,
+        canActivate: [...oidcGuard, AuthGuard],
+        data: { role: RoleEnum.RPCT }
+      },
+      {
+        path: 'dashboard/:codiceIpa/atmap',
+        component: RpctAtmapComponent,
+        canActivate: [...oidcGuard, AuthGuard],
+        data: { role: RoleEnum.RPCT }
+      },
       {
         path: 'history',
         component: HistoryComponent,
