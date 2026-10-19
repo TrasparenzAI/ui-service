@@ -614,7 +614,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     forkJoin([
       this.persist(this.buildConf(S.APP_AI, S.AI_DEFAULT_MODEL, defaultModel.value), true),
       this.persist(this.buildConf(S.APP_AI, S.AI_TEXT_TO_SPEECH, textToSpeech.value), true),
-      this.persist(this.buildConf(S.APP_AI, MainConfigurationComponent.AI_MCP_DVNS_ENABLED, !!mcpDvnsEnabled.value), true),
+      this.persist(this.buildConf(S.APP_AI, S.AI_MCP_DVNS_ENABLED, !!mcpDvnsEnabled.value), true),
       this.persist(this.buildConf(S.APP_AI, S.AI_NUM_CTX, this.numCtxValues[num_ctx_index.value]), true),
       this.persist(this.buildConf(S.APP_AI, S.AI_SYSTEM_PROMPT, systemPrompt.value), true),
       this.persist(this.buildConf(S.APP_AI, S.AI_INITIAL_MESSAGE, initialMessage.value), true)
