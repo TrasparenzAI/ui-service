@@ -83,7 +83,8 @@
       },
       "initialMessage": {
         "label": "Messaggio iniziale"
-      }
+      },
+      "mcp_dvns_enabled": "Abilitazione di MCP DVNS"
     },
     "configuration" : {
       "slice": {

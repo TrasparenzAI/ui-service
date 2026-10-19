@@ -907,10 +907,16 @@
               {{ "it.ai.num_ctx" | translate : {num_ctx: numCtx | number} }}
             </it-range>
           </div>
-          <div class="form-check col-md-6 col-xl-3 px-2">
+          <div class="form-check col-md-6 col-xl-3 px-2 pt-2">
               <it-checkbox
                 formControlName="textToSpeech"
                 [label]="'it.ai.text_to_speech' | translate"
+                toggle="true"></it-checkbox>
+          </div>
+          <div class="form-check col-md-6 col-xl-3 px-2">
+              <it-checkbox
+                formControlName="mcpDvnsEnabled"
+                [label]="'it.ai.mcp_dvns_enabled' | translate"
                 toggle="true"></it-checkbox>
           </div>
         </div>
