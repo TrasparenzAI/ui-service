@@ -21,15 +21,42 @@ function toEntry(key: string, value: unknown): RpctAtMapEntry {
   return { key, value: text, isLink: /^https?:\/\//i.test(text) };
 }
 
+/**
+ * Come per l'XML, scende fino alle foglie: nello schema ANAC le sezioni stanno dentro un contenitore
+ * (es. { "at_art2_bis_c1": { "personale": "https://..." } }, in XML map/at_art2_bis_c1), quindi leggere
+ * solo il primo livello darebbe una riga "at_art2_bis_c1 | [object Object]".
+ * Un array ripete la chiave del genitore per ogni elemento.
+ */
+function collectJsonLeaves(
+  value: unknown,
+  key: string,
+  out: { lastModified: string | null; entries: RpctAtMapEntry[] }
+): void {
+  if (key === SCHEMA_KEY) return;
+  if (Array.isArray(value)) {
+    value.forEach(item => collectJsonLeaves(item, key, out));
+    return;
+  }
+  if (value !== null && typeof value === 'object') {
+    Object.entries(value as Record<string, unknown>)
+      .forEach(([childKey, childValue]) => collectJsonLeaves(childValue, childKey, out));
+    return;
+  }
+  if (key === LAST_MODIFIED_KEY) {
+    out.lastModified = String(value ?? '').trim() || null;
+  } else {
+    out.entries.push(toEntry(key, value));
+  }
+}
+
 function parseJson(content: string): RpctParsedAtMap {
   const data = JSON.parse(content);
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return { lastModified: null, entries: [], error: 'Contenuto JSON non riconosciuto.' };
   }
-  const entries = Object.keys(data)
-    .filter(key => key !== LAST_MODIFIED_KEY && key !== SCHEMA_KEY)
-    .map(key => toEntry(key, data[key]));
-  return { lastModified: data[LAST_MODIFIED_KEY] ?? null, entries, error: null };
+  const out: { lastModified: string | null; entries: RpctAtMapEntry[] } = { lastModified: null, entries: [] };
+  collectJsonLeaves(data, '', out);
+  return { lastModified: out.lastModified, entries: out.entries, error: null };
 }
 
 function parseXml(content: string, domParser: DOMParser): RpctParsedAtMap {
