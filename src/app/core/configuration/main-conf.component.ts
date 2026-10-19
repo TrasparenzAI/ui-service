@@ -45,9 +45,6 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
   @ViewChild('headerPopconfirmModal') headerPopconfirmModal: ItModalComponent;
   @ViewChildren(ItAccordionComponent) accordions!: QueryList<ItAccordionComponent>;
 
-  /** Chiave del config-service (applicazione ai-integration-service) che abilita l'MCP DVNS. */
-  private static readonly AI_MCP_DVNS_ENABLED = 'ai.mcp.dvns.enabled';
-
   readonly activeTab = Tab.HOURS;
   readonly tabs = [Tab.HOURS, Tab.DAY, Tab.MONTH];
 
@@ -392,7 +389,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
       [S.APP_RESULT, S.SLICE, (conf) => this.applySlice(JSON.parse(conf.value))],
       [S.APP_AI, S.AI_DEFAULT_MODEL, (conf) => this.aiForm.controls.defaultModel.patchValue(conf.value)],
       [S.APP_AI, S.AI_TEXT_TO_SPEECH, (conf) => this.aiForm.controls.textToSpeech.patchValue(String(conf.value) === 'true')],
-      [S.APP_AI, MainConfigurationComponent.AI_MCP_DVNS_ENABLED, (conf) => this.aiForm.controls.mcpDvnsEnabled.patchValue(String(conf.value) === 'true')],
+      [S.APP_AI, S.AI_MCP_DVNS_ENABLED, (conf) => this.aiForm.controls.mcpDvnsEnabled.patchValue(String(conf.value) === 'true')],
       [S.APP_AI, S.AI_NUM_CTX, (conf) => this.aiForm.controls.num_ctx_index.patchValue(this.numCtxValues.indexOf(Number(conf.value)))],
       [S.APP_AI, S.AI_INITIAL_MESSAGE, (conf) => this.aiForm.controls.initialMessage.patchValue(conf.value)],
       [S.APP_AI, S.AI_SYSTEM_PROMPT, (conf) => this.aiForm.controls.systemPrompt.patchValue(conf.value)],

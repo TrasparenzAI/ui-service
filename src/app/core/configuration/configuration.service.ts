@@ -53,6 +53,7 @@ export class ConfigurationService extends CommonService<Configuration> {
   public static readonly AI_INITIAL_MESSAGE = `ai.initialMessage`;
   public static readonly AI_TEXT_TO_SPEECH = `ai.text-to-speech.enable`;
   public static readonly AI_NUM_CTX = `spring.ai.ollama.chat.options.num_ctx`;
+  public static readonly AI_MCP_DVNS_ENABLED = 'ai.mcp.dvns.enabled';
 
   private cachedStatusColor: any;
   private cachedSliceColor: any;
