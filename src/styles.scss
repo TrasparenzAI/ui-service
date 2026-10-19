@@ -62,3 +62,9 @@
 .leaflet-pane,.leaflet-top, .leaflet-bottom {
   z-index: 1 !important;
 }
+
+// Spazio tra icona e testo nelle voci dei menu a tendina
+.dropdown-menu .dropdown-item .icon,
+.dropdown-menu .dropdown-item svg {
+  margin-right: 0.5rem;
+}
