@@ -67,6 +67,7 @@
             "assets": [
               "src/assets",
               "src/favicon.ico",
+              { "glob": "**/*", "input": "public" },
               {
                 "glob": "**/*",
                 "input": "./node_modules/bootstrap-italia/",
