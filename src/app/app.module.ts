@@ -1,4 +1,4 @@
-import { ErrorHandler, NgModule, provideAppInitializer, inject, LOCALE_ID } from '@angular/core';
+import { ErrorHandler, NgModule, provideAppInitializer, inject, LOCALE_ID, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
@@ -26,6 +26,7 @@ import localeIt from '@angular/common/locales/it';
 
 import { OidcSecurityService } from 'angular-auth-oidc-client';
 import { MatomoRouteTrackerService } from './shared/service/matomo.service';
+import { ServiceWorkerModule } from '@angular/service-worker';
 
 
 @NgModule({ declarations: [
@@ -63,7 +64,14 @@ import { MatomoRouteTrackerService } from './shared/service/matomo.service';
         }),
         AppRoutingModule, // Routing
         CoreModule, // Componenti moduli e servizi non Lazy
-        AppRoutingEndModule,
+        AppRoutingEndModule, 
+      ServiceWorkerModule.register('ngsw-worker.js', {
+        enabled: !isDevMode(),
+        // Register the ServiceWorker as soon as the application is stable
+        // or after 30 seconds (whichever comes first).
+        registrationStrategy: 'registerWhenStable:30000'
+      })
+    ,
       ], 
       providers: [
         { provide: LOCALE_ID, useValue: 'it-IT' },

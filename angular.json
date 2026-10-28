@@ -122,7 +122,8 @@
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"
                 }
-              ]
+              ],
+              "serviceWorker": "ngsw-config.json"
             }
           },
           "defaultConfiguration": ""
@@ -164,20 +165,6 @@
               "src/assets",
               "src/favicon.ico"
             ]
-          }
-        }
-      }
-    },
-    "tapita-e2e": {
-      "root": "",
-      "sourceRoot": "e2e",
-      "projectType": "application",
-      "architect": {
-        "e2e": {
-          "builder": "@angular-devkit/build-angular:protractor",
-          "options": {
-            "protractorConfig": "./protractor.conf.js",
-            "devServerTarget": "tapita:serve"
           }
         }
       }
