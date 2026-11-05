@@ -133,15 +133,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.apiMessageService.onLoad.subscribe((value) => {
       this.spinner = value;
     });
-    this.translateService.onLangChange.subscribe((event: LangChangeEvent) => {
-      this.translateService.get('it.home.title').subscribe((title: string) => {
-        this.titleService.setTitle(title);
-      });
-    });
+
     this.configurationService.getMenuLink().subscribe((menu: any) => {
       const links = Array.isArray(menu?.dettagli) ? menu.dettagli : [];
       this.menuLinks = links;
     });
+    this.translateService.get('header.company.children').subscribe((children: any) => {
+      if (Array.isArray(children)) {
+        this.companyChildren = children;
+      }
+    });
+
     if (this.authGuard.isDevAuthBypassEnabled()) {
       this.authenticated = true;
       this.isAdmin = true;
