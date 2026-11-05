@@ -521,9 +521,19 @@
   },
   "header": {
     "company": {
-      "title": "Protocollo d’intesa ANAC - CNR - 7 agosto 2023",
-      "acronym": "Protocollo d’intesa Anac - Cnr",
-      "url": "https://www.anticorruzione.it/-/protocollo-d-intesa-tra-l-autorit%C3%A0-nazionale-anticorruzione-e-il-consiglio-nazionale-delle-ricerche-7-agosto-2023"
+      "title": "Collaborazione CNR - ANAC",
+      "acronym": "CNR - ANAC",
+      "url": "#",
+      "children": [
+        {
+          "title": "Protocollo d'intesa ANAC - CNR - 7 agosto 2023",
+          "url": "https://www.anticorruzione.it/it/-/protocollo-d-intesa-tra-l-autorit%C3%A0-nazionale-anticorruzione-e-il-consiglio-nazionale-delle-ricerche-7-agosto-2023"
+        },
+        {
+          "title": "Protocollo d'intesa ANAC - CNR - 3 agosto 2026",
+          "url": "https://www.anticorruzione.it/it/-/protocollo-di-intesa-anac-cnr-del-3-agosto-2026"
+        }
+      ]
     },
     "company2": {
       "title": "Autorità Nazionale Anticorruzione",
