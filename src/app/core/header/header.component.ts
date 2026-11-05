@@ -106,6 +106,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   userData: any;
   menuLinks!: any[];
+  companyChildren: { title: string; url: string }[] = [];
 
   constructor(private apiMessageService: ApiMessageService,
               private translateService: TranslateService,
@@ -141,6 +142,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.configurationService.getMenuLink().subscribe((menu: any) => {
       const links = Array.isArray(menu?.dettagli) ? menu.dettagli : [];
       this.menuLinks = links;
+    });
+    this.translateService.get('header.company.children').subscribe((children: any) => {
+      if (Array.isArray(children)) {
+        this.companyChildren = children;
+      }
     });
     if (this.authGuard.isDevAuthBypassEnabled()) {
       this.authenticated = true;
