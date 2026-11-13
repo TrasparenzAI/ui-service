@@ -1,4 +1,4 @@
-import { throwError as observableThrowError, of as observableOf, Observable, switchMap, map, catchError} from 'rxjs';
+import { throwError as observableThrowError, of as observableOf, Observable, switchMap, map, catchError, of} from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { CommonService } from '../../common/controller/common.service';
@@ -13,6 +13,12 @@ import { environment } from '../../../environments/environment';
 import { AuthGuard } from '../../auth/auth-guard';
 import { RoleEnum } from '../../auth/role.enum';
 import { ConfigurationService } from '../configuration/configuration.service';
+
+export interface WorkflowVersion {
+  name: string;
+  version: number;
+  createTime: number;
+}
 
 @Injectable()
 export class ConductorService extends CommonService<Workflow> {
@@ -54,6 +60,17 @@ export class ConductorService extends CommonService<Workflow> {
     return undefined;
   }
   
+  getWorkflowVersions(
+    workflowName = ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW
+  ): Observable<WorkflowVersion[]> {
+    return this.getAny('/api/metadata/workflow/names-and-versions').pipe(
+      map((res: Record<string, WorkflowVersion[]>) =>
+        [...(res?.[workflowName] ?? [])].sort((a, b) => b.version - a.version)
+      ),
+      catchError(() => of([]))
+    );
+  }
+
   public getAll(filter?: {}, path?: string): Observable<Workflow[]> {
     if (!path) {
       path = `/${ConductorService.AMMINISTRAZIONE_TRASPARENTE_FLOW}/correlated/${ConductorService.AMMINISTRAZIONE_TRASPARENTE_CORRELATION}`;

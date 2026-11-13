@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, LOCALE_ID, OnInit, QueryList, ViewChild, ViewChildren, ViewEncapsulation } from '@angular/core';
 import { ConfigurationService } from './configuration.service';
 import { Configuration } from './configuration.model';
 import { Bs5UnixCronComponent, CronLocalization, Tab } from '@sbzen/ng-cron';
@@ -20,7 +20,7 @@ import { ResultService } from '../result/result.service';
 import { validColorValidator } from 'ngx-colors';
 import { AIService } from '../ai/ai.service';
 import { catchError, forkJoin, map, Observable, of, switchMap, tap } from 'rxjs';
-
+import { formatDate } from '@angular/common';
 import * as parser from 'cron-parser';
 
 @Component({
@@ -203,6 +203,8 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     }
   };
   readonly numCtxValues = Array.from({ length: 10 }, (_, i) => 1 << (11 + i));
+  workflowVersionOptions: SelectControlOption[] = [];
+  private locale = inject(LOCALE_ID);
 
   constructor(
     private formBuilder: FormBuilder,
@@ -262,6 +264,7 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
     this.initForms();
     this.loadModels();
     this.loadConfigurations();
+    this.loadWorkflowVersions();
   }
 
   private loadWorkflows(): void {
@@ -344,6 +347,29 @@ export class MainConfigurationComponent implements OnInit, AfterViewInit {
       mcpDvnsEnabled: new FormControl(false),
       num_ctx_index: new FormControl(6),
       systemPrompt: new FormControl()
+    });
+  }
+
+  loadWorkflowVersions(): void {
+    const current = this.workflowBODYForm.get('version')?.value;
+    this.conductorService.getWorkflowVersions().subscribe(versions => {
+      this.workflowVersionOptions = versions.map(v => ({
+        value: v.version,
+        text: `Versione ${v.version} – ${
+          v.createTime > 0
+            ? 'creata il ' + formatDate(v.createTime, 'dd/MM/yyyy HH:mm', this.locale)
+            : 'data di creazione non disponibile'
+        }`,
+        selected: v.version === current,
+      }));
+      // se la versione salvata non esiste più su Conductor, la mostro comunque
+      if (current != null && !versions.some(v => v.version === current)) {
+        this.workflowVersionOptions.unshift({
+          value: current,
+          text: `Versione ${current} – non presente su Conductor`,
+          selected: true,
+        });
+      }
     });
   }
 
