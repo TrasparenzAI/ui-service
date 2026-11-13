@@ -68,3 +68,8 @@
 .dropdown-menu .dropdown-item svg {
   margin-right: 0.5rem;
 }
+@media (min-width: 992px) {
+  .it-header-slim-wrapper .it-header-slim-wrapper-content > a.navbar-brand {
+    display: none !important;
+  }
+}
