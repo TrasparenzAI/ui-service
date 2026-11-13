@@ -73,3 +73,9 @@
     display: none !important;
   }
 }
+.it-header-navbar-wrapper .custom-navbar-toggler .icon {
+  fill: #fff !important;
+}
+.it-header-navbar-wrapper.theme-light .custom-navbar-toggler .icon {
+  fill: #06c !important;
+}
