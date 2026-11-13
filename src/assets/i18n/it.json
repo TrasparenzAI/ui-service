@@ -541,7 +541,8 @@
       "url": "https://www.anticorruzione.it"
     },
     "title": "TrasparenzAI",
-    "subtitle": "Piattaforma per l'analisi e la consultazione della trasparenza amministrativa delle Pubbliche Amministrazioni"
+    "subtitle": "Piattaforma per l'analisi e la consultazione della trasparenza amministrativa delle Pubbliche Amministrazioni",
+    "slim-menu": "Menu"
   },
   "footer": {
     "first": "Progetto per la sperimentazione di tecnologie digitali innovative per l'analisi automatica della sezione Amministrazione Trasparente dei siti web delle Pubbliche Amministrazioni e dei soggetti giuridici che rientrano nel campo di applicazione del D.Lgs. n. 33/2013.",
